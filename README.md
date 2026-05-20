@@ -79,6 +79,7 @@ Key GCP capabilities:
 - Cloud-native IAM
 - Cloud Logging & Monitoring
 - Stateless runtime deployment
+- Local runtime validation guide: `docs/gcp-cloud-run-runtime.md`
 
 ---
 
@@ -225,5 +226,4 @@ Instead, it focuses on:
 - AI platform engineering foundations
 
 ---
-
 
