@@ -1,0 +1,27 @@
+{
+  "gateway": {
+    "mode": "local",
+    "port": 8080,
+    "bind": "lan",
+    "controlUi": {
+      "enabled": false,
+      "allowInsecureAuth": false,
+      "allowedOrigins": []
+    },
+    "auth": {
+      "mode": "token",
+      "token": "REPLACE_AT_RUNTIME",
+      "password": "REPLACE_AT_RUNTIME"
+    }
+  },
+  "plugins": {
+    "entries": {}
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "REPLACE_AT_RUNTIME"
+      }
+    }
+  }
+}
