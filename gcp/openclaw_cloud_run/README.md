@@ -42,6 +42,35 @@ Optional:
 - `OPENCLAW_GATEWAY_BIND` (default `lan`; `loopback` is blocked by entrypoint)
 - `OPENCLAW_CONTROL_UI_ENABLED` (default `false`)
 - `OPENCLAW_PLUGIN_ENTRIES_JSON` or `OPENCLAW_PLUGIN_ENTRIES_JSON_FILE` (future plugin/provider injection hook)
+- `OPENAI_API_KEY` or `OPENAI_API_KEY_FILE` (recommended for OpenAI-compatible provider auth)
+- `GEMINI_API_KEY` or `GEMINI_API_KEY_FILE` (supported alias; used when `OPENAI_API_KEY` is unset)
+- `OPENCLAW_OPENAI_BASE_URL` (default `https://generativelanguage.googleapis.com/v1beta/openai/`)
+- `OPENCLAW_PRIMARY_MODEL` (default `openai/gemini-3.5-flash`)
+- `OPENCLAW_GEMINI_MODEL_ID` (default derived from `OPENCLAW_PRIMARY_MODEL`)
+- `OPENCLAW_GEMINI_MODEL_NAME` (default `Gemini (AI Studio OpenAI Compat)`)
+
+## Gemini API Key Integration (Experimental)
+
+This container now supports Google AI Studio Gemini API keys through OpenClaw's OpenAI-compatible provider path.
+
+- Provider route: `openai/*`
+- Default model: `openai/gemini-3.5-flash`
+- Default base URL: `https://generativelanguage.googleapis.com/v1beta/openai/`
+- Auth key source:
+  - `OPENAI_API_KEY` (preferred)
+  - or `GEMINI_API_KEY` alias when `OPENAI_API_KEY` is not set
+
+Cloud Run recommended secret mapping:
+
+```bash
+--set-secrets OPENAI_API_KEY=gemini-api-key-experimental:latest
+```
+
+or:
+
+```bash
+--set-secrets GEMINI_API_KEY=gemini-api-key-experimental:latest
+```
 
 ## Local Build
 

@@ -20,7 +20,29 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "REPLACE_AT_RUNTIME"
+        "primary": "openai/gemini-3.5-flash"
+      },
+      "models": {
+        "openai/gemini-3.5-flash": {
+          "alias": "Gemini 3.5 Flash (AI Studio OpenAI Compat)"
+        }
+      }
+    }
+  },
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "openai": {
+        "api": "openai-completions",
+        "baseUrl": "https://generativelanguage.googleapis.com/v1beta/openai/",
+        "apiKey": "REPLACE_AT_RUNTIME",
+        "models": [
+          {
+            "id": "gemini-3.5-flash",
+            "name": "Gemini 3.5 Flash (AI Studio OpenAI Compat)",
+            "input": ["text", "image"]
+          }
+        ]
       }
     }
   }

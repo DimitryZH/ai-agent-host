@@ -63,6 +63,10 @@ export OPENCLAW_GATEWAY_BIND="${OPENCLAW_GATEWAY_BIND:-lan}"
 export OPENCLAW_GATEWAY_AUTH_MODE="${OPENCLAW_GATEWAY_AUTH_MODE:-token}"
 export OPENCLAW_GATEWAY_PORT="${PORT:-8080}"
 export OPENCLAW_CONTROL_UI_ENABLED="${OPENCLAW_CONTROL_UI_ENABLED:-false}"
+export OPENCLAW_PRIMARY_MODEL="${OPENCLAW_PRIMARY_MODEL:-openai/gemini-3.5-flash}"
+export OPENCLAW_OPENAI_BASE_URL="${OPENCLAW_OPENAI_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai/}"
+export OPENCLAW_GEMINI_MODEL_ID="${OPENCLAW_GEMINI_MODEL_ID:-${OPENCLAW_PRIMARY_MODEL#openai/}}"
+export OPENCLAW_GEMINI_MODEL_NAME="${OPENCLAW_GEMINI_MODEL_NAME:-Gemini (AI Studio OpenAI Compat)}"
 
 [[ -f "${OPENCLAW_CONFIG_TEMPLATE}" ]] || fail "Config template not found: ${OPENCLAW_CONFIG_TEMPLATE}"
 [[ "${OPENCLAW_GATEWAY_PORT}" =~ ^[0-9]+$ ]] || fail "PORT must be numeric. Received: ${OPENCLAW_GATEWAY_PORT}"
@@ -75,6 +79,12 @@ fi
 OPENCLAW_GATEWAY_TOKEN="$(read_secret OPENCLAW_GATEWAY_TOKEN)"
 OPENCLAW_GATEWAY_PASSWORD="$(read_secret OPENCLAW_GATEWAY_PASSWORD)"
 OPENCLAW_PLUGIN_ENTRIES_JSON="$(read_secret OPENCLAW_PLUGIN_ENTRIES_JSON)"
+OPENAI_API_KEY="$(read_secret OPENAI_API_KEY)"
+GEMINI_API_KEY="$(read_secret GEMINI_API_KEY)"
+
+if [[ -z "${OPENAI_API_KEY}" && -n "${GEMINI_API_KEY}" ]]; then
+  OPENAI_API_KEY="${GEMINI_API_KEY}"
+fi
 
 if [[ "${OPENCLAW_GATEWAY_AUTH_MODE}" == "token" && -z "${OPENCLAW_GATEWAY_TOKEN}" ]]; then
   fail "OPENCLAW_GATEWAY_TOKEN (or OPENCLAW_GATEWAY_TOKEN_FILE) is required when OPENCLAW_GATEWAY_AUTH_MODE=token."
@@ -82,6 +92,10 @@ fi
 
 if [[ "${OPENCLAW_GATEWAY_AUTH_MODE}" == "password" && -z "${OPENCLAW_GATEWAY_PASSWORD}" ]]; then
   fail "OPENCLAW_GATEWAY_PASSWORD (or OPENCLAW_GATEWAY_PASSWORD_FILE) is required when OPENCLAW_GATEWAY_AUTH_MODE=password."
+fi
+
+if [[ -z "${OPENAI_API_KEY}" ]]; then
+  fail "OPENAI_API_KEY (or OPENAI_API_KEY_FILE) is required. GEMINI_API_KEY (or GEMINI_API_KEY_FILE) is also supported as an alias."
 fi
 
 if [[ -z "${OPENCLAW_PLUGIN_ENTRIES_JSON}" ]]; then
@@ -102,6 +116,11 @@ jq \
   --arg auth_mode "${OPENCLAW_GATEWAY_AUTH_MODE}" \
   --arg token "${OPENCLAW_GATEWAY_TOKEN}" \
   --arg password "${OPENCLAW_GATEWAY_PASSWORD}" \
+  --arg primary_model "${OPENCLAW_PRIMARY_MODEL}" \
+  --arg openai_base_url "${OPENCLAW_OPENAI_BASE_URL}" \
+  --arg openai_api_key "${OPENAI_API_KEY}" \
+  --arg gemini_model_id "${OPENCLAW_GEMINI_MODEL_ID}" \
+  --arg gemini_model_name "${OPENCLAW_GEMINI_MODEL_NAME}" \
   --argjson control_ui_enabled "${OPENCLAW_CONTROL_UI_ENABLED_JSON}" \
   --argjson plugin_entries "${OPENCLAW_PLUGIN_ENTRIES_JSON}" \
   '
@@ -112,6 +131,18 @@ jq \
   | .gateway.auth.mode = $auth_mode
   | .gateway.auth.token = (if $auth_mode == "token" then $token else "" end)
   | .gateway.auth.password = (if $auth_mode == "password" then $password else "" end)
+  | .agents.defaults.model.primary = $primary_model
+  | .models.mode = "merge"
+  | .models.providers.openai.api = "openai-completions"
+  | .models.providers.openai.baseUrl = $openai_base_url
+  | .models.providers.openai.apiKey = $openai_api_key
+  | .models.providers.openai.models = [
+      {
+        "id": $gemini_model_id,
+        "name": $gemini_model_name,
+        "input": ["text", "image"]
+      }
+    ]
   | .plugins.entries = ((.plugins.entries // {}) + $plugin_entries)
   ' \
   "${OPENCLAW_CONFIG_TEMPLATE}" > "${OPENCLAW_CONFIG_PATH}"
