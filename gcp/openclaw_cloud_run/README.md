@@ -27,6 +27,9 @@ This is intentionally separate from `gcp/cloud_run/`:
 - `Dockerfile`: Node-based image + pinned OpenClaw install + non-root runtime user.
 - `entrypoint.sh`: strict startup wrapper that renders runtime config and starts Gateway.
 - `config/openclaw.template.json`: non-sensitive template with placeholder values.
+- `scripts/deploy_onboarding_ui.sh`: build + deploy temporary IAM-protected UI onboarding revision.
+- `scripts/disable_onboarding_ui.sh`: rollback helper to disable Control UI.
+- `scripts/validate_post_onboarding.sh`: authenticated probe helper after onboarding.
 
 ## Runtime Inputs
 
@@ -41,13 +44,18 @@ Optional:
 - `OPENCLAW_GATEWAY_PASSWORD` or `OPENCLAW_GATEWAY_PASSWORD_FILE` (required only when auth mode is `password`)
 - `OPENCLAW_GATEWAY_BIND` (default `lan`; `loopback` is blocked by entrypoint)
 - `OPENCLAW_CONTROL_UI_ENABLED` (default `false`)
+- `OPENCLAW_CONTROL_UI_ALLOWED_ORIGINS_JSON` or `OPENCLAW_CONTROL_UI_ALLOWED_ORIGINS_JSON_FILE` (optional JSON array of allowed UI origins; when UI is enabled and this is unset, runtime defaults to `["http://127.0.0.1:PORT","http://localhost:PORT"]`)
 - `OPENCLAW_PLUGIN_ENTRIES_JSON` or `OPENCLAW_PLUGIN_ENTRIES_JSON_FILE` (future plugin/provider injection hook)
 - `OPENAI_API_KEY` or `OPENAI_API_KEY_FILE` (recommended for OpenAI-compatible provider auth)
 - `GEMINI_API_KEY` or `GEMINI_API_KEY_FILE` (supported alias; used when `OPENAI_API_KEY` is unset)
+- `GOOGLE_API_KEY` or `GOOGLE_API_KEY_FILE` (supported alias for native Google provider auth)
 - `OPENCLAW_OPENAI_BASE_URL` (default `https://generativelanguage.googleapis.com/v1beta/openai/`)
 - `OPENCLAW_PRIMARY_MODEL` (default `openai/gemini-3.5-flash`)
-- `OPENCLAW_GEMINI_MODEL_ID` (default derived from `OPENCLAW_PRIMARY_MODEL`)
-- `OPENCLAW_GEMINI_MODEL_NAME` (default `Gemini (AI Studio OpenAI Compat)`)
+- `OPENCLAW_OPENAI_MODEL_ID` (default `gemini-3.5-flash`)
+- `OPENCLAW_OPENAI_MODEL_NAME` (default `Gemini (AI Studio OpenAI Compat)`)
+- `OPENCLAW_GOOGLE_BASE_URL` (default `https://generativelanguage.googleapis.com/v1beta`)
+- `OPENCLAW_GOOGLE_MODEL_ID` (default `gemini-2.5-flash`)
+- `OPENCLAW_GOOGLE_MODEL_NAME` (default `Gemini (Native Google API)`)
 
 ## Gemini API Key Integration (Experimental)
 
@@ -60,6 +68,16 @@ This container now supports Google AI Studio Gemini API keys through OpenClaw's 
   - `OPENAI_API_KEY` (preferred)
   - or `GEMINI_API_KEY` alias when `OPENAI_API_KEY` is not set
 
+This runtime also renders a native OpenClaw `google` provider path in parallel:
+
+- Provider route: `google/*`
+- Default native model: `google/gemini-2.5-flash`
+- Default base URL: `https://generativelanguage.googleapis.com/v1beta`
+- Auth key source:
+  - `GEMINI_API_KEY`
+  - or `GOOGLE_API_KEY`
+  - fallback to `OPENAI_API_KEY` if neither native key alias is set
+
 Cloud Run recommended secret mapping:
 
 ```bash
@@ -70,6 +88,72 @@ or:
 
 ```bash
 --set-secrets GEMINI_API_KEY=gemini-api-key-experimental:latest
+```
+
+## Controlled UI Onboarding Mode (IAM Protected)
+
+Use this only as a temporary onboarding mode to initialize identity/workspace state.
+
+Security posture remains:
+
+- Cloud Run IAM restricted (`--no-allow-unauthenticated`)
+- gateway token auth enabled
+- `max-instances=1`
+- no public anonymous access
+
+### Deploy UI-Enabled Revision
+
+From repo root:
+
+```bash
+bash gcp/openclaw_cloud_run/scripts/deploy_onboarding_ui.sh
+```
+
+This script:
+
+1. builds/pushes image tag `onboarding-ui-YYYYMMDDTHHMMSSZ`
+2. deploys `openclaw-runtime-experimental`
+3. sets `OPENCLAW_CONTROL_UI_ENABLED=true`
+4. preserves IAM restriction and `max-instances=1`
+
+### Access UI Safely
+
+Direct browser access to an IAM-protected Cloud Run URL is not the recommended onboarding path.
+Use local IAM proxying:
+
+```bash
+gcloud run services proxy openclaw-runtime-experimental \
+  --project=ai-agent-host-497515 \
+  --region=us-central1 \
+  --port=8080
+```
+
+Then open:
+
+- `http://127.0.0.1:8080/`
+- if needed, `http://127.0.0.1:8080/__openclaw__/control-ui-config.json` (diagnostic check)
+
+Gateway auth still applies. Use the configured gateway token when prompted by the UI/auth flow.
+
+### Roll Back To Headless
+
+```bash
+bash gcp/openclaw_cloud_run/scripts/disable_onboarding_ui.sh
+```
+
+Equivalent command:
+
+```bash
+gcloud run services update openclaw-runtime-experimental \
+  --project=ai-agent-host-497515 \
+  --region=us-central1 \
+  --update-env-vars OPENCLAW_CONTROL_UI_ENABLED=false
+```
+
+### Post-Onboarding Validation
+
+```bash
+bash gcp/openclaw_cloud_run/scripts/validate_post_onboarding.sh
 ```
 
 ## Local Build
@@ -102,9 +186,9 @@ docker run --rm \
 
 ## Expected Limitations
 
-- Control UI is disabled by default and not validated in this phase.
-- Durable state is not implemented; local container writes are ephemeral.
-- Provider integrations (Gemini/Vertex/etc.) are not configured yet.
+- Control UI is disabled by default; enabling it is an explicit temporary onboarding mode.
+- Durable state is not implemented; Cloud Run local filesystem writes are ephemeral.
+- Native Google/Gemini provider path works, but OpenAI-compatible Gemini route remains an active compatibility gap.
 - Cloud Run deployment wiring (Terraform/service variables) is intentionally deferred.
 - Exact production command/config tuning for OpenClaw Gateway still needs runtime verification.
 
