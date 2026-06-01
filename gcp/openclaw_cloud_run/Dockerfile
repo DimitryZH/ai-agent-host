@@ -1,7 +1,9 @@
 FROM node:24-bookworm-slim
 
+ARG OPENCLAW_VERSION=2026.4.21
+
 ENV DEBIAN_FRONTEND=noninteractive \
-    OPENCLAW_VERSION=2026.4.21 \
+    OPENCLAW_VERSION=${OPENCLAW_VERSION} \
     OPENCLAW_HOME=/home/openclaw \
     OPENCLAW_STATE_DIR=/var/lib/openclaw/state \
     OPENCLAW_RUNTIME_DIR=/var/lib/openclaw/runtime \

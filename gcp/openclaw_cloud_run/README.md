@@ -25,6 +25,7 @@ This is intentionally separate from `gcp/cloud_run/`:
 ## Files
 
 - `Dockerfile`: Node-based image + pinned OpenClaw install + non-root runtime user.
+- `cloudbuild.versioned.yaml`: Cloud Build config for pinned image builds with explicit `OPENCLAW_VERSION` override.
 - `entrypoint.sh`: strict startup wrapper that renders runtime config and starts Gateway.
 - `config/openclaw.template.json`: non-sensitive template with placeholder values.
 - `scripts/deploy_onboarding_ui.sh`: build + deploy temporary IAM-protected UI onboarding revision.
@@ -160,6 +161,24 @@ bash gcp/openclaw_cloud_run/scripts/validate_post_onboarding.sh
 
 ```bash
 docker build -t openclaw-cloud-run:local ./gcp/openclaw_cloud_run
+```
+
+Build with an explicit OpenClaw version override:
+
+```bash
+docker build \
+  --build-arg OPENCLAW_VERSION=2026.5.27 \
+  -t openclaw-cloud-run:openclaw-2026-5-27 \
+  ./gcp/openclaw_cloud_run
+```
+
+Cloud Build equivalent:
+
+```bash
+gcloud builds submit gcp/openclaw_cloud_run \
+  --project ai-agent-host-497515 \
+  --config gcp/openclaw_cloud_run/cloudbuild.versioned.yaml \
+  --substitutions _IMAGE_URI=us-central1-docker.pkg.dev/ai-agent-host-497515/ai-agent-runtime/openclaw-cloud-run:openclaw-2026-5-27,_OPENCLAW_VERSION=2026.5.27
 ```
 
 ## Local Run
