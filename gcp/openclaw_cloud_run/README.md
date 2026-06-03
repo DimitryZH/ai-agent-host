@@ -47,6 +47,7 @@ Optional:
 - `OPENCLAW_CONTROL_UI_ENABLED` (default `false`)
 - `OPENCLAW_CONTROL_UI_ALLOWED_ORIGINS_JSON` or `OPENCLAW_CONTROL_UI_ALLOWED_ORIGINS_JSON_FILE` (optional JSON array of allowed UI origins; when UI is enabled and this is unset, runtime defaults to `["http://127.0.0.1:PORT","http://localhost:PORT"]`)
 - `OPENCLAW_PLUGIN_ENTRIES_JSON` or `OPENCLAW_PLUGIN_ENTRIES_JSON_FILE` (future plugin/provider injection hook)
+- `OPENCLAW_MCP_SERVERS_JSON` or `OPENCLAW_MCP_SERVERS_JSON_FILE` (optional JSON object for OpenClaw-managed MCP server definitions)
 - `OPENAI_API_KEY` or `OPENAI_API_KEY_FILE` (recommended for OpenAI-compatible provider auth)
 - `GEMINI_API_KEY` or `GEMINI_API_KEY_FILE` (supported alias; used when `OPENAI_API_KEY` is unset)
 - `GOOGLE_API_KEY` or `GOOGLE_API_KEY_FILE` (supported alias for native Google provider auth)
@@ -90,6 +91,57 @@ or:
 ```bash
 --set-secrets GEMINI_API_KEY=gemini-api-key-experimental:latest
 ```
+
+## GitHub Read-Only Repository Access (Prepared)
+
+This container can load OpenClaw-managed MCP server definitions from Secret Manager through `OPENCLAW_MCP_SERVERS_JSON`.
+
+For GitHub repository read-only access, prefer the official GitHub MCP server with read-only mode enabled and a repository-scoped credential. Keep the token out of repository files.
+
+Recommended Secret Manager inputs:
+
+- `openclaw-github-readonly-token-experimental`: GitHub credential with read-only access only.
+- `openclaw-mcp-servers-experimental`: MCP server definition JSON.
+
+Example MCP server definition shape, assuming a Cloud Run-compatible `github-mcp-server` command is packaged into the image:
+
+```json
+{
+  "github": {
+    "command": "github-mcp-server",
+    "args": [
+      "stdio"
+    ],
+    "env": {
+      "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}",
+      "GITHUB_READ_ONLY": "1",
+      "GITHUB_TOOLSETS": "repos"
+    }
+  }
+}
+```
+
+Do not use Docker-in-Docker for this Cloud Run service. If the selected GitHub MCP distribution only supports Docker on the operator machine, package a Cloud Run-compatible binary or use a remote MCP endpoint instead.
+
+Cloud Run secret mapping pattern:
+
+```bash
+--set-secrets OPENCLAW_MCP_SERVERS_JSON=openclaw-mcp-servers-experimental:latest
+```
+
+If the MCP server needs a separate token environment variable at runtime, inject it from Secret Manager as well:
+
+```bash
+--set-secrets GITHUB_PERSONAL_ACCESS_TOKEN=openclaw-github-readonly-token-experimental:latest
+```
+
+Read-only requirements:
+
+- Scope access only to `DimitryZH/ai-agent-host` and `DimitryZH/compose-to-aspire-demo`.
+- Do not grant access to `DimitryZH/ai-operations-platform` for Phase 0.1.
+- Grant repository contents read access only.
+- Do not grant contents write, pull requests write, issues write, actions write, repository administration, organization administration, or secret management permissions.
+- Keep `GITHUB_READ_ONLY=1` enabled for this phase.
 
 ## Controlled UI Onboarding Mode (IAM Protected)
 

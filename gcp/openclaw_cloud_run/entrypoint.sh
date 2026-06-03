@@ -91,6 +91,7 @@ fi
 OPENCLAW_GATEWAY_TOKEN="$(read_secret OPENCLAW_GATEWAY_TOKEN)"
 OPENCLAW_GATEWAY_PASSWORD="$(read_secret OPENCLAW_GATEWAY_PASSWORD)"
 OPENCLAW_PLUGIN_ENTRIES_JSON="$(read_secret OPENCLAW_PLUGIN_ENTRIES_JSON)"
+OPENCLAW_MCP_SERVERS_JSON="$(read_secret OPENCLAW_MCP_SERVERS_JSON)"
 OPENCLAW_CONTROL_UI_ALLOWED_ORIGINS_JSON="$(read_secret OPENCLAW_CONTROL_UI_ALLOWED_ORIGINS_JSON)"
 OPENAI_API_KEY="$(read_secret OPENAI_API_KEY)"
 GEMINI_API_KEY="$(read_secret GEMINI_API_KEY)"
@@ -122,6 +123,12 @@ if [[ -z "${OPENCLAW_PLUGIN_ENTRIES_JSON}" ]]; then
   OPENCLAW_PLUGIN_ENTRIES_JSON='{}'
 else
   validate_object_json "OPENCLAW_PLUGIN_ENTRIES_JSON" "${OPENCLAW_PLUGIN_ENTRIES_JSON}"
+fi
+
+if [[ -z "${OPENCLAW_MCP_SERVERS_JSON}" ]]; then
+  OPENCLAW_MCP_SERVERS_JSON='{}'
+else
+  validate_object_json "OPENCLAW_MCP_SERVERS_JSON" "${OPENCLAW_MCP_SERVERS_JSON}"
 fi
 
 OPENCLAW_CONTROL_UI_ENABLED_JSON="$(normalize_bool "${OPENCLAW_CONTROL_UI_ENABLED}")"
@@ -158,6 +165,7 @@ jq \
   --argjson control_ui_enabled "${OPENCLAW_CONTROL_UI_ENABLED_JSON}" \
   --argjson control_ui_allowed_origins "${OPENCLAW_CONTROL_UI_ALLOWED_ORIGINS_JSON}" \
   --argjson plugin_entries "${OPENCLAW_PLUGIN_ENTRIES_JSON}" \
+  --argjson mcp_servers "${OPENCLAW_MCP_SERVERS_JSON}" \
   '
   .gateway.mode = "local"
   | .gateway.port = $port
@@ -202,6 +210,7 @@ jq \
       }
     })
   | .plugins.entries = ((.plugins.entries // {}) + $plugin_entries)
+  | .mcp.servers = ((.mcp.servers // {}) + $mcp_servers)
   ' \
   "${OPENCLAW_CONFIG_TEMPLATE}" > "${OPENCLAW_CONFIG_PATH}"
 

@@ -27,6 +27,9 @@
   "plugins": {
     "entries": {}
   },
+  "mcp": {
+    "servers": {}
+  },
   "skills": {
     "allowBundled": []
   },
