@@ -12,4 +12,4 @@ images:
   - ${_IMAGE_URI}
 
 substitutions:
-  _OPENCLAW_VERSION: "2026.4.21"
+  _OPENCLAW_VERSION: "2026.5.27"

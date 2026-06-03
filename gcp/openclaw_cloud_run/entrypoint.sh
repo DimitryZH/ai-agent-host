@@ -68,6 +68,7 @@ export OPENCLAW_CONFIG_TEMPLATE="${OPENCLAW_CONFIG_TEMPLATE:-/opt/openclaw/confi
 export OPENCLAW_CONFIG_PATH="${OPENCLAW_CONFIG_PATH:-/var/lib/openclaw/runtime/openclaw.json}"
 export OPENCLAW_STATE_DIR="${OPENCLAW_STATE_DIR:-/var/lib/openclaw/state}"
 export OPENCLAW_RUNTIME_DIR="${OPENCLAW_RUNTIME_DIR:-/var/lib/openclaw/runtime}"
+export OPENCLAW_WORKSPACE_DIR="${OPENCLAW_WORKSPACE_DIR:-${OPENCLAW_STATE_DIR}/workspace}"
 export OPENCLAW_GATEWAY_BIND="${OPENCLAW_GATEWAY_BIND:-lan}"
 export OPENCLAW_GATEWAY_AUTH_MODE="${OPENCLAW_GATEWAY_AUTH_MODE:-token}"
 export OPENCLAW_GATEWAY_PORT="${PORT:-8080}"
@@ -93,6 +94,8 @@ OPENCLAW_GATEWAY_PASSWORD="$(read_secret OPENCLAW_GATEWAY_PASSWORD)"
 OPENCLAW_PLUGIN_ENTRIES_JSON="$(read_secret OPENCLAW_PLUGIN_ENTRIES_JSON)"
 OPENCLAW_MCP_SERVERS_JSON="$(read_secret OPENCLAW_MCP_SERVERS_JSON)"
 OPENCLAW_CONTROL_UI_ALLOWED_ORIGINS_JSON="$(read_secret OPENCLAW_CONTROL_UI_ALLOWED_ORIGINS_JSON)"
+GH_TOKEN_VALUE="$(read_secret GH_TOKEN)"
+GITHUB_TOKEN_VALUE="$(read_secret GITHUB_TOKEN)"
 OPENAI_API_KEY="$(read_secret OPENAI_API_KEY)"
 GEMINI_API_KEY="$(read_secret GEMINI_API_KEY)"
 GOOGLE_API_KEY="$(read_secret GOOGLE_API_KEY)"
@@ -145,6 +148,28 @@ fi
 
 install -d -m 0750 "${OPENCLAW_RUNTIME_DIR}"
 install -d -m 0750 "${OPENCLAW_STATE_DIR}"
+install -d -m 0750 "${OPENCLAW_WORKSPACE_DIR}"
+
+for bootstrap_file in AGENTS.md SOUL.md BOOTSTRAP.md; do
+  if [[ -f "/opt/openclaw/workspace/${bootstrap_file}" && ! -f "${OPENCLAW_WORKSPACE_DIR}/${bootstrap_file}" ]]; then
+    cp "/opt/openclaw/workspace/${bootstrap_file}" "${OPENCLAW_WORKSPACE_DIR}/${bootstrap_file}"
+  fi
+done
+
+GITHUB_CLI_TOKEN="${GH_TOKEN_VALUE:-${GITHUB_TOKEN_VALUE:-}}"
+if [[ -n "${GITHUB_CLI_TOKEN}" ]]; then
+  export GH_TOKEN="${GITHUB_CLI_TOKEN}"
+  export GITHUB_TOKEN="${GITHUB_CLI_TOKEN}"
+  export GH_CONFIG_DIR="${GH_CONFIG_DIR:-${OPENCLAW_HOME}/.config/gh}"
+  install -d -m 0700 "${GH_CONFIG_DIR}"
+  cat > "${GH_CONFIG_DIR}/hosts.yml" <<EOF
+github.com:
+    oauth_token: ${GITHUB_CLI_TOKEN}
+    user: x-access-token
+    git_protocol: https
+EOF
+  chmod 0600 "${GH_CONFIG_DIR}/hosts.yml"
+fi
 
 log "Rendering runtime config at ${OPENCLAW_CONFIG_PATH}"
 jq \
@@ -153,6 +178,7 @@ jq \
   --arg auth_mode "${OPENCLAW_GATEWAY_AUTH_MODE}" \
   --arg token "${OPENCLAW_GATEWAY_TOKEN}" \
   --arg password "${OPENCLAW_GATEWAY_PASSWORD}" \
+  --arg workspace_dir "${OPENCLAW_WORKSPACE_DIR}" \
   --arg primary_model "${OPENCLAW_PRIMARY_MODEL}" \
   --arg openai_base_url "${OPENCLAW_OPENAI_BASE_URL}" \
   --arg openai_api_key "${OPENAI_API_KEY}" \
@@ -175,6 +201,7 @@ jq \
   | .gateway.auth.mode = $auth_mode
   | .gateway.auth.token = (if $auth_mode == "token" then $token else "" end)
   | .gateway.auth.password = (if $auth_mode == "password" then $password else "" end)
+  | .agents.defaults.workspace = $workspace_dir
   | .agents.defaults.model.primary = $primary_model
   | .models.mode = "merge"
   | .models.providers.openai.api = "openai-completions"

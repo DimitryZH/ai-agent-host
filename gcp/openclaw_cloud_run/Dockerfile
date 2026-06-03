@@ -1,6 +1,6 @@
 FROM node:24-bookworm-slim
 
-ARG OPENCLAW_VERSION=2026.4.21
+ARG OPENCLAW_VERSION=2026.5.27
 
 ENV DEBIAN_FRONTEND=noninteractive \
     OPENCLAW_VERSION=${OPENCLAW_VERSION} \
@@ -20,19 +20,31 @@ RUN apt-get update \
         tini \
     && rm -rf /var/lib/apt/lists/*
 
+RUN mkdir -p -m 0755 /etc/apt/keyrings \
+    && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg -o /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends gh \
+    && gh --version \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN curl -fsSL --proto '=https' --tlsv1.2 https://openclaw.ai/install.sh \
     | bash -s -- --no-onboard --install-method npm --version "${OPENCLAW_VERSION}" \
     && openclaw --version
 
 RUN groupadd --system --gid 10001 openclaw \
     && useradd --system --uid 10001 --gid openclaw --create-home --home-dir "${OPENCLAW_HOME}" --shell /usr/sbin/nologin openclaw \
+    && install -d -o openclaw -g openclaw -m 0700 "${OPENCLAW_HOME}/.openclaw" \
     && install -d -o openclaw -g openclaw -m 0750 /var/lib/openclaw \
     && install -d -o openclaw -g openclaw -m 0750 "${OPENCLAW_STATE_DIR}" \
     && install -d -o openclaw -g openclaw -m 0750 "${OPENCLAW_RUNTIME_DIR}" \
     && install -d -o openclaw -g openclaw -m 0750 /opt/openclaw/config \
     && chown -R openclaw:openclaw /usr/local/lib/node_modules/openclaw/dist/extensions
 
-COPY config/openclaw.template.json /opt/openclaw/config/openclaw.template.json
+COPY --chown=openclaw:openclaw config/openclaw.template.json /opt/openclaw/config/openclaw.template.json
+COPY --chown=openclaw:openclaw config/exec-approvals.github-readonly.json /home/openclaw/.openclaw/exec-approvals.json
+COPY --chown=openclaw:openclaw workspace/ /opt/openclaw/workspace/
 COPY entrypoint.sh /usr/local/bin/openclaw-cloud-run-entrypoint.sh
 
 RUN chmod 0755 /usr/local/bin/openclaw-cloud-run-entrypoint.sh \

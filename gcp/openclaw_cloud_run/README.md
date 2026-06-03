@@ -58,6 +58,7 @@ Optional:
 - `OPENCLAW_GOOGLE_BASE_URL` (default `https://generativelanguage.googleapis.com/v1beta`)
 - `OPENCLAW_GOOGLE_MODEL_ID` (default `gemini-2.5-flash`)
 - `OPENCLAW_GOOGLE_MODEL_NAME` (default `Gemini (Native Google API)`)
+- `GH_TOKEN` or `GITHUB_TOKEN` (optional GitHub CLI token; use only read-only scoped credentials in this phase)
 
 ## Gemini API Key Integration (Experimental)
 
@@ -94,7 +95,66 @@ or:
 
 ## GitHub Read-Only Repository Access (Prepared)
 
-This container can load OpenClaw-managed MCP server definitions from Secret Manager through `OPENCLAW_MCP_SERVERS_JSON`.
+The simple supported path for OpenClaw 2026.5.27 is the bundled `github` skill backed by GitHub CLI (`gh`).
+
+This image installs `gh` and exposes only the bundled `github` skill by default. Use a read-only fine-grained PAT through `GH_TOKEN` or `GITHUB_TOKEN`; do not run interactive `gh auth login` in the container.
+
+At startup, the entrypoint writes an ephemeral GitHub CLI `hosts.yml` under the non-root OpenClaw home directory from the Secret Manager-provided token. This is required because OpenClaw exec runs may not inherit token environment variables. The file is mode `0600`, exists only inside the running container filesystem, and must contain only a read-only token.
+
+The runtime enables only the `exec` tool for this path, with gateway-host exec policy set to allowlist mode. The baked approval policy allows `gh` read commands for only:
+
+- `DimitryZH/ai-agent-host`
+- `DimitryZH/compose-to-aspire-demo`
+
+It does not allow shell pipelines, redirection, file mutation tools, branch creation, PR creation, issue creation, or arbitrary commands.
+
+Recommended Secret Manager input:
+
+- `openclaw-github-readonly-token-experimental`: GitHub fine-grained PAT with read-only access only.
+
+Cloud Run secret mapping pattern:
+
+```bash
+--set-secrets GH_TOKEN=openclaw-github-readonly-token-experimental:latest,GITHUB_TOKEN=openclaw-github-readonly-token-experimental:latest
+```
+
+Read-only validation commands:
+
+```bash
+gh repo view DimitryZH/ai-agent-host --json name,description,defaultBranchRef,owner
+gh api repos/DimitryZH/ai-agent-host/contents/README.md --jq '.name,.path,.download_url'
+gh repo view DimitryZH/compose-to-aspire-demo --json name,description,defaultBranchRef,owner
+gh api repos/DimitryZH/compose-to-aspire-demo/contents/README.md --jq '.name,.path,.download_url'
+```
+
+The PAT must be scoped only to:
+
+- `DimitryZH/ai-agent-host`
+- `DimitryZH/compose-to-aspire-demo`
+
+Do not grant access to `DimitryZH/ai-operations-platform` for Phase 0.1b.
+
+Required GitHub permissions:
+
+- Metadata: read-only
+- Contents: read-only
+
+Forbidden permissions:
+
+- Contents write
+- Pull requests write
+- Issues write
+- Actions/workflows write
+- Administration
+- Secrets
+- Environments
+- Organization permissions
+
+Keep repository writes blocked by credential scope. The bundled `github` skill documents broader `gh` workflows, so the read-only PAT is the enforcement boundary for this phase.
+
+## GitHub MCP Repository Access (Optional)
+
+This container can also load OpenClaw-managed MCP server definitions from Secret Manager through `OPENCLAW_MCP_SERVERS_JSON`.
 
 For GitHub repository read-only access, prefer the official GitHub MCP server with read-only mode enabled and a repository-scoped credential. Keep the token out of repository files.
 

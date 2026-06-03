@@ -31,10 +31,21 @@
     "servers": {}
   },
   "skills": {
-    "allowBundled": []
+    "allowBundled": ["github"]
   },
   "tools": {
-    "allow": []
+    "allow": ["exec"],
+    "deny": ["process", "write", "edit", "apply_patch", "group:fs"],
+    "exec": {
+      "host": "gateway",
+      "security": "allowlist",
+      "ask": "off",
+      "timeoutSec": 30,
+      "strictInlineEval": true,
+      "applyPatch": {
+        "enabled": false
+      }
+    }
   },
   "agents": {
     "defaults": {
@@ -43,6 +54,7 @@
         "transport": "sse",
         "openaiWsWarmup": false
       },
+      "skills": ["github"],
       "model": {
         "primary": "openai/gemini-3.5-flash"
       },
