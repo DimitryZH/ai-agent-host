@@ -43,7 +43,8 @@ RUN groupadd --system --gid 10001 openclaw \
     && chown -R openclaw:openclaw /usr/local/lib/node_modules/openclaw/dist/extensions
 
 COPY --chown=openclaw:openclaw config/openclaw.template.json /opt/openclaw/config/openclaw.template.json
-COPY --chown=openclaw:openclaw config/exec-approvals.github-readonly.json /home/openclaw/.openclaw/exec-approvals.json
+COPY --chown=openclaw:openclaw config/exec-approvals.github-readonly.json /opt/openclaw/config/exec-approvals.github-readonly.json
+COPY --chown=openclaw:openclaw config/exec-approvals.github-pr.json /opt/openclaw/config/exec-approvals.github-pr.json
 COPY --chown=openclaw:openclaw workspace/ /opt/openclaw/workspace/
 COPY entrypoint.sh /usr/local/bin/openclaw-cloud-run-entrypoint.sh
 

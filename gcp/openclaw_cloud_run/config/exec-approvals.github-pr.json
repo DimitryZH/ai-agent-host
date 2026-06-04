@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "defaults": {
+    "security": "allowlist",
+    "ask": "off",
+    "askFallback": "deny",
+    "autoAllowSkills": false
+  },
+  "agents": {
+    "main": {
+      "security": "allowlist",
+      "ask": "off",
+      "askFallback": "deny",
+      "autoAllowSkills": false,
+      "allowlist": [
+        {
+          "id": "5dfd3db7-0402-445b-8eb0-eb63ad08da1a",
+          "pattern": "gh",
+          "argPattern": "^(repo view DimitryZH\\/ai-agent-host( --json name,owner,defaultBranchRef)?|api repos\\/DimitryZH\\/ai-agent-host\\/git\\/ref\\/heads\\/main --jq \\.object\\.sha|api repos\\/DimitryZH\\/ai-agent-host\\/git\\/refs --method POST --field ref=refs\\/heads\\/openclaw\\/pr-validation-[0-9]{8}-[0-9]{6} --field sha=[0-9a-f]{40}|api repos\\/DimitryZH\\/ai-agent-host\\/contents\\/docs\\/openclaw-pr-validation\\.md --method PUT --field message=\"?docs: add OpenClaw PR validation note\"? --field content=IyBPcGVuQ2xhdyBQUiBWYWxpZGF0aW9uCgpUaGlzIGZpbGUgdmFsaWRhdGVzIHRoYXQgT3BlbkNsYXcgY2FuIGNyZWF0ZSBhIGNvbnRyb2xsZWQgZG9jdW1lbnRhdGlvbi1vbmx5IGRyYWZ0IHB1bGwgcmVxdWVzdCB0aHJvdWdoIHRoZSBjb25maWd1cmVkIEdpdEh1YiBpbnRlZ3JhdGlvbi4KCk5vIGluZnJhc3RydWN0dXJlIGNoYW5nZXMgYXJlIGluY2x1ZGVkLgo= --field branch=openclaw\\/pr-validation-[0-9]{8}-[0-9]{6}|pr create --repo DimitryZH\\/ai-agent-host --base main --head openclaw\\/pr-validation-[0-9]{8}-[0-9]{6} --draft --title \"?docs: OpenClaw draft PR validation test\"? --body \"?Validation-only draft PR created by OpenClaw\\. Documentation-only change\\. No infrastructure, secret, runtime, deployment, Terraform, or GitHub Actions changes\\. Manual review required; do not merge automatically\\.\"?)$",
+          "source": "phase-0.2b-draft-pr",
+          "commandText": "controlled draft PR validation for DimitryZH/ai-agent-host"
+        }
+      ]
+    }
+  }
+}

@@ -73,6 +73,7 @@ export OPENCLAW_GATEWAY_BIND="${OPENCLAW_GATEWAY_BIND:-lan}"
 export OPENCLAW_GATEWAY_AUTH_MODE="${OPENCLAW_GATEWAY_AUTH_MODE:-token}"
 export OPENCLAW_GATEWAY_PORT="${PORT:-8080}"
 export OPENCLAW_CONTROL_UI_ENABLED="${OPENCLAW_CONTROL_UI_ENABLED:-false}"
+export OPENCLAW_GITHUB_MODE="${OPENCLAW_GITHUB_MODE:-readonly}"
 export OPENCLAW_PRIMARY_MODEL="${OPENCLAW_PRIMARY_MODEL:-openai/gemini-3.5-flash}"
 export OPENCLAW_OPENAI_BASE_URL="${OPENCLAW_OPENAI_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai/}"
 export OPENCLAW_OPENAI_MODEL_ID="${OPENCLAW_OPENAI_MODEL_ID:-${OPENCLAW_GEMINI_MODEL_ID:-gemini-3.5-flash}}"
@@ -89,6 +90,10 @@ if [[ "${OPENCLAW_GATEWAY_AUTH_MODE}" != "token" && "${OPENCLAW_GATEWAY_AUTH_MOD
   fail "OPENCLAW_GATEWAY_AUTH_MODE must be token or password."
 fi
 
+if [[ "${OPENCLAW_GITHUB_MODE}" != "readonly" && "${OPENCLAW_GITHUB_MODE}" != "pr" ]]; then
+  fail "OPENCLAW_GITHUB_MODE must be readonly or pr."
+fi
+
 OPENCLAW_GATEWAY_TOKEN="$(read_secret OPENCLAW_GATEWAY_TOKEN)"
 OPENCLAW_GATEWAY_PASSWORD="$(read_secret OPENCLAW_GATEWAY_PASSWORD)"
 OPENCLAW_PLUGIN_ENTRIES_JSON="$(read_secret OPENCLAW_PLUGIN_ENTRIES_JSON)"
@@ -96,6 +101,7 @@ OPENCLAW_MCP_SERVERS_JSON="$(read_secret OPENCLAW_MCP_SERVERS_JSON)"
 OPENCLAW_CONTROL_UI_ALLOWED_ORIGINS_JSON="$(read_secret OPENCLAW_CONTROL_UI_ALLOWED_ORIGINS_JSON)"
 GH_TOKEN_VALUE="$(read_secret GH_TOKEN)"
 GITHUB_TOKEN_VALUE="$(read_secret GITHUB_TOKEN)"
+GITHUB_PR_TOKEN_VALUE="$(read_secret GITHUB_PR_TOKEN)"
 OPENAI_API_KEY="$(read_secret OPENAI_API_KEY)"
 GEMINI_API_KEY="$(read_secret GEMINI_API_KEY)"
 GOOGLE_API_KEY="$(read_secret GOOGLE_API_KEY)"
@@ -156,7 +162,20 @@ for bootstrap_file in AGENTS.md SOUL.md BOOTSTRAP.md; do
   fi
 done
 
+OPENCLAW_APPROVALS_SOURCE="/opt/openclaw/config/exec-approvals.github-readonly.json"
 GITHUB_CLI_TOKEN="${GH_TOKEN_VALUE:-${GITHUB_TOKEN_VALUE:-}}"
+if [[ "${OPENCLAW_GITHUB_MODE}" == "pr" ]]; then
+  OPENCLAW_APPROVALS_SOURCE="/opt/openclaw/config/exec-approvals.github-pr.json"
+  [[ -n "${GITHUB_PR_TOKEN_VALUE}" ]] || fail "GITHUB_PR_TOKEN (or GITHUB_PR_TOKEN_FILE) is required when OPENCLAW_GITHUB_MODE=pr."
+  GITHUB_CLI_TOKEN="${GITHUB_PR_TOKEN_VALUE}"
+fi
+
+[[ -f "${OPENCLAW_APPROVALS_SOURCE}" ]] || fail "OpenClaw approval policy not found: ${OPENCLAW_APPROVALS_SOURCE}"
+install -d -m 0700 "${OPENCLAW_HOME}/.openclaw"
+cp "${OPENCLAW_APPROVALS_SOURCE}" "${OPENCLAW_HOME}/.openclaw/exec-approvals.json"
+chmod 0600 "${OPENCLAW_HOME}/.openclaw/exec-approvals.json"
+log "Installed ${OPENCLAW_GITHUB_MODE} GitHub exec approval policy"
+
 if [[ -n "${GITHUB_CLI_TOKEN}" ]]; then
   export GH_TOKEN="${GITHUB_CLI_TOKEN}"
   export GITHUB_TOKEN="${GITHUB_CLI_TOKEN}"
