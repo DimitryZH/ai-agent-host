@@ -10,6 +10,7 @@ This project demonstrates secure, infrastructure-focused deployment patterns for
 - Cloud-native security practices
 - Immutable deployment workflows
 - AI runtime operational hardening
+- Project routing policy for future DevBox ownership: `docs/project-routing-policy.md`
 
 The repository is designed as a bridge between traditional VM-hosted AI runtimes and modern cloud-native AI operations platforms.
 
