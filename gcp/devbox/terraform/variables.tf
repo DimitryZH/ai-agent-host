@@ -64,7 +64,7 @@ variable "network" {
 }
 
 variable "subnetwork" {
-  description = "Optional subnetwork name or self-link. Leave null to attach to the provider default network behavior."
+  description = "Optional subnetwork name or self-link. Leave null to attach to the provider default network behavior. If set, network must reference the parent VPC for the firewall rule."
   type        = string
   default     = null
 }
@@ -100,16 +100,24 @@ variable "devbox_service_account_roles" {
     "roles/logging.logWriter",
     "roles/monitoring.metricWriter"
   ]
+
+  validation {
+    condition = alltrue([
+      for role in var.devbox_service_account_roles :
+      !contains(["roles/owner", "roles/editor"], lower(role))
+    ])
+    error_message = "Do not grant Owner or Editor to the DevBox service account."
+  }
 }
 
 variable "operator_iam_members" {
-  description = "IAM members allowed to connect through IAP and use OS Login, for example user:person@example.com."
+  description = "IAM members allowed to connect through IAP and use standard OS Login, for example user:person@example.com."
   type        = list(string)
   default     = []
 }
 
 variable "admin_iam_members" {
-  description = "IAM members granted OS Admin Login. Keep empty unless admin access is explicitly approved."
+  description = "IAM members granted OS Admin Login and IAP tunnel access. Keep empty unless admin access is explicitly approved."
   type        = list(string)
   default     = []
 }

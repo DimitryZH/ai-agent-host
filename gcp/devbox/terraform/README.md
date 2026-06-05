@@ -11,6 +11,7 @@ The skeleton models:
 - dedicated VM service account
 - minimal service account IAM roles
 - operator OS Login and IAP IAM bindings
+- admin OS Login members with IAP tunnel access
 - OS Login metadata
 - blocked project SSH keys
 - Shielded VM settings
@@ -42,3 +43,14 @@ terraform validate
 ```
 
 Use `terraform.tfvars.example` as a reference only. Do not commit a real `terraform.tfvars`.
+
+## Plan Inputs
+
+Before running `terraform plan`, confirm:
+
+- `project_id`, `region`, and `zone`
+- parent VPC `network` and optional `subnetwork`
+- approved `operator_iam_members`
+- approved `admin_iam_members`, if any
+- whether local state is acceptable for this first plan or remote state must be designed first
+- whether the default `e2-standard-2` and 100 GB `pd-balanced` boot disk are still appropriate

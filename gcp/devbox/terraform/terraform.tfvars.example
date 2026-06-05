@@ -17,6 +17,7 @@ operator_iam_members = [
   # "user:developer@example.com"
 ]
 
+# Admin members also receive IAP tunnel access.
 admin_iam_members = [
   # "user:admin@example.com"
 ]

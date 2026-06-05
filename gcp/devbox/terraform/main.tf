@@ -14,6 +14,11 @@ locals {
     },
     var.labels
   )
+
+  iap_iam_members = setunion(
+    toset(var.operator_iam_members),
+    toset(var.admin_iam_members)
+  )
 }
 
 data "google_compute_image" "ubuntu_lts" {
@@ -37,7 +42,7 @@ resource "google_project_iam_member" "devbox_service_account_roles" {
 }
 
 resource "google_project_iam_member" "operator_iap_tunnel" {
-  for_each = toset(var.operator_iam_members)
+  for_each = local.iap_iam_members
 
   project = var.project_id
   role    = "roles/iap.tunnelResourceAccessor"

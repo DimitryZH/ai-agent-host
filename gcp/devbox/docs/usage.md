@@ -23,6 +23,8 @@ terraform plan -var-file=terraform.tfvars
 
 Do not run `terraform apply` without explicit human approval.
 
+Admin IAM members receive OS Admin Login and IAP tunnel access. Standard operator IAM members receive OS Login and IAP tunnel access.
+
 ## Connect Through IAP SSH
 
 After an approved apply creates the VM, use the Terraform output:
