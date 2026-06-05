@@ -1,0 +1,28 @@
+project_id = "ai-agent-host-497515"
+region     = "us-central1"
+zone       = "us-central1-a"
+
+instance_name = "ai-agent-devbox"
+machine_type  = "e2-standard-2"
+
+boot_disk_size_gb = 100
+boot_disk_type    = "pd-balanced"
+
+network     = "default"
+subnetwork  = null
+network_tag = "devbox"
+
+# Add approved users only. Do not use broad groups unless explicitly reviewed.
+operator_iam_members = [
+  # "user:developer@example.com"
+]
+
+admin_iam_members = [
+  # "user:admin@example.com"
+]
+
+labels = {
+  project = "ai-agent-host"
+  env     = "dev"
+  purpose = "devbox"
+}
