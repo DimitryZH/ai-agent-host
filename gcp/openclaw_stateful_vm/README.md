@@ -1,13 +1,24 @@
 # OpenClaw Stateful VM Runtime
 
-This directory contains the Phase 5.3 implementation-preparation skeleton for a
-private, single-writer OpenClaw gateway on Google Cloud.
+This directory contains the production-like GCP runtime preparation for a
+private, single-writer OpenClaw gateway.
 
-It is intentionally separate from `gcp/openclaw_cloud_run/`. The Cloud Run
-implementation remains the validated runtime contract and proof-of-concept.
-This VM architecture replaces only the unsafe ephemeral state model.
+The Terraform skeleton, bootstrap script, and systemd unit are present. A
+reviewed Terraform plan has been generated separately as internal project
+evidence, but no `terraform apply` has been performed from this folder. No VM,
+disk, network, service account, or MIG resource has been created by this
+runtime yet.
 
-No infrastructure has been deployed by this phase.
+## Purpose
+
+The Cloud Run implementation in `gcp/openclaw_cloud_run/` remains the validated
+runtime contract. It proves the OpenClaw image, startup behavior, Secret
+Manager inputs, Gemini configuration, GitHub controls, and container logging.
+
+This directory prepares the durable runtime path for the state-owning OpenClaw
+gateway. It keeps the validated container contract and replaces the unsafe
+ephemeral state model with a private VM, preserved disk, stateful MIG, and
+state-aware operations model.
 
 ## Architecture
 
@@ -42,55 +53,32 @@ State disk --> daily snapshot policy
 - The existing Artifact Registry image must be pinned by digest.
 - Secret values are fetched at VM service start and written only to
   `/run/openclaw/secrets`.
-- Terraform manages Secret Manager IAM access to named existing secrets, not
-  secret values or secret versions.
-- APIs are documented but are not enabled by this layer.
+- Terraform grants Secret Manager access to named existing secrets, not secret
+  values or secret versions.
+- APIs are documented but are not enabled by this Terraform root.
 
-## Reused from the Cloud Run Runtime
+## How This Differs From Cloud Run
+
+Reused from Cloud Run:
 
 - Artifact Registry repository convention: `ai-agent-runtime`.
-- Existing versioned OpenClaw container and entrypoint contract.
+- Existing OpenClaw container and entrypoint contract.
 - Container port `8080`.
 - Runtime UID/GID `10001:10001`.
-- `OPENCLAW_STATE_DIR`, `OPENCLAW_RUNTIME_DIR`, and config rendering behavior.
-- Native Gemini and OpenAI-compatible Gemini environment variables.
-- `OPENCLAW_GITHUB_MODE=readonly|pr`.
-- Separate controlled PR token and image-baked exec approval policies.
+- OpenClaw state/runtime/workspace environment conventions.
+- Gemini environment variables.
+- `OPENCLAW_GITHUB_MODE=readonly|pr` controls.
+- Separate controlled PR token behavior.
 - Secret Manager-backed runtime credentials.
 - Foreground container logging.
 
-Cloud Run lifecycle assumptions, revisions, invoker IAM, ephemeral state, and
-maximum-instance workarounds are intentionally not reused.
+Not reused from Cloud Run:
 
-## Adapted from the Official OpenClaw GCP Guide
-
-The official guide establishes a useful VM baseline: Docker, persistent host
-state/workspace directories, small VM sizing, and tunnel-based access.
-
-This implementation strengthens that baseline with:
-
-- private networking and no external IP;
-- IAP and OS Login;
-- a stateful MIG instead of an unmanaged VM;
-- a separate preserved state disk;
-- systemd instead of Docker Compose;
-- an immutable Artifact Registry digest;
-- least-privilege runtime IAM;
-- Secret Manager runtime retrieval;
-- Cloud NAT, Ops Agent, autohealing, and snapshot policy;
-- explicit deployment and recovery gates.
-
-## Repository-Specific Decisions
-
-- Keep the current customized OpenClaw image rather than rebuilding upstream on
-  the VM.
-- Keep `readonly` as the default GitHub mode.
-- Require a separate named secret before PR mode can be selected.
-- Use a TCP health check until `/readyz` is proven safe for autohealing.
-- Use `RECREATE`, zero surge, and one unavailable instance during updates so
-  old and new gateway writers cannot overlap.
-- Preserve the data disk with both MIG `delete_rule = NEVER` and Terraform
-  `prevent_destroy`.
+- ephemeral filesystem assumptions;
+- Cloud Run revision and concurrency assumptions;
+- Cloud Run invoker IAM;
+- public Cloud Run URL behavior;
+- maximum-instance settings as a state-safety mechanism.
 
 ## Directory Structure
 
@@ -98,17 +86,33 @@ This implementation strengthens that baseline with:
 gcp/openclaw_stateful_vm/
 |-- README.md
 |-- terraform/
+|   |-- versions.tf
+|   |-- providers.tf
+|   |-- variables.tf
+|   |-- locals.tf
+|   |-- main.tf
+|   |-- network.tf
+|   |-- iam.tf
+|   |-- disk.tf
+|   |-- instance_template.tf
+|   |-- mig.tf
+|   |-- health_check.tf
+|   |-- snapshot_policy.tf
+|   |-- outputs.tf
+|   `-- terraform.tfvars.example
 |-- scripts/
 |   `-- bootstrap-openclaw.sh.tftpl
 |-- systemd/
 |   `-- openclaw.service.tftpl
 `-- docs/
     |-- stateful-vm-implementation-summary.md
-    |-- stateful-vm-deployment-gates.md
     `-- stateful-vm-operations-runbook.md
 ```
 
-## Configuration
+Deployment approval, apply evidence, and gate tracking are maintained
+separately as ignored internal project evidence.
+
+## Configuration Flow
 
 Copy the example only for local planning:
 
@@ -117,40 +121,32 @@ cd gcp/openclaw_stateful_vm/terraform
 cp terraform.tfvars.example terraform.tfvars
 ```
 
-Before any plan, replace:
+Before any approved apply, confirm:
 
 - `project_id`;
-- the placeholder `container_image` with an approved immutable digest;
+- region and zone;
+- immutable `container_image` digest;
 - Secret Manager secret IDs;
-- operator IAM members;
-- zone, network, sizing, and snapshot settings after review.
+- operator and admin IAM members;
+- machine type;
+- network choice;
+- snapshot settings;
+- remote Terraform backend.
 
 Do not place secret values in `terraform.tfvars`.
 
-## Required APIs
+## Terraform Validation
 
-This Terraform layer does not enable APIs. Confirm these APIs before a future
-apply:
-
-```text
-artifactregistry.googleapis.com
-compute.googleapis.com
-iap.googleapis.com
-logging.googleapis.com
-monitoring.googleapis.com
-secretmanager.googleapis.com
-```
-
-## Local Validation
+Safe local validation:
 
 ```bash
-terraform fmt -recursive
+terraform fmt -check -recursive
 terraform init -backend=false
 terraform validate
 ```
 
-Run ShellCheck against a rendered bootstrap script. The source is a Terraform
-template and cannot be passed directly to ShellCheck without rendering its
+Run ShellCheck against a rendered bootstrap script when available. The source
+is a Terraform template and cannot be checked directly without rendering its
 template expressions first.
 
 ## Security Model
@@ -175,11 +171,11 @@ start an IAP tunnel:
 ```bash
 gcloud compute instance-groups managed list-instances openclaw-stateful-mig \
   --project=PROJECT_ID \
-  --zone=us-central1-a
+  --zone=ZONE
 
 gcloud compute start-iap-tunnel INSTANCE_NAME 8080 \
   --project=PROJECT_ID \
-  --zone=us-central1-a \
+  --zone=ZONE \
   --local-host-port=127.0.0.1:18080
 ```
 
@@ -201,26 +197,35 @@ The bootstrap script formats the data disk only when it has no filesystem. It
 mounts the disk by its stable Compute Engine device identifier and creates
 restrictive state/workspace directories owned by `10001:10001`.
 
+## Before Apply
+
+The runtime is not ready for apply until these items are approved:
+
+- remote Terraform backend;
+- operator/admin IAM members;
+- cost review;
+- immutable image digest;
+- required secret IDs;
+- `OPENCLAW_GITHUB_MODE=readonly` as the initial mode;
+- Control UI startup mode;
+- TCP health check;
+- snapshot policy;
+- runtime burn-in procedure;
+- backup/restore acceptance;
+- explicit human approval.
+
 ## Intentionally Deferred
 
-- API enablement.
-- `terraform plan` against a real project.
-- `terraform apply` or resource creation.
-- Remote Terraform backend design.
-- Cloud Run modification or migration.
-- OpenClaw state export or cutover.
-- HTTP application health checks.
-- External HTTPS load balancer or public access.
-- Cloud Storage archive backups.
-- Monitoring alert policies.
+- `terraform apply` and resource creation;
+- API enablement from this Terraform root;
+- Cloud Run modification or migration;
+- OpenClaw state export or cutover;
+- HTTP application health checks for autohealing;
+- external HTTPS load balancer or public access;
+- Cloud Storage archive backups;
+- monitoring alert policies.
 
-## Next Steps
+## Related Documents
 
-Review:
-
-1. `docs/stateful-vm-implementation-summary.md`
-2. `docs/stateful-vm-deployment-gates.md`
-3. `docs/stateful-vm-operations-runbook.md`
-
-Do not apply until every deployment gate is satisfied and explicit human
-approval is recorded.
+- `docs/stateful-vm-implementation-summary.md`
+- `docs/stateful-vm-operations-runbook.md`

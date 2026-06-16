@@ -1,12 +1,12 @@
 # OpenClaw Stateful VM Implementation Summary
 
-**Status:** Terraform skeleton prepared; no plan or apply performed
+**Status:** Terraform skeleton prepared; reviewed plan exists as separate internal evidence; no apply performed
 **Scope:** OpenClaw stateful VM implementation preparation
 **Date:** 2026-06-15
 
 ## Summary
 
-Phase 5.3 creates a reviewable Google Cloud Terraform skeleton and draft
+This directory provides a reviewable Google Cloud Terraform skeleton and draft
 operational files for a private, single-writer OpenClaw gateway.
 
 The skeleton models:
@@ -29,7 +29,7 @@ The skeleton models:
 No APIs, secrets, cloud resources, Cloud Run services, or runtime state were
 created or modified.
 
-## Phase 5.3A Cleanup Review
+## Repository Cleanup
 
 The tracked example configuration is `terraform/terraform.tfvars.example`.
 Operators may copy it to the ignored local file `terraform.tfvars`.
@@ -37,7 +37,6 @@ Operators may copy it to the ignored local file `terraform.tfvars`.
 The tracked implementation documentation uses production-style names:
 
 - `docs/stateful-vm-implementation-summary.md`;
-- `docs/stateful-vm-deployment-gates.md`;
 - `docs/stateful-vm-operations-runbook.md`.
 
 The root-module provider lockfile is retained at
@@ -150,7 +149,7 @@ layer.
 - VM startup retrieval of named secrets without putting values in metadata or
   Terraform state.
 - Separate protected disk plus stateful MIG update fencing.
-- Explicit deployment gates and state-aware operations procedures.
+- Explicit deployment approval records and state-aware operations procedures.
 
 ## Resource and File Decisions
 
@@ -214,7 +213,8 @@ The unit:
 
 ## Required APIs
 
-Required before a future apply, but intentionally not managed in Phase 5.3:
+Required before a future apply, but intentionally not managed by this Terraform
+root:
 
 ```text
 artifactregistry.googleapis.com
@@ -225,7 +225,7 @@ monitoring.googleapis.com
 secretmanager.googleapis.com
 ```
 
-## Validation Commands and Results
+## Validation Status
 
 ```text
 terraform fmt -recursive: passed
@@ -244,17 +244,15 @@ trailing-whitespace scan: passed
 real-token/private-key pattern scan: passed; Secret Manager IDs only
 Cloud Run diff check: passed; no Cloud Run files modified
 shellcheck rendered bootstrap: not run; ShellCheck is not installed
-terraform plan: not run
+terraform plan: generated separately as internal project evidence
 ```
 
 ## Terraform Plan Status
 
-`terraform plan` is intentionally not run in Phase 5.3 because:
+A reviewed plan exists separately as internal project evidence. The tracked
+implementation folder does not store plan output.
 
-- the example image digest is a placeholder;
-- operator identities and final secret names require review;
-- the zone, network, APIs, and Artifact Registry image digest are not approved;
-- no explicit approval was given to use live project credentials for planning.
+No `terraform apply` has been performed.
 
 ## Open Implementation Decisions
 

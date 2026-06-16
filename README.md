@@ -1,229 +1,124 @@
 # AI Agent Host
 
-Multi-cloud Terraform deployment patterns for self-hosted AI agent runtimes on AWS and GCP.
+AI Agent Host is an infrastructure-focused repository for hosting and operating
+self-hosted AI agent runtimes across cloud platforms.
 
-This project demonstrates secure, infrastructure-focused deployment patterns for hosting AI agents using:
+The project focuses on practical platform engineering patterns: immutable
+runtime images, least-privilege identity, private access paths, secret
+isolation, Terraform-managed infrastructure, and operational recovery.
 
-- AWS EC2 + Amazon Bedrock
-- Google Cloud Run + Gemini API
-- Terraform Infrastructure as Code
-- Cloud-native security practices
-- Immutable deployment workflows
-- AI runtime operational hardening
+## Current Direction
 
-The repository is designed as a bridge between traditional VM-hosted AI runtimes and modern cloud-native AI operations platforms.
-
----
-
-# Goals
-
-The project focuses on:
-
-- Self-hosted AI agent runtime deployment
-- Multi-cloud infrastructure patterns
-- Secure AI runtime hosting
-- Terraform-first infrastructure provisioning
-- Cloud-native operational practices
-- Platform evolution toward AI Operations Platforms
-
----
-
-# Architecture Overview
-
-## AWS Deployment Model
+The current OpenClaw workstream has two GCP runtime paths:
 
 ```text
-Terraform
-    ↓
-EC2 Instance
-    ↓
-user_data bootstrap
-    ↓
-Dockerized OpenClaw Runtime
-    ↓
-Amazon Bedrock
+Cloud Run proof-of-concept
+        |
+        v
+Stateful VM runtime preparation
+        |
+        v
+Future controlled apply and burn-in
 ```
 
-Key AWS capabilities:
+The Cloud Run runtime proved the container contract, Gemini integration,
+Secret Manager usage, GitHub controls, Control UI onboarding, and basic
+operational behavior. It remains important because the stateful VM runtime
+reuses that validated image and runtime contract.
 
-- EC2 AI runtime hosting
-- IAM role-based Bedrock access
-- SSM Session Manager access
-- Hardened security groups
-- Persistent runtime storage
-- Encrypted backup support
+Durable-state analysis showed that Cloud Run is not the right production-like
+home for the state-owning OpenClaw gateway today. The stateful VM work adds a
+private Compute Engine architecture with a preserved disk, single-writer
+operation, IAP-only access, and recovery procedures.
 
----
+No stateful VM infrastructure has been applied from this repository yet.
 
-## GCP Deployment Model
+## Repository Map
 
-```text
-GitHub Actions
-        ↓
-Build Container
-        ↓
-Artifact Registry
-        ↓
-Cloud Run Deployment
-        ↓
-AI Agent Runtime
-        ↓
-Gemini API / Vertex AI
-```
+- `gcp/openclaw_cloud_run/` - validated Cloud Run proof-of-concept runtime.
+- `gcp/openclaw_stateful_vm/` - production-like stateful VM runtime
+  preparation.
+- `gcp/devbox/` - GCP engineering workstation preparation.
+- `gcp/terraform/` - earlier GCP Terraform baseline material.
+- `aws/` - AWS runtime infrastructure material.
+- `ROADMAP.md` - high-level project roadmap.
 
-Key GCP capabilities:
+## Runtime Status
 
-- Cloud Run serverless runtime
-- Container-first architecture
-- Secret Manager integration
-- Cloud-native IAM
-- Cloud Logging & Monitoring
-- Stateless runtime deployment
-- Local runtime validation guide: `docs/gcp-cloud-run-runtime.md`
+### GCP Cloud Run
 
----
+Status: validated proof-of-concept.
 
-# Repository Structure
+The Cloud Run implementation demonstrates:
 
-```text
-ai-agent-host/
-├── README.md
-├── docs/
-│   ├── architecture.md
-│   ├── security-model.md
-│   ├── deployment-model.md
-│   ├── backup-restore.md
-│   └── troubleshooting.md
-│
-├── aws/
-│   ├── terraform/
-│   │   ├── main.tf
-│   │   ├── variables.tf
-│   │   ├── outputs.tf
-│   │   └── terraform.tfvars.example
-│   ├── user_data/
-│   │   └── install_openclaw.sh
-│   ├── iam/
-│   └── examples/
-│
-├── gcp/
-│   ├── terraform/
-│   │   ├── main.tf
-│   │   ├── variables.tf
-│   │   ├── outputs.tf
-│   │   └── terraform.tfvars.example
-│   ├── cloud_run/
-│   │   ├── Dockerfile
-│   │   ├── app/
-│   │   └── deploy.sh
-│   ├── startup_scripts/
-│   └── examples/
-│
-├── shared/
-│   ├── hardening/
-│   ├── templates/
-│   └── configs/
-│
-├── .github/
-│   └── workflows/
-│
-└── images/
-```
+- OpenClaw container build and startup contract;
+- Artifact Registry image publishing;
+- Secret Manager integration;
+- Gemini API configuration;
+- GitHub read-only and controlled PR-mode handling;
+- Control UI onboarding;
+- Cloud Logging integration.
 
----
+Cloud Run is still a useful validation target and runtime contract reference,
+but it is not treated as the durable state-owning runtime.
 
-# Security Model
+### GCP Stateful VM
 
-The project follows a least-privilege security approach.
+Status: prepared and planned, not yet applied.
 
-Core principles:
+The stateful VM implementation prepares:
 
-- No public AI dashboards by default
-- Dedicated service accounts and IAM roles
-- Secret isolation through cloud secret managers
-- Read-only operational defaults
-- SSH avoidance where possible
-- Immutable infrastructure deployment patterns
+- private Compute Engine VM through a zonal stateful MIG;
+- MIG target size `1` with no autoscaling;
+- no public VM IP and no public OpenClaw endpoint;
+- IAP TCP forwarding and OS Login access model;
+- separate preserved Persistent Disk for `/var/lib/openclaw`;
+- systemd-managed OpenClaw container;
+- digest-pinned Artifact Registry image;
+- Secret Manager runtime retrieval;
+- Cloud NAT for private outbound access;
+- TCP health check first;
+- daily snapshot policy.
 
----
+The first apply still requires explicit approval, remote state/backend
+decisions, operator IAM approval, cost acceptance, and a burn-in procedure.
 
-# AWS Security Practices
+### AWS
 
-Recommended AWS operational model:
+Status: infrastructure pattern and earlier runtime work.
 
-- AWS Systems Manager Session Manager instead of SSH
-- Minimal IAM policies for Bedrock access
-- Restricted network exposure
-- Encrypted EBS storage
-- Non-root runtime user
-- Hardened systemd runtime configuration
+The AWS side remains part of the multi-cloud direction and provides EC2-based
+runtime hosting patterns, IAM-based access to model services, and operational
+hardening references.
 
----
+## Security Model
 
-# GCP Security Practices
+The repository uses conservative defaults:
 
-Recommended GCP operational model:
+- no public AI dashboards by default;
+- dedicated service accounts and IAM roles;
+- cloud secret managers for sensitive values;
+- read-only operational defaults where practical;
+- private/tunneled access paths;
+- immutable image references for planned deployments;
+- explicit approval before destructive or deploy-time actions.
 
-- Cloud Run IAM authentication
-- Secret Manager for sensitive values
-- Artifact Registry image signing
-- Cloud Logging audit visibility
-- Dedicated service accounts
-- Minimal Vertex AI permissions
+Secret values should not be committed to this repository.
 
----
+## What Is Not Deployed Yet
 
-# Backup Strategy
+The stateful VM runtime is not running yet. The repository contains the
+Terraform/runtime preparation and a reviewed plan, but no `terraform apply` has
+been performed for that runtime.
 
-The project supports:
+The next deployment step must be a controlled apply decision, not an implicit
+automation step.
 
-- Encrypted cloud storage backups
-- Runtime configuration versioning
-- GitHub private repository backups
-- Operational configuration recovery
-- Runtime state restoration procedures
+## Project Scope
 
-AWS:
+This project is not an LLM training project, chatbot demo, or GPU inference
+platform. It is an infrastructure and operations repository for AI agent
+runtime hosting.
 
-- S3 encrypted backup bucket
-
-GCP:
-
-- Cloud Storage encrypted backup bucket
-
----
-
-# Long-Term Evolution
-
-This repository is intentionally designed as a foundational AI runtime hosting project that evolves toward larger operational AI systems.
-
-Project evolution path:
-
-```text
-ai-agent-host
-        ↓
-ai-operations-platform
-```
-
----
-
-# Project Scope
-
-This project is intentionally infrastructure-focused.
-
-It is not:
-
-- an LLM training project
-- an ML research project
-- a chatbot demo
-- a GPU inference platform
-
-Instead, it focuses on:
-
-- AI runtime hosting
-- operational infrastructure
-- cloud-native deployment patterns
-- AI platform engineering foundations
-
----
-
+Longer term, the repository is intended to support a broader AI operations
+platform foundation across GCP and AWS.

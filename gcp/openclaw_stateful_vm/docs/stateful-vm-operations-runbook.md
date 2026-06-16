@@ -1,6 +1,6 @@
 # OpenClaw Stateful VM Operations Runbook
 
-**Status:** Draft for Phase 5.3 review
+**Status:** Draft for future approved deployment
 **Important:** Commands are examples for a future approved deployment. Do not
 run mutation commands without an approved change or incident procedure.
 
@@ -20,7 +20,8 @@ start only one replacement writer
 
 Before the first approved apply:
 
-1. Complete every deployment gate.
+1. Confirm deployment approval, apply evidence, and gate tracking have been
+   completed in internal project evidence.
 2. Confirm the immutable image digest.
 3. Confirm all Secret Manager identifiers.
 4. Confirm the VM service account IAM bindings.
