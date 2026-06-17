@@ -30,15 +30,24 @@ locals {
       OPENCLAW_CONFIG_PATH                     = "${var.openclaw_runtime_dir}/openclaw.json"
       OPENCLAW_CONTROL_UI_ALLOWED_ORIGINS_JSON = var.openclaw_control_ui_allowed_origins_json
       OPENCLAW_CONTROL_UI_ENABLED              = tostring(var.openclaw_control_ui_enabled)
-      OPENCLAW_GATEWAY_AUTH_MODE               = "token"
-      OPENCLAW_GATEWAY_BIND                    = "lan"
-      OPENCLAW_GITHUB_MODE                     = var.openclaw_github_mode
-      OPENCLAW_GOOGLE_MODEL_ID                 = var.openclaw_google_model_id
-      OPENCLAW_OPENAI_MODEL_ID                 = var.openclaw_openai_model_id
-      OPENCLAW_PRIMARY_MODEL                   = var.openclaw_primary_model
-      OPENCLAW_RUNTIME_DIR                     = var.openclaw_runtime_dir
-      OPENCLAW_STATE_DIR                       = var.openclaw_state_dir
-      OPENCLAW_WORKSPACE_DIR                   = var.openclaw_workspace_dir
+      OPENCLAW_PLUGIN_ENTRIES_JSON = jsonencode(
+        var.openclaw_admin_http_rpc_enabled
+        ? {
+          "admin-http-rpc" = {
+            enabled = true
+          }
+        }
+        : {}
+      )
+      OPENCLAW_GATEWAY_AUTH_MODE = "token"
+      OPENCLAW_GATEWAY_BIND      = "lan"
+      OPENCLAW_GITHUB_MODE       = var.openclaw_github_mode
+      OPENCLAW_GOOGLE_MODEL_ID   = var.openclaw_google_model_id
+      OPENCLAW_OPENAI_MODEL_ID   = var.openclaw_openai_model_id
+      OPENCLAW_PRIMARY_MODEL     = var.openclaw_primary_model
+      OPENCLAW_RUNTIME_DIR       = var.openclaw_runtime_dir
+      OPENCLAW_STATE_DIR         = var.openclaw_state_dir
+      OPENCLAW_WORKSPACE_DIR     = var.openclaw_workspace_dir
     },
     {
       for env_name, _ in local.runtime_secret_ids :

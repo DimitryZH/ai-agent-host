@@ -28,6 +28,9 @@ github_pr_secret_id  = null
 
 openclaw_control_ui_enabled = false
 
+# Enable only when Control UI onboarding / device pairing approval through admin RPC is needed.
+openclaw_admin_http_rpc_enabled = false
+
 create_network   = true
 create_cloud_nat = true
 subnetwork_cidr  = "10.42.0.0/24"

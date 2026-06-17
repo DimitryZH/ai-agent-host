@@ -230,6 +230,12 @@ variable "openclaw_control_ui_allowed_origins_json" {
   default     = "[\"http://127.0.0.1:18080\",\"http://localhost:18080\"]"
 }
 
+variable "openclaw_admin_http_rpc_enabled" {
+  description = "Enable the bundled OpenClaw admin-http-rpc plugin for trusted onboarding/admin RPC over the authenticated gateway."
+  type        = bool
+  default     = false
+}
+
 variable "openclaw_primary_model" {
   description = "Default OpenClaw primary model."
   type        = string
