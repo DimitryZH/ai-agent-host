@@ -1,0 +1,30 @@
+project_id  = "ai-agent-host-497515"
+location    = "us-central1"
+bucket_name = "ai-agent-host-497515-openclaw-stateful-vm-tfstate"
+
+state_prefix = "openclaw-stateful-vm"
+
+uniform_bucket_level_access = true
+public_access_prevention    = "enforced"
+versioning_enabled          = true
+soft_delete_retention_seconds = 604800
+
+# Leave null unless an explicit retention policy is approved.
+retention_policy_retention_period_seconds = null
+
+# Use only approved Terraform deployment identities.
+# Do not add the OpenClaw runtime service account here.
+terraform_deployer_iam_members = [
+  # "user:REPLACE_WITH_TERRAFORM_DEPLOYER_EMAIL",
+  # "group:REPLACE_WITH_TERRAFORM_DEPLOYERS_GROUP",
+  # "serviceAccount:REPLACE_WITH_TERRAFORM_DEPLOYER_SA",
+]
+
+terraform_deployer_iam_role = "roles/storage.objectAdmin"
+
+labels = {
+  project   = "ai-agent-host"
+  component = "openclaw-stateful-vm"
+  purpose   = "terraform-state"
+  env       = "prototype"
+}
