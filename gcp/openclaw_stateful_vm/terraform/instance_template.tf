@@ -17,7 +17,7 @@ resource "google_compute_instance_template" "openclaw" {
   }
 
   disk {
-    source      = google_compute_disk.openclaw_state.self_link
+    source      = google_compute_disk.openclaw_state.name
     device_name = var.data_disk_device_name
     auto_delete = false
     boot        = false
