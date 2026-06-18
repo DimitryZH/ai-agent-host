@@ -1,13 +1,11 @@
 # OpenClaw Stateful VM Runtime
 
-This directory contains the production-like GCP runtime preparation for a
-private, single-writer OpenClaw gateway.
+This directory contains the production-like GCP runtime for a private,
+single-writer OpenClaw gateway on a stateful VM.
 
-The Terraform skeleton, bootstrap script, and systemd unit are present. A
-reviewed Terraform plan has been generated separately as internal project
-evidence, but no `terraform apply` has been performed from this folder. No VM,
-disk, network, service account, or MIG resource has been created by this
-runtime yet.
+The runtime is now applied and validated on Google Cloud. It keeps the
+container contract proven on Cloud Run while moving authoritative OpenClaw
+state onto a preserved Persistent Disk attached to a zonal stateful MIG.
 
 ## Purpose
 
@@ -15,10 +13,10 @@ The Cloud Run implementation in `gcp/openclaw_cloud_run/` remains the validated
 runtime contract. It proves the OpenClaw image, startup behavior, Secret
 Manager inputs, Gemini configuration, GitHub controls, and container logging.
 
-This directory prepares the durable runtime path for the state-owning OpenClaw
-gateway. It keeps the validated container contract and replaces the unsafe
-ephemeral state model with a private VM, preserved disk, stateful MIG, and
-state-aware operations model.
+This directory implements the durable runtime path for the state-owning
+OpenClaw gateway. It keeps the validated container contract and replaces the
+unsafe ephemeral state model with a private VM, preserved disk, stateful MIG,
+and state-aware operations model.
 
 ## Architecture
 
@@ -109,8 +107,9 @@ gcp/openclaw_stateful_vm/
     `-- stateful-vm-operations-runbook.md
 ```
 
-Deployment approval, apply evidence, and gate tracking are maintained
-separately as ignored internal project evidence.
+Deployment approval history and intermediate evidence are maintained separately
+as internal project material. The tracked documentation here reflects the
+current applied runtime status.
 
 ## Configuration Flow
 
@@ -165,8 +164,7 @@ template expressions first.
 
 ## Access Model
 
-After a future approved deployment, discover the managed instance name and
-start an IAP tunnel:
+Discover the managed instance name and start an IAP tunnel:
 
 ```bash
 gcloud compute instance-groups managed list-instances openclaw-stateful-mig \
@@ -179,8 +177,13 @@ gcloud compute start-iap-tunnel INSTANCE_NAME 8080 \
   --local-host-port=127.0.0.1:18080
 ```
 
-Then access `http://127.0.0.1:18080/` only when the Control UI is explicitly
-enabled.
+Control UI access over IAP has been validated. When the Control UI is enabled,
+open `http://127.0.0.1:18080/`.
+
+The current runtime also supports the bundled `admin-http-rpc` plugin as an
+explicit opt-in onboarding and admin RPC path. That path was used to validate
+device pairing for the Control UI without disabling gateway token auth or
+device pairing.
 
 ## State Model
 
@@ -197,33 +200,39 @@ The bootstrap script formats the data disk only when it has no filesystem. It
 mounts the disk by its stable Compute Engine device identifier and creates
 restrictive state/workspace directories owned by `10001:10001`.
 
-## Before Apply
+## Current Validation Status
 
-The runtime is not ready for apply until these items are approved:
+Validated on the Stateful VM runtime:
 
-- remote Terraform backend;
-- operator/admin IAM members;
-- cost review;
-- immutable image digest;
-- required secret IDs;
-- `OPENCLAW_GITHUB_MODE=readonly` as the initial mode;
-- Control UI startup mode;
-- TCP health check;
-- snapshot policy;
-- runtime burn-in procedure;
-- backup/restore acceptance;
-- explicit human approval.
+- applied private Compute Engine VM through a zonal stateful MIG;
+- preserved state disk attachment and mount model;
+- `openclaw.service` and `openclaw-gateway` container startup;
+- IAP SSH and IAP TCP tunnel access;
+- `/health` and `/readyz`;
+- OpenAI-compatible API access;
+- Gemini-backed response path;
+- Control UI over IAP;
+- `admin-http-rpc` plugin availability;
+- Control UI device pairing through admin RPC.
+
+Still intentionally deferred:
+
+- restart and recreate persistence drill after validated UI pairing;
+- snapshot restore drill;
+- final GitHub PR-mode decision on the VM runtime;
+- Vertex AI migration decision;
+- long-term always-on versus start-stop operating model.
 
 ## Intentionally Deferred
 
-- `terraform apply` and resource creation;
-- API enablement from this Terraform root;
+- destructive recovery drills without explicit approval;
 - Cloud Run modification or migration;
-- OpenClaw state export or cutover;
+- OpenClaw state export or cutover from this directory;
 - HTTP application health checks for autohealing;
 - external HTTPS load balancer or public access;
 - Cloud Storage archive backups;
-- monitoring alert policies.
+- monitoring alert policies;
+- automatic approval of GitHub PR-capable runtime mode.
 
 ## Related Documents
 

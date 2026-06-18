@@ -1,8 +1,8 @@
 # OpenClaw Stateful VM Operations Runbook
 
-**Status:** Draft for future approved deployment
-**Important:** Commands are examples for a future approved deployment. Do not
-run mutation commands without an approved change or incident procedure.
+**Status:** Active runtime operations runbook
+**Important:** Keep the runtime private, single-writer, and token-protected.
+Do not print secret values in terminals, logs, tickets, commits, or chat.
 
 ## Operating Invariant
 
@@ -16,103 +16,234 @@ identify the authoritative disk
 start only one replacement writer
 ```
 
-## First Deploy Readiness
+## Current Runtime Snapshot
 
-Before the first approved apply:
+- Project: `ai-agent-host-497515`
+- Zone: `us-central1-a`
+- Runtime shape: private Compute Engine VM in a zonal stateful MIG
+- MIG target size: `1`
+- Gateway container: `openclaw-gateway`
+- systemd service: `openclaw.service`
+- State mount: `/var/lib/openclaw`
+- Access model: IAP SSH and IAP TCP tunnel only
+- Public VM IP: none
 
-1. Confirm deployment approval, apply evidence, and gate tracking have been
-   completed in internal project evidence.
-2. Confirm the immutable image digest.
-3. Confirm all Secret Manager identifiers.
-4. Confirm the VM service account IAM bindings.
-5. Confirm the zone and data disk.
-6. Confirm TCP health check mode.
-7. Confirm the reviewed Terraform plan contains one MIG instance and no public
-   IP.
+The current VM name may change after a recreate. Always query the MIG before
+running instance-specific commands.
 
-After the first approved apply:
-
-1. Confirm MIG target and actual size are exactly one.
-2. Confirm the data disk is attached and mounted at `/var/lib/openclaw`.
-3. Confirm `openclaw.service` is active.
-4. Confirm the container image digest.
-5. Confirm the snapshot policy is attached.
-6. Confirm IAP access.
-7. Validate pairing and persistence before any migration.
-
-## Discover the Managed Instance
+## Discover The Managed Instance
 
 ```bash
 gcloud compute instance-groups managed list-instances openclaw-stateful-mig \
-  --project=PROJECT_ID \
-  --zone=ZONE
+  --project=ai-agent-host-497515 \
+  --zone=us-central1-a
 ```
 
-Record the instance name before using subsequent commands.
+Record the current instance name before using subsequent commands.
 
-## IAP Tunnel Access
+## Control UI Access Through IAP Tunnel
 
-Open a local gateway tunnel:
+Preferred local tunnel command:
 
 ```bash
-gcloud compute start-iap-tunnel INSTANCE_NAME 8080 \
-  --project=PROJECT_ID \
-  --zone=ZONE \
+gcloud compute start-iap-tunnel openclaw-stateful-wbzf 8080 \
+  --project=ai-agent-host-497515 \
+  --zone=us-central1-a \
   --local-host-port=127.0.0.1:18080
 ```
 
-When Control UI is explicitly enabled, open:
+If the instance name changes, replace `openclaw-stateful-wbzf` with the current
+instance reported by the MIG.
+
+Then open:
 
 ```text
 http://127.0.0.1:18080/
 ```
 
+Allowed local browser origins remain:
+
+- `http://127.0.0.1:18080`
+- `http://localhost:18080`
+
 SSH through IAP:
 
 ```bash
 gcloud compute ssh INSTANCE_NAME \
-  --project=PROJECT_ID \
-  --zone=ZONE \
+  --project=ai-agent-host-497515 \
+  --zone=us-central1-a \
   --tunnel-through-iap
 ```
 
-## systemd Status
+## Service And Container Checks
 
 Read-only checks:
 
 ```bash
-sudo systemctl status openclaw.service
+sudo systemctl is-active openclaw.service
 sudo systemctl is-enabled openclaw.service
-sudo systemctl show openclaw.service -p ActiveState -p SubState -p NRestarts
-```
-
-Restart only during an approved change or recovery:
-
-```bash
-sudo systemctl restart openclaw.service
-```
-
-## Container and Logs
-
-```bash
 sudo docker ps --filter name=openclaw-gateway
 sudo docker inspect openclaw-gateway --format '{{.Config.Image}}'
-sudo journalctl -u openclaw.service --since '30 minutes ago'
 ```
 
-Do not print `/run/openclaw/secrets` contents or environment values.
+Validated baseline at closeout time:
 
-## Pairing Validation
+- `openclaw.service`: active and enabled
+- `openclaw-gateway`: running
 
-1. Open the Control UI through the IAP tunnel.
-2. Authenticate with the approved gateway token.
-3. Complete device pairing through the approved OpenClaw flow.
-4. Record a non-sensitive paired-device identifier and a test session marker.
-5. Restart the service and confirm pairing persists.
-6. Perform an approved VM repair test and confirm pairing persists again.
+## Health And Readiness Checks
 
-If pairing is lost, stop migration planning and investigate state disk mounting
-and OpenClaw state paths.
+```bash
+curl -sS -i http://127.0.0.1:8080/health
+curl -sS -i http://127.0.0.1:8080/readyz
+```
+
+Expected:
+
+- `HTTP/1.1 200 OK`
+- `/health` returns live status
+- `/readyz` returns ready status
+
+## Gateway Token Retrieval
+
+Local browser use:
+
+```bash
+gcloud secrets versions access latest \
+  --secret=openclaw-gateway-token-experimental \
+  --project=ai-agent-host-497515 | tr -d '\r\n'; echo
+```
+
+VM-local use:
+
+```bash
+TOKEN="$(sudo cat /run/openclaw/secrets/OPENCLAW_GATEWAY_TOKEN | tr -d '\r\n')"
+```
+
+Why CRLF must be stripped:
+
+- the token file may contain a trailing newline or CRLF;
+- bearer auth fails if the raw file content is used verbatim;
+- `tr -d '\r\n'` produces the exact header-safe token value.
+
+Do not echo the token into logs or notes.
+
+## Control UI Pairing Through Admin RPC
+
+The bundled `admin-http-rpc` plugin is now intentionally enabled for trusted
+onboarding and operator pairing flows.
+
+The authenticated endpoint is:
+
+```text
+POST /api/v1/admin/rpc
+```
+
+Validated runtime config shape:
+
+```json
+{
+  "plugins": {
+    "entries": {
+      "admin-http-rpc": {
+        "enabled": true
+      }
+    }
+  }
+}
+```
+
+### Why Not To Use CLI Approve First
+
+Do not start with:
+
+```bash
+openclaw devices approve <requestId>
+```
+
+Reason:
+
+- the CLI device may itself have only `operator.pairing` scope;
+- that can trigger a scope-upgrade approval loop instead of approving the
+  browser;
+- the admin RPC path was the validated low-risk way to approve the browser
+  pairing request while preserving gateway token auth and device pairing.
+
+### List Pending And Paired Devices
+
+```bash
+TOKEN="$(sudo cat /run/openclaw/secrets/OPENCLAW_GATEWAY_TOKEN | tr -d '\r\n')"
+
+curl -sS -i \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  http://127.0.0.1:8080/api/v1/admin/rpc \
+  -d '{"method":"device.pair.list","params":{}}'
+```
+
+Use the response to summarize:
+
+- pending device count
+- paired device count
+- relevant non-sensitive client identifiers such as `openclaw-control-ui`
+
+Do not paste the token. Avoid recording full public keys unless explicitly
+needed for an incident investigation.
+
+### Approve One Pairing Request
+
+```bash
+TOKEN="$(sudo cat /run/openclaw/secrets/OPENCLAW_GATEWAY_TOKEN | tr -d '\r\n')"
+
+curl -sS -i \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  http://127.0.0.1:8080/api/v1/admin/rpc \
+  -d '{"method":"device.pair.approve","params":{"requestId":"PASTE_REQUEST_ID_HERE"}}'
+```
+
+Expected success shape:
+
+```text
+HTTP/1.1 200 OK
+ok=true
+```
+
+### What To Do If `requestId` Becomes Stale
+
+If approval returns `unknown requestId`:
+
+1. Refresh or reconnect the browser.
+2. Generate a fresh pairing prompt.
+3. Run `device.pair.list` again.
+4. Approve the current request ID only.
+
+Do not keep retrying an old request ID.
+
+### When Re-Pairing May Be Required
+
+Re-pairing can be required after:
+
+- browser local storage reset;
+- Control UI reconnect from a new browser profile;
+- future restart or recreate drills that change runtime state unexpectedly;
+- a restore exercise from an older snapshot;
+- manual device cleanup performed during an approved recovery workflow.
+
+The current stateful VM design is intended to preserve paired state across VM
+recreation, but that persistence still needs an explicit restart and recreate
+closure drill.
+
+## API Runtime Notes
+
+Known model alias detail:
+
+```text
+Use model alias "openclaw", not provider model id "google/gemini-2.5-flash".
+```
+
+This matters for OpenAI-compatible API validation such as
+`/v1/chat/completions`.
 
 ## State Disk Checks
 
@@ -128,28 +259,11 @@ df -h /var/lib/openclaw
 
 Expected:
 
-- ext4 filesystem;
-- persistent disk device;
-- state/workspace owned by UID/GID `10001:10001`;
-- restrictive permissions;
-- adequate free space.
-
-## VM Repair Validation
-
-This is a disruptive, approved test.
-
-1. Confirm a current snapshot exists.
-2. Confirm pairing/session test markers.
-3. Confirm MIG size is one.
-4. Trigger one controlled MIG repair using the approved operator procedure.
-5. Monitor replacement without starting another VM manually.
-6. Confirm the same authoritative disk is attached.
-7. Confirm `openclaw.service` is healthy.
-8. Confirm pairing, sessions, workspace, Gemini, and GitHub controls persist.
-9. Record repair duration and evidence.
-
-Stop the test if repeated repairs begin. Disable further repair actions and
-investigate the health signal before continuing.
+- ext4 filesystem
+- preserved persistent disk device
+- state/workspace owned by UID/GID `10001:10001`
+- restrictive permissions
+- adequate free space
 
 ## Manual Pre-Upgrade Snapshot
 
@@ -169,7 +283,7 @@ A manual pre-upgrade snapshot must be application-consistent.
    sync
    ```
 
-5. Create a labeled manual snapshot through the approved operator/deployment
+5. Create a labeled manual snapshot through the approved operator or deployment
    identity.
 6. Confirm snapshot creation was accepted.
 7. Restart the gateway and validate health.
@@ -200,27 +314,27 @@ Never attach the authoritative disk or a restored copy to two active gateways.
 5. Confirm the MIG update plan uses `RECREATE`, zero surge, and size one.
 6. Apply only after explicit approval.
 7. Validate:
-   - one active instance;
-   - correct disk;
-   - correct image digest;
-   - Control UI and pairing;
-   - sessions/workspace;
-   - Gemini;
-   - GitHub read-only mode;
-   - controlled PR mode only when separately approved.
+   - one active instance
+   - correct disk
+   - correct image digest
+   - Control UI and pairing
+   - sessions/workspace
+   - Gemini
+   - GitHub read-only mode
+   - controlled PR mode only when separately approved
 
 ## Rollback Outline
 
 Image-only rollback:
 
-1. Stop/fence the failed gateway.
+1. Stop or fence the failed gateway.
 2. Restore the previous instance template digest.
 3. Start one gateway.
 4. Run the full validation checklist.
 
 State rollback:
 
-1. Stop/fence the failed gateway.
+1. Stop or fence the failed gateway.
 2. Preserve the failed disk for investigation.
 3. Restore the approved pre-upgrade snapshot to a new disk.
 4. Make the restored disk authoritative through a reviewed Terraform change.

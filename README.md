@@ -15,10 +15,10 @@ The current OpenClaw workstream has two GCP runtime paths:
 Cloud Run proof-of-concept
         |
         v
-Stateful VM runtime preparation
+Stateful VM runtime
         |
         v
-Future controlled apply and burn-in
+Closure drills and operating model decisions
 ```
 
 The Cloud Run runtime proved the container contract, Gemini integration,
@@ -30,8 +30,6 @@ Durable-state analysis showed that Cloud Run is not the right production-like
 home for the state-owning OpenClaw gateway today. The stateful VM work adds a
 private Compute Engine architecture with a preserved disk, single-writer
 operation, IAP-only access, and recovery procedures.
-
-No stateful VM infrastructure has been applied from this repository yet.
 
 ## Repository Map
 
@@ -64,9 +62,9 @@ but it is not treated as the durable state-owning runtime.
 
 ### GCP Stateful VM
 
-Status: prepared and planned, not yet applied.
+Status: applied and substantially validated.
 
-The stateful VM implementation prepares:
+The stateful VM implementation now provides:
 
 - private Compute Engine VM through a zonal stateful MIG;
 - MIG target size `1` with no autoscaling;
@@ -80,8 +78,15 @@ The stateful VM implementation prepares:
 - TCP health check first;
 - daily snapshot policy.
 
-The first apply still requires explicit approval, remote state/backend
-decisions, operator IAM approval, cost acceptance, and a burn-in procedure.
+Validated outcomes now include:
+
+- successful Stateful VM deployment;
+- persistent state architecture baseline;
+- OpenAI-compatible API validation;
+- Gemini-backed response path;
+- Control UI over IAP;
+- explicit opt-in `admin-http-rpc` onboarding and pairing path;
+- device pairing validation without disabling gateway token auth or pairing.
 
 ### AWS
 
@@ -105,14 +110,17 @@ The repository uses conservative defaults:
 
 Secret values should not be committed to this repository.
 
-## What Is Not Deployed Yet
+## What Remains Open
 
-The stateful VM runtime is not running yet. The repository contains the
-Terraform/runtime preparation and a reviewed plan, but no `terraform apply` has
-been performed for that runtime.
+The stateful VM runtime is running, but Phase 5 is not fully closed yet.
 
-The next deployment step must be a controlled apply decision, not an implicit
-automation step.
+Remaining closure work includes:
+
+- restart and recreate persistence validation after UI pairing;
+- snapshot restore drill;
+- GitHub PR mode decision on the VM runtime;
+- Vertex AI migration decision;
+- final always-on versus start-stop operating model.
 
 ## Project Scope
 

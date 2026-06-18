@@ -1,15 +1,16 @@
 # OpenClaw Stateful VM Implementation Summary
 
-**Status:** Terraform skeleton prepared; reviewed plan exists as separate internal evidence; no apply performed
-**Scope:** OpenClaw stateful VM implementation preparation
-**Date:** 2026-06-15
+**Status:** Terraform runtime applied; core runtime validation completed; closure gates remain
+**Scope:** OpenClaw stateful VM implementation and validation baseline
+**Date:** 2026-06-17
 
 ## Summary
 
-This directory provides a reviewable Google Cloud Terraform skeleton and draft
-operational files for a private, single-writer OpenClaw gateway.
+This directory now provides the applied Google Cloud Terraform runtime and
+tracked operational documentation for a private, single-writer OpenClaw
+gateway.
 
-The skeleton models:
+The implementation models and now runs:
 
 - dedicated private VPC/subnet by default, or reviewed existing network inputs;
 - Cloud Router and Cloud NAT for private outbound access;
@@ -26,8 +27,15 @@ The skeleton models:
 - TCP autohealing check with a conservative initial delay;
 - daily snapshot policy with 14-day prototype retention.
 
-No APIs, secrets, cloud resources, Cloud Run services, or runtime state were
-created or modified.
+Validated runtime outcomes:
+
+- Stateful VM deployment completed;
+- preserved state disk attached and mounted;
+- `openclaw.service` active and enabled;
+- `openclaw-gateway` running;
+- `/health` and `/readyz` returning `200`;
+- Control UI available through IAP tunnel;
+- bundled `admin-http-rpc` plugin enabled for authenticated pairing flows.
 
 ## Repository Cleanup
 
@@ -249,42 +257,35 @@ terraform plan: generated separately as internal project evidence
 
 ## Terraform Plan Status
 
-A reviewed plan exists separately as internal project evidence. The tracked
-implementation folder does not store plan output.
+The runtime is applied and the Terraform root has been revalidated against the
+remote backend after the Control UI and admin RPC enablement changes.
 
-No `terraform apply` has been performed.
+The tracked implementation folder does not store plan output artifacts.
 
-## Open Implementation Decisions
+## Remaining Decisions
 
-1. Confirm `us-central1-a` or select another zone.
-2. Confirm `e2-small` is sufficient or start with `e2-medium`.
-3. Confirm dedicated VPC creation versus a reviewed existing VPC/subnet.
-4. Confirm exact immutable Artifact Registry digest.
-5. Confirm final Secret Manager identifiers and whether PR mode is required at
-   first deployment.
-6. Decide whether Control UI starts disabled or is enabled for an approved
-   onboarding window.
-7. Validate TCP health behavior and decide whether HTTP `/readyz` is ever safe
-   for autohealing.
-8. Decide whether daily snapshots and 14-day retention meet the required RPO.
-9. Design a remote Terraform backend before managing durable infrastructure.
-10. Decide whether Ops Agent default collection is sufficient or needs an
-    explicit journald receiver configuration.
+1. Validate paired-device persistence after service restart.
+2. Validate paired-device persistence after MIG recreate.
+3. Perform a snapshot restore drill.
+4. Decide whether GitHub PR mode should ever be enabled on the VM runtime.
+5. Decide whether Vertex AI migration is worth the operational change.
+6. Decide whether the runtime should stay always on or use controlled start-stop
+   operations.
+7. Revisit whether TCP autohealing remains sufficient after longer burn-in.
 
-## Risks Before Apply
+## Risks And Follow-Up Notes
 
 - The state disk and MIG deletion protections make destructive changes fail by
   design and require an explicit decommission procedure.
-- An incorrect health signal can cause an autohealing loop.
-- The first bootstrap depends on Cloud NAT, Artifact Registry, Secret Manager,
-  and Docker package repository availability.
-- Secret IAM propagation delay can cause initial service restart attempts.
-- `e2-small` might be memory constrained.
-- The current container has not yet been validated with all VM runtime flags.
-- Applying a new template will cause intentional downtime because surge is
+- An incorrect health signal can still cause an autohealing loop.
+- Applying a new template causes intentional downtime because surge is
   prohibited.
-- Scheduled snapshots are not a substitute for tested application-consistent
-  pre-upgrade snapshots.
+- Scheduled snapshots are not a substitute for a tested restore drill.
+- The admin RPC endpoint is intentionally enabled and must remain authenticated
+  through the gateway token path.
+- GitHub read-only behavior is configured, but VM-specific GitHub workflow
+  validation still needs explicit evidence before it should be treated as fully
+  closed.
 
 ## Review Checklist
 
