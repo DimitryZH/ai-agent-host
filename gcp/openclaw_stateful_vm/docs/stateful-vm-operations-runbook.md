@@ -28,8 +28,9 @@ start only one replacement writer
 - Access model: IAP SSH and IAP TCP tunnel only
 - Public VM IP: none
 
-The current VM name may change after a recreate. Always query the MIG before
-running instance-specific commands.
+The current VM name may change after a recreate, or the same managed instance
+name may be retained. Always query the MIG before running instance-specific
+commands.
 
 ## Discover The Managed Instance
 
@@ -109,6 +110,23 @@ Validated baseline at closeout time:
 
 - `openclaw.service`: active and enabled
 - `openclaw-gateway`: running
+
+Validated continuity result:
+
+- controlled `openclaw.service` restart preserved service recovery, API
+  availability, paired-device state, and Control UI continuity
+- controlled Stateful MIG recreate preserved the authoritative Persistent Disk,
+  the single-writer runtime model, service recovery, API availability,
+  paired-device state, and Control UI continuity
+
+Recreate interpretation note:
+
+```text
+Do not use managed instance name change as the only recreate signal.
+A successful recreate may keep the same managed instance name.
+Use instance lifecycle timestamps and fresh container age to confirm that a
+replacement event actually occurred.
+```
 
 ## Health And Readiness Checks
 
@@ -250,8 +268,8 @@ Re-pairing can be required after:
 - manual device cleanup performed during an approved recovery workflow.
 
 The current stateful VM design is intended to preserve paired state across VM
-recreation, but that persistence still needs an explicit restart and recreate
-closure drill.
+recreation, and that behavior has now been validated through controlled restart
+and controlled recreate checks.
 
 ## API Runtime Notes
 

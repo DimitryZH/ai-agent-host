@@ -1,7 +1,7 @@
 # OpenClaw Stateful VM Runtime Validation Summary
 
-**Status:** Runtime baseline validated; restart, recreate, and restore
-persistence still unproven
+**Status:** Runtime baseline, controlled restart, and controlled recreate
+validated; restore persistence still unproven
 **Date:** 2026-06-18
 
 ## Summary
@@ -107,16 +107,42 @@ VM replacement, Stateful MIG recreate, or snapshot restore.
   re-establishment
 - the current browser profile can reconnect without creating a new pairing
   request
+- controlled `openclaw.service` restart preserved runtime health, API
+  availability, paired-device state, and Control UI continuity
+- controlled Stateful MIG recreate preserved the authoritative Persistent Disk,
+  single-writer runtime model, service recovery, API recovery, paired-device
+  state, and Control UI continuity
+
+## Controlled Recreate Validation
+
+The runtime was exercised through one controlled Stateful MIG recreate and then
+revalidated in place.
+
+Validated recreate outcomes:
+
+- the MIG returned to one healthy managed instance with target size `1`
+- the authoritative ext4 disk remained mounted at `/var/lib/openclaw`
+- `openclaw.service` returned active and enabled
+- the `openclaw-gateway` container returned running on the expected digest
+- `/health` and `/readyz` returned `200`
+- the OpenAI-compatible API and authenticated admin RPC both recovered
+- paired-device count and pending-device count matched baseline
+- the existing browser profile remained accepted through a fresh IAP tunnel
+- Control UI continuity remained intact for the current live session
+
+Operational note:
+
+```text
+A Stateful MIG recreate may preserve the same managed instance name.
+Verify replacement by lifecycle timestamps and fresh container age, not by
+expecting the instance name to change.
+```
 
 ## What Remains Unproven
 
 The following persistence boundaries still require separate approved
 validation:
 
-- `openclaw.service` restart
-- container replacement
-- VM replacement
-- Stateful MIG recreate or repair
 - snapshot restore into a usable runtime
 
 Those are materially different from reconnecting a local IAP tunnel and should
