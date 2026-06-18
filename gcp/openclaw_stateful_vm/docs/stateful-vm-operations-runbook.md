@@ -66,6 +66,25 @@ Allowed local browser origins remain:
 - `http://127.0.0.1:18080`
 - `http://localhost:18080`
 
+Validated continuity note:
+
+- terminating the local IAP tunnel does not by itself clear authoritative
+  OpenClaw state
+- the operator later re-established a fresh IAP tunnel, entered the gateway
+  token again, and regained access with the same existing browser profile
+- no new browser device pairing was required during that reconnect
+
+Interpretation:
+
+```text
+The IAP tunnel is only a local transport path and is not the authoritative
+OpenClaw state boundary.
+```
+
+Do not treat local tunnel reconnect success as proof of persistence across
+service restart, container replacement, VM replacement, Stateful MIG recreate,
+or snapshot restore.
+
 SSH through IAP:
 
 ```bash

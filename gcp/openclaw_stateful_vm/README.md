@@ -104,6 +104,7 @@ gcp/openclaw_stateful_vm/
 |   `-- openclaw.service.tftpl
 `-- docs/
     |-- stateful-vm-implementation-summary.md
+    |-- stateful-vm-runtime-validation-summary.md
     `-- stateful-vm-operations-runbook.md
 ```
 
@@ -213,7 +214,9 @@ Validated on the Stateful VM runtime:
 - Gemini-backed response path;
 - Control UI over IAP;
 - `admin-http-rpc` plugin availability;
-- Control UI device pairing through admin RPC.
+- Control UI device pairing through admin RPC;
+- Control UI continuity across local IAP tunnel termination and
+  re-establishment.
 
 Still intentionally deferred:
 
@@ -237,4 +240,5 @@ Still intentionally deferred:
 ## Related Documents
 
 - `docs/stateful-vm-implementation-summary.md`
+- `docs/stateful-vm-runtime-validation-summary.md`
 - `docs/stateful-vm-operations-runbook.md`

@@ -1,8 +1,10 @@
 # OpenClaw Stateful VM Implementation Summary
 
-**Status:** Terraform runtime applied; core runtime validation completed; closure gates remain
-**Scope:** OpenClaw stateful VM implementation and validation baseline
-**Date:** 2026-06-17
+**Status:** Terraform runtime applied; core runtime validation completed;
+restart, recreate, and restore persistence still unproven
+**Scope:** OpenClaw stateful VM implementation and externally useful runtime
+baseline
+**Date:** 2026-06-18
 
 ## Summary
 
@@ -36,6 +38,14 @@ Validated runtime outcomes:
 - `/health` and `/readyz` returning `200`;
 - Control UI available through IAP tunnel;
 - bundled `admin-http-rpc` plugin enabled for authenticated pairing flows.
+- local IAP tunnel termination and re-establishment did not require a new
+  browser pairing flow for the existing Control UI profile.
+
+Important boundary:
+
+- local IAP reconnect continuity is not proof of persistence across service
+  restart, container replacement, VM replacement, Stateful MIG recreate, or
+  snapshot restore.
 
 ## Repository Cleanup
 
@@ -262,16 +272,15 @@ remote backend after the Control UI and admin RPC enablement changes.
 
 The tracked implementation folder does not store plan output artifacts.
 
-## Remaining Decisions
+## Unproven Persistence Boundaries
 
-1. Validate paired-device persistence after service restart.
-2. Validate paired-device persistence after MIG recreate.
-3. Perform a snapshot restore drill.
-4. Decide whether GitHub PR mode should ever be enabled on the VM runtime.
-5. Decide whether Vertex AI migration is worth the operational change.
-6. Decide whether the runtime should stay always on or use controlled start-stop
-   operations.
-7. Revisit whether TCP autohealing remains sufficient after longer burn-in.
+Still unproven:
+
+- paired-device persistence after service restart
+- paired-device persistence after Stateful MIG recreate
+- snapshot restore into a usable runtime
+- final VM-specific GitHub workflow evidence
+- longer-term operating model decisions
 
 ## Risks And Follow-Up Notes
 
@@ -286,21 +295,6 @@ The tracked implementation folder does not store plan output artifacts.
 - GitHub read-only behavior is configured, but VM-specific GitHub workflow
   validation still needs explicit evidence before it should be treated as fully
   closed.
-
-## Review Checklist
-
-- [ ] Architecture report remains accepted.
-- [ ] Terraform resource ownership and state backend are reviewed.
-- [ ] MIG size-one and no-surge behavior are accepted.
-- [ ] State disk protection and decommission workflow are accepted.
-- [ ] Network and Cloud NAT cost are accepted.
-- [ ] Runtime service account permissions are reviewed.
-- [ ] Every named secret is confirmed.
-- [ ] Image digest is confirmed and scanned.
-- [ ] Health check and autohealing behavior are reviewed.
-- [ ] Snapshot policy and restore procedure are reviewed.
-- [ ] Operations runbook is reviewed.
-- [ ] Explicit human approval is recorded before `terraform apply`.
 
 ## Sources
 
