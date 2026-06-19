@@ -20,7 +20,7 @@ output "state_disk_name" {
 
 output "snapshot_policy_name" {
   description = "Daily state disk snapshot policy name."
-  value       = google_compute_resource_policy.daily_state_snapshot.name
+  value       = google_compute_resource_policy.daily_state_snapshot_standard.name
 }
 
 output "iap_ssh_command" {

@@ -13,7 +13,7 @@ resource "google_compute_disk" "openclaw_state" {
 
 resource "google_compute_disk_resource_policy_attachment" "openclaw_state_snapshot" {
   project = var.project_id
-  name    = google_compute_resource_policy.daily_state_snapshot.name
+  name    = google_compute_resource_policy.daily_state_snapshot_standard.name
   disk    = google_compute_disk.openclaw_state.name
   zone    = var.zone
 }

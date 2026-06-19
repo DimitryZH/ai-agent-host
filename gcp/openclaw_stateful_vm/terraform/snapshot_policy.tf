@@ -1,6 +1,6 @@
-resource "google_compute_resource_policy" "daily_state_snapshot" {
+resource "google_compute_resource_policy" "daily_state_snapshot_standard" {
   project     = var.project_id
-  name        = "${var.name_prefix}-daily-snapshot"
+  name        = "${var.name_prefix}-daily-snapshot-standard"
   region      = var.region
   description = "Daily prototype snapshots for the authoritative OpenClaw state disk."
 
@@ -18,7 +18,7 @@ resource "google_compute_resource_policy" "daily_state_snapshot" {
     }
 
     snapshot_properties {
-      guest_flush       = true
+      guest_flush       = false
       labels            = local.labels
       storage_locations = var.snapshot_storage_locations
     }
