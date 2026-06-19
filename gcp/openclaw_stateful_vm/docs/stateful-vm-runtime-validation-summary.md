@@ -1,7 +1,8 @@
 # OpenClaw Stateful VM Runtime Validation Summary
 
-**Status:** Runtime baseline, controlled restart, and controlled recreate
-validated; restore persistence still unproven
+**Status:** Runtime baseline, controlled restart, controlled recreate, and
+controlled Stateful MIG stop/start validated; restore persistence still
+unproven
 **Date:** 2026-06-18
 
 ## Summary
@@ -22,6 +23,8 @@ Validated baseline outcomes:
 - bundled `admin-http-rpc` plugin enabled for authenticated pairing flows
 - Control UI pairing validated without disabling gateway token auth or device
   pairing
+- controlled stop/start through the Stateful MIG validated as the accepted
+  operating model
 
 ## Sanitized Read-Only Baseline
 
@@ -53,6 +56,14 @@ The runtime uses:
 
 This keeps the single-writer state boundary on the preserved disk rather than
 on ephemeral container or tunnel state.
+
+Accepted operating model:
+
+- run the Stateful VM during operator working windows
+- stop it outside those windows through the Stateful MIG control plane
+- start the same managed instance again through the Stateful MIG control plane
+- do not use direct Compute Engine stop/start commands for the VM while it is
+  under Stateful MIG control
 
 ## Control UI And Pairing Baseline
 
@@ -112,6 +123,36 @@ VM replacement, Stateful MIG recreate, or snapshot restore.
 - controlled Stateful MIG recreate preserved the authoritative Persistent Disk,
   single-writer runtime model, service recovery, API recovery, paired-device
   state, and Control UI continuity
+- controlled Stateful MIG stop and start preserved the authoritative
+  Persistent Disk, single-writer runtime model, service and container
+  recovery, health and readiness recovery, paired-device state, and Control UI
+  continuity
+
+## Controlled Stop Start Validation
+
+The runtime was exercised through one controlled stop and one controlled start
+of the current managed instance through the Stateful MIG control plane.
+
+Validated stop/start outcomes:
+
+- stop used `gcloud compute instance-groups managed stop-instances`
+- start used `gcloud compute instance-groups managed start-instances`
+- the managed instance returned to `RUNNING`
+- the Stateful MIG returned to stable `HEALTHY` and `NONE` state
+- the preserved state disk remained attached and remounted at
+  `/var/lib/openclaw`
+- `openclaw.service` and `openclaw-gateway` recovered successfully
+- `/health` and `/readyz` returned `200`
+- paired-device count and pending-device count matched baseline
+- Control UI continuity remained aligned with the validated stateful runtime
+  behavior
+
+Cost note:
+
+```text
+Stopping the VM pauses compute runtime, but preserved Persistent Disk,
+snapshots, and other applicable retained cloud charges still remain.
+```
 
 ## Controlled Recreate Validation
 

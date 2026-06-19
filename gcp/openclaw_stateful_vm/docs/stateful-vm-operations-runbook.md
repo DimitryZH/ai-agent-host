@@ -32,6 +32,14 @@ The current VM name may change after a recreate, or the same managed instance
 name may be retained. Always query the MIG before running instance-specific
 commands.
 
+Accepted operating model:
+
+- run the Stateful VM only during operator working windows
+- stop and start the managed instance through the Stateful MIG control plane
+- keep the authoritative state boundary on the preserved disk
+- never use direct Compute Engine stop or start commands for the VM while it is
+  managed by the Stateful MIG
+
 ## Discover The Managed Instance
 
 ```bash
@@ -41,6 +49,52 @@ gcloud compute instance-groups managed list-instances openclaw-stateful-mig \
 ```
 
 Record the current instance name before using subsequent commands.
+
+## Controlled Stop Start Through The Stateful MIG
+
+Validated operating model:
+
+- controlled stop and start through the Stateful MIG are validated
+- this is the accepted operational method for pausing compute outside operator
+  working windows and resuming it later
+- preserved state, service recovery, paired-device continuity, and Control UI
+  continuity remained consistent with the stateful design
+
+Stop the current managed instance:
+
+```bash
+gcloud compute instance-groups managed stop-instances openclaw-stateful-mig \
+  --instances=INSTANCE_NAME \
+  --project=ai-agent-host-497515 \
+  --zone=us-central1-a
+```
+
+Start the same managed instance:
+
+```bash
+gcloud compute instance-groups managed start-instances openclaw-stateful-mig \
+  --instances=INSTANCE_NAME \
+  --project=ai-agent-host-497515 \
+  --zone=us-central1-a
+```
+
+Do not use:
+
+```bash
+gcloud compute instances stop INSTANCE_NAME
+gcloud compute instances start INSTANCE_NAME
+```
+
+Expected control-plane signals:
+
+- after stop:
+  - `targetSize = 0`
+  - `targetStoppedSize = 1`
+- after start:
+  - `targetSize = 1`
+  - `targetStoppedSize = 0`
+  - exactly one managed instance returns to `RUNNING`
+  - the instance returns to `HEALTHY` with action `NONE`
 
 ## Control UI Access Through IAP Tunnel
 
@@ -118,6 +172,10 @@ Validated continuity result:
 - controlled Stateful MIG recreate preserved the authoritative Persistent Disk,
   the single-writer runtime model, service recovery, API availability,
   paired-device state, and Control UI continuity
+- controlled Stateful MIG stop and start preserved the authoritative
+  Persistent Disk, the single-writer runtime model, service and container
+  recovery, health and readiness recovery, paired-device continuity, and
+  Control UI continuity
 
 Recreate interpretation note:
 
@@ -301,6 +359,14 @@ Expected:
 - state/workspace owned by UID/GID `10001:10001`
 - restrictive permissions
 - adequate free space
+
+## Cost Note
+
+Stopping the managed instance pauses compute runtime for the VM itself.
+
+Applicable baseline cloud charges can still continue while the VM is stopped,
+including preserved Persistent Disk, snapshots, and other retained
+infrastructure resources.
 
 ## Manual Pre-Upgrade Snapshot
 
