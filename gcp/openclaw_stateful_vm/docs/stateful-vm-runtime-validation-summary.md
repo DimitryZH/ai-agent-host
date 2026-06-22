@@ -1,9 +1,8 @@
 # OpenClaw Stateful VM Runtime Validation Summary
 
-**Status:** Runtime baseline, controlled restart, controlled recreate, and
-controlled Stateful MIG stop/start validated; restore persistence still
-unproven
-**Date:** 2026-06-18
+**Status:** Runtime baseline, controlled restart, controlled recreate,
+controlled Stateful MIG stop/start, and isolated snapshot restore validated
+**Date:** 2026-06-22
 
 ## Summary
 
@@ -25,6 +24,8 @@ Validated baseline outcomes:
   pairing
 - controlled stop/start through the Stateful MIG validated as the accepted
   operating model
+- daily standard scheduled snapshots validated
+- isolated restore from a selected scheduled snapshot validated
 
 ## Sanitized Read-Only Baseline
 
@@ -127,6 +128,91 @@ VM replacement, Stateful MIG recreate, or snapshot restore.
   Persistent Disk, single-writer runtime model, service and container
   recovery, health and readiness recovery, paired-device state, and Control UI
   continuity
+- daily standard crash-consistent scheduled snapshots are working for the
+  authoritative state disk
+- a restored disk can be created from a selected scheduled snapshot without
+  mutating the production runtime
+- a temporary standalone recovery VM with no public IP can host the restored
+  disk as an isolated recovery target
+- the restored disk can be attached and mounted only on that recovery VM while
+  the production authoritative disk remains attached only to the production
+  writer
+- expected OpenClaw state, workspace, device, and session artifacts are
+  present on the restored disk
+- the recovery OpenClaw runtime can start successfully on the isolated private
+  recovery VM
+- local recovery validation passed for `/health`, `/readyz`, and `/v1/models`
+- the isolated restore drill was validated without public ingress and without
+  GitHub token or PR/write capability
+
+## Isolated Snapshot Restore Validation
+
+The authoritative state-disk backup and isolated restore path has now been
+validated end to end against a selected scheduled snapshot.
+
+Validated restore outcomes:
+
+- daily standard scheduled snapshots are working
+- a restore disk was created from a selected scheduled snapshot
+- a temporary standalone recovery VM was created with no public IP
+- the restored disk was attached and mounted only on the recovery VM
+- the production authoritative disk remained attached only to the production
+  managed instance
+- expected OpenClaw `state`, `workspace`, device, and session artifacts were
+  present on the restored disk
+- the recovery `openclaw.service` started successfully
+- local `/health` returned success
+- local `/readyz` returned success
+- local `/v1/models` returned the expected local model aliases
+- no public ingress was created
+- no GitHub token or PR/write capability was used
+- production VM, production Stateful MIG, and production authoritative disk
+  were not mutated
+
+Accepted restore model:
+
+- select one scheduled snapshot
+- create one restored disk from that snapshot
+- attach the restored disk only to one temporary private recovery VM
+- mount the restored disk as the recovery state boundary
+- start one isolated recovery runtime
+- validate locally before any optional external access is considered
+
+Accepted backup model:
+
+- daily backup:
+  standard crash-consistent snapshots of the authoritative state disk
+- risky upgrade or migration backup:
+  manual application-consistent snapshot with the service stopped and
+  filesystem buffers flushed
+
+Accepted safety model:
+
+- single writer only
+- no production disk reattachment to the recovery runtime
+- no public exposure by default
+- no GitHub PR/write capability in the recovery runtime
+
+## Validation Boundaries
+
+The validated restore drill is an isolated recovery pattern, not a full
+automated disaster-recovery pipeline.
+
+What has not been validated yet:
+
+- formal RTO or RPO commitments
+- cross-region restore
+- production failover or cutover
+- unattended end-to-end DR automation
+
+Current limitation:
+
+- this drill reused the existing gateway-token and model-key secret objects as
+  a short-lived controlled exception for the isolated recovery VM
+
+Preferred future improvement:
+
+- dedicated non-production recovery secrets for isolated restore validation
 
 ## Controlled Stop Start Validation
 
@@ -179,12 +265,12 @@ Verify replacement by lifecycle timestamps and fresh container age, not by
 expecting the instance name to change.
 ```
 
-## What Remains Unproven
+## Remaining Work
 
-The following persistence boundaries still require separate approved
-validation:
+The restore drill is now validated as an isolated recovery procedure.
 
-- snapshot restore into a usable runtime
+Separate future work can still improve maturity:
 
-Those are materially different from reconnecting a local IAP tunnel and should
-not be inferred from the reconnect test alone.
+- dedicated non-production recovery secrets
+- optional guarded operator helpers for repeated drills
+- optional broader DR design for cross-region or cutover scenarios

@@ -40,6 +40,16 @@ Accepted operating model:
 - never use direct Compute Engine stop or start commands for the VM while it is
   managed by the Stateful MIG
 
+Accepted backup and restore model:
+
+- daily backup uses standard crash-consistent scheduled snapshots of the
+  authoritative state disk
+- risky upgrade or migration backup uses a manual application-consistent
+  snapshot after the service is stopped and filesystem buffers are flushed
+- restore validation uses a selected snapshot, a restored disk, and one
+  isolated private recovery VM
+- default recovery validation remains private and local first
+
 ## Discover The Managed Instance
 
 ```bash
@@ -397,16 +407,54 @@ The runtime VM service account must not receive snapshot-delete permissions.
 
 Never attach the authoritative disk or a restored copy to two active gateways.
 
+Validated isolated restore model:
+
+- selected snapshot to restored disk
+- restored disk to temporary standalone recovery VM
+- no public IP
+- no public ingress by default
+- no GitHub PR/write capability
+- one isolated recovery runtime only
+
+Validated outcomes:
+
+- restored disk creation from a selected scheduled snapshot
+- restored disk attached and mounted only on the recovery VM
+- expected `state`, `workspace`, device, and session artifacts present
+- recovery `openclaw.service` startup succeeded
+- local `/health`, `/readyz`, and `/v1/models` succeeded
+- production VM, production Stateful MIG, and production authoritative disk
+  remained unchanged
+
+Restore drill steps:
+
 1. Select a snapshot and isolated restore location.
-2. Use non-production secrets and no PR-capable GitHub token.
-3. Create a new disk from the snapshot.
-4. Fence the test environment from production.
-5. Start one test gateway.
-6. Verify filesystem integrity, pairing records, sessions, workspace, and
-   OpenClaw startup.
-7. Measure restore time.
-8. Record results.
-9. Remove the isolated test only after review.
+2. Keep production single-writer boundaries intact.
+3. Create a new restored disk from the snapshot.
+4. Create one temporary standalone recovery VM with no public IP.
+5. Attach and mount the restored disk only on that recovery VM.
+6. Use approved gateway and model secrets only, with no GitHub PR/write
+   capability.
+7. Start one isolated recovery gateway.
+8. Verify filesystem structure, service startup, local health, local
+   readiness, and local model-listing behavior.
+9. Review results and clean up the isolated recovery environment.
+
+Default safety rules for restore validation:
+
+- do not reattach the production authoritative disk
+- do not expose the recovery gateway publicly by default
+- do not grant GitHub PR/write capability
+- do not claim production failover readiness from this drill alone
+
+Current limitation:
+
+- the validated drill used the existing gateway-token and model-key secret
+  objects as a short-lived controlled exception
+
+Preferred future improvement:
+
+- dedicated non-production recovery secrets for isolated restore validation
 
 ## Upgrade Outline
 
