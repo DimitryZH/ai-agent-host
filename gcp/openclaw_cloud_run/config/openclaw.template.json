@@ -34,8 +34,22 @@
     "allowBundled": ["github"]
   },
   "tools": {
-    "allow": ["exec"],
-    "deny": ["process", "write", "edit", "apply_patch", "group:fs"],
+    "profile": "minimal",
+    "allow": ["session_status"],
+    "deny": [
+      "process",
+      "write",
+      "edit",
+      "apply_patch",
+      "group:fs",
+      "code_execution",
+      "cron",
+      "gateway",
+      "browser",
+      "canvas",
+      "message",
+      "sessions_send"
+    ],
     "exec": {
       "host": "gateway",
       "security": "allowlist",
