@@ -120,3 +120,31 @@ exec-approvals.github-pr.json
 Do not delete or modify the active Cloud Run config path until the Dockerfile,
 entrypoint, image build, and Stateful VM deployment path are updated and
 validated together.
+
+# OpenClaw Shared Workspace Seed
+
+**Status:** Mirror copy; not yet the active build source
+**Runtime impact:** None
+
+This directory contains shared OpenClaw workspace seed files that are intended to
+be reused by multiple runtime targets.
+
+The current active source-of-truth remains:
+
+```text
+gcp/openclaw_cloud_run/workspace/
+```
+
+These files are copied here as a preparation step for a later refactor. They are
+not consumed by the current Docker build or Stateful VM runtime yet.
+
+## Purpose
+
+The workspace seed defines baseline OpenClaw agent guidance and runtime
+orientation files that can be packaged into the container image.
+
+## Safety Boundary
+
+Do not delete or modify the active Cloud Run workspace path until the Dockerfile,
+entrypoint, image build, and Stateful VM deployment path are updated and
+validated together.
