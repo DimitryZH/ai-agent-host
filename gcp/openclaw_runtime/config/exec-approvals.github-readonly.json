@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "defaults": {
+    "security": "allowlist",
+    "ask": "off",
+    "askFallback": "deny",
+    "autoAllowSkills": false
+  },
+  "agents": {
+    "main": {
+      "security": "allowlist",
+      "ask": "off",
+      "askFallback": "deny",
+      "autoAllowSkills": false,
+      "allowlist": [
+        {
+          "id": "1b95d3a4-7c40-45c7-a1e7-5f12564a8a01",
+          "pattern": "gh",
+          "argPattern": "^(repo view DimitryZH\\/(ai-agent-host|compose-to-aspire-demo)( .*)?|api (?!.*(^| )(--method|-X|--input|-f|-F|--raw-field|--field)( |$))(-H Accept:application\\/vnd\\.github\\.raw )?repos\\/DimitryZH\\/(ai-agent-host|compose-to-aspire-demo)(\\/.*)?( .*)?)$",
+          "source": "phase-0.1b-readonly",
+          "commandText": "gh read-only repository access for approved repositories"
+        },
+        {
+          "id": "c6ed520d-72bb-4b47-9be4-61e1a3d6485f",
+          "pattern": "base64",
+          "argPattern": "^(-d|--decode)$",
+          "source": "phase-0.1b-readonly",
+          "commandText": "decode GitHub API file content returned by gh"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "gateway": {
+    "mode": "local",
+    "port": 8080,
+    "bind": "lan",
+    "controlUi": {
+      "enabled": false,
+      "allowInsecureAuth": false,
+      "allowedOrigins": []
+    },
+    "auth": {
+      "mode": "token",
+      "token": "REPLACE_AT_RUNTIME",
+      "password": "REPLACE_AT_RUNTIME"
+    },
+    "http": {
+      "endpoints": {
+        "chatCompletions": {
+          "enabled": true
+        },
+        "responses": {
+          "enabled": true
+        }
+      }
+    }
+  },
+  "plugins": {
+    "entries": {}
+  },
+  "mcp": {
+    "servers": {}
+  },
+  "skills": {
+    "allowBundled": ["github"]
+  },
+  "tools": {
+    "profile": "minimal",
+    "allow": ["session_status"],
+    "deny": [
+      "process",
+      "write",
+      "edit",
+      "apply_patch",
+      "group:fs",
+      "code_execution",
+      "cron",
+      "gateway",
+      "browser",
+      "canvas",
+      "message",
+      "sessions_send"
+    ],
+    "exec": {
+      "host": "gateway",
+      "security": "allowlist",
+      "ask": "off",
+      "timeoutSec": 30,
+      "strictInlineEval": true,
+      "applyPatch": {
+        "enabled": false
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "systemPromptOverride": "You are a concise assistant. Reply with exactly one short answer.",
+      "params": {
+        "transport": "sse",
+        "openaiWsWarmup": false
+      },
+      "skills": ["github"],
+      "model": {
+        "primary": "openai/gemini-3.5-flash"
+      },
+      "models": {
+        "openai/gemini-3.5-flash": {
+          "alias": "Gemini 3.5 Flash (AI Studio OpenAI Compat)"
+        },
+        "google/gemini-2.5-flash": {
+          "alias": "Gemini 2.5 Flash (Native Google API)"
+        }
+      }
+    }
+  },
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "openai": {
+        "api": "openai-completions",
+        "baseUrl": "https://generativelanguage.googleapis.com/v1beta/openai/",
+        "apiKey": "REPLACE_AT_RUNTIME",
+        "models": [
+          {
+            "id": "gemini-3.5-flash",
+            "name": "Gemini 3.5 Flash (AI Studio OpenAI Compat)",
+            "input": ["text", "image"],
+            "compat": {
+              "requiresStringContent": true,
+              "supportsTools": false
+            }
+          }
+        ]
+      },
+      "google": {
+        "api": "google-generative-ai",
+        "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
+        "apiKey": "REPLACE_AT_RUNTIME",
+        "models": [
+          {
+            "id": "gemini-2.5-flash",
+            "name": "Gemini 2.5 Flash (Native Google API)",
+            "input": ["text", "image"]
+          }
+        ]
+      }
+    }
+  }
+}

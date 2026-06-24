@@ -87,3 +87,36 @@ This scaffold does not change runtime behavior.
 Do not move active runtime files into this directory until the Dockerfile,
 entrypoint, image build, and Stateful VM deployment path are updated and
 validated together.
+
+
+# OpenClaw Shared Runtime Config
+
+**Status:** Mirror copy; not yet the active build source
+**Runtime impact:** None
+
+This directory contains shared OpenClaw runtime configuration assets that are
+intended to become the common runtime contract for both Cloud Run and Stateful VM
+targets.
+
+The current active source-of-truth remains:
+
+```text
+gcp/openclaw_cloud_run/config/
+```
+
+These files are copied here as a preparation step for a later refactor. They are
+not consumed by the current Docker build or Stateful VM runtime yet.
+
+## Included Files
+
+```text
+openclaw.template.json
+exec-approvals.github-readonly.json
+exec-approvals.github-pr.json
+```
+
+## Safety Boundary
+
+Do not delete or modify the active Cloud Run config path until the Dockerfile,
+entrypoint, image build, and Stateful VM deployment path are updated and
+validated together.
