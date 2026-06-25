@@ -50,6 +50,17 @@ variable "ubuntu_image_family" {
   default     = "ubuntu-2404-lts-amd64"
 }
 
+variable "ubuntu_image_name" {
+  description = "Optional exact Ubuntu image name for controlled rollouts that must avoid image-family drift. Null keeps ubuntu_image_family behavior."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.ubuntu_image_name == null || can(regex("^[a-z]([-a-z0-9]*[a-z0-9])?$", var.ubuntu_image_name))
+    error_message = "ubuntu_image_name must be null or an RFC1035-compatible image name."
+  }
+}
+
 variable "boot_disk_size_gb" {
   description = "Recreatable boot disk size in GB."
   type        = number

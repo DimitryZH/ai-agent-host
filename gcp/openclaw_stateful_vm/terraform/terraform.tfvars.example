@@ -12,6 +12,9 @@ artifact_registry_project_id    = "your-gcp-project-id"
 artifact_registry_location      = "us-central1"
 artifact_registry_repository_id = "ai-agent-runtime"
 
+# Optional: pin the boot image to avoid image-family drift during controlled rollouts.
+# ubuntu_image_name = "ubuntu-2404-noble-amd64-v20260615"
+
 boot_disk_size_gb = 20
 data_disk_size_gb = 30
 data_disk_type    = "pd-balanced"

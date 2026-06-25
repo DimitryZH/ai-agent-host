@@ -9,7 +9,7 @@ resource "google_compute_instance_template" "openclaw" {
   labels         = local.labels
 
   disk {
-    source_image = data.google_compute_image.ubuntu_lts.self_link
+    source_image = data.google_compute_image.ubuntu_lts.id
     auto_delete  = true
     boot         = true
     disk_type    = var.boot_disk_type
