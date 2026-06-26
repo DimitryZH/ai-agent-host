@@ -36,7 +36,6 @@
   "tools": {
     "profile": "minimal",
     "alsoAllow": ["exec"],
-    "allow": ["session_status", "exec"],
     "deny": [
       "process",
       "write",
