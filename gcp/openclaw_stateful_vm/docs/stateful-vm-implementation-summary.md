@@ -272,6 +272,49 @@ remote backend after the Control UI and admin RPC enablement changes.
 
 The tracked implementation folder does not store plan output artifacts.
 
+## GitHub Read-Only Enablement
+
+GitHub read-only validation is closed for the Stateful VM runtime.
+
+Final working commit:
+
+```text
+4496456 fix(openclaw): use additive exec tool allowlist
+```
+
+Final live image digest:
+
+```text
+us-central1-docker.pkg.dev/ai-agent-host-497515/ai-agent-runtime/openclaw-cloud-run@sha256:dae26bfd64cada5e6d2ce7c95fc32251ccffcfecf9b795dd6b38ebc69506d673
+```
+
+Final read-only tool posture:
+
+- `tools.profile = "minimal"`
+- `tools.alsoAllow = ["exec"]`
+- `tools.allow` absent
+- `tools.exec.security = "allowlist"`
+- `tools.exec.applyPatch.enabled = false`
+- `OPENCLAW_GITHUB_MODE = readonly`
+- MCP servers empty
+
+Runtime health passed with `/health = 200` and `/readyz = 200`. Effective
+inventory exposed only `session_status + exec`. One approved GitHub read-only
+smoke test passed through OpenClaw using `exec`:
+`gh repo view DimitryZH/ai-agent-host --json name,owner,defaultBranchRef`.
+
+Rollback digest remains available:
+
+```text
+us-central1-docker.pkg.dev/ai-agent-host-497515/ai-agent-runtime/openclaw-cloud-run@sha256:74107b482bbba58f0e4d27522418524713c45e8a5aacac0bd7d8dac8e2c266d4
+```
+
+GitHub PR/write mode remains disabled and not approved.
+
+Gateway transport still reported pending pairing/scope approval during
+validation, so OpenClaw used embedded fallback. This is a follow-up caveat, not
+a blocker for the read-only tool policy result.
+
 ## Unproven Persistence Boundaries
 
 Still unproven:
@@ -279,7 +322,7 @@ Still unproven:
 - paired-device persistence after service restart
 - paired-device persistence after Stateful MIG recreate
 - snapshot restore into a usable runtime
-- final VM-specific GitHub workflow evidence
+- GitHub PR/write mode, which remains separate and not approved
 - longer-term operating model decisions
 
 ## Risks And Follow-Up Notes
@@ -292,9 +335,8 @@ Still unproven:
 - Scheduled snapshots are not a substitute for a tested restore drill.
 - The admin RPC endpoint is intentionally enabled and must remain authenticated
   through the gateway token path.
-- GitHub read-only behavior is configured, but VM-specific GitHub workflow
-  validation still needs explicit evidence before it should be treated as fully
-  closed.
+- Gateway transport pairing/scope approval remains a follow-up caveat for
+  direct gateway validation flows.
 
 ## Sources
 

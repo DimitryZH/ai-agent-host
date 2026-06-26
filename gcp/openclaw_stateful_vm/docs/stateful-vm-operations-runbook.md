@@ -474,6 +474,42 @@ Preferred future improvement:
    - GitHub read-only mode
    - controlled PR mode only when separately approved
 
+## Current GitHub Read-Only Posture
+
+The current validated GitHub read-only image digest is:
+
+```text
+us-central1-docker.pkg.dev/ai-agent-host-497515/ai-agent-runtime/openclaw-cloud-run@sha256:dae26bfd64cada5e6d2ce7c95fc32251ccffcfecf9b795dd6b38ebc69506d673
+```
+
+Validated config posture:
+
+- `tools.profile = "minimal"`
+- `tools.alsoAllow = ["exec"]`
+- `tools.allow` absent
+- `tools.exec.security = "allowlist"`
+- `tools.exec.applyPatch.enabled = false`
+- `OPENCLAW_GITHUB_MODE = readonly`
+- MCP servers empty
+
+Validation result:
+
+- `/health = 200`
+- `/readyz = 200`
+- effective inventory: `session_status + exec`
+- approved GitHub read-only smoke test: PASS
+- GitHub PR/write mode: disabled and not approved
+
+Rollback image digest:
+
+```text
+us-central1-docker.pkg.dev/ai-agent-host-497515/ai-agent-runtime/openclaw-cloud-run@sha256:74107b482bbba58f0e4d27522418524713c45e8a5aacac0bd7d8dac8e2c266d4
+```
+
+Caveat: gateway transport still reported pending pairing/scope approval during
+validation and OpenClaw used embedded fallback. Treat this as a follow-up item,
+not a rollback trigger.
+
 ## Rollback Outline
 
 Image-only rollback:
