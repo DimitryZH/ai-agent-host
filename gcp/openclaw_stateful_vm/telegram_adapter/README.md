@@ -26,6 +26,7 @@ Implemented:
 * loopback-only OpenClaw `/health` snapshot provider;
 * safe Telegram bot suffix normalization such as `/status@SomeBot`;
 * safe diagnostic event shape that excludes raw message text and chat IDs;
+* fake transport dispatcher for Telegram-like update dictionaries;
 * limited help response for unsupported commands such as `/ask`;
 * unit tests for command routing and non-secret responses.
 
@@ -35,6 +36,7 @@ Not implemented:
 * bot token handling;
 * outbound polling;
 * Telegram Bot API client;
+* `getUpdates` or `sendMessage` calls;
 * runtime service wrapper;
 * non-local OpenClaw API probing;
 * GitHub commands;
