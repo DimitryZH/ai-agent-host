@@ -10,6 +10,9 @@ status-only mobile operator adapter. It is based on the approved design shape
 and the pending capability request, but it does not approve or implement the
 adapter.
 
+The enablement approval package is tracked in
+`gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-enablement-approval.md`.
+
 ## Preconditions
 
 Implementation must not start until all of the following are true:

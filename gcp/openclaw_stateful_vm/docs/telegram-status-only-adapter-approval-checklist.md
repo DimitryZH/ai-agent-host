@@ -13,6 +13,7 @@ It complements:
 * `gcp/openclaw_stateful_vm/docs/telegram-mobile-operator-channel.md`
 * `gcp/openclaw_stateful_vm/docs/capability-requests/telegram-status-only-adapter.md`
 * `gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-implementation-plan.md`
+* `gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-enablement-approval.md`
 
 ## Approval Gates
 
