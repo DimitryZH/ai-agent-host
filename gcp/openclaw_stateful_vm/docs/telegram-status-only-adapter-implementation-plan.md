@@ -1,6 +1,6 @@
 # Telegram Status-Only Adapter Implementation Plan
 
-**Status:** Planning only; implementation requires explicit human approval
+**Status:** Planning only; implementation is gated by an approved change record
 **Scope:** Future Telegram status-only adapter for the OpenClaw Stateful VM
 
 ## Purpose
@@ -14,7 +14,7 @@ adapter.
 
 Implementation must not start until all of the following are true:
 
-* the Telegram status-only adapter capability request is approved by a human;
+* the Telegram status-only adapter capability request has operator approval;
 * the target Telegram bot exists outside the repository;
 * the bot token storage approach is approved;
 * the approved Telegram chat ID allowlist is known;
@@ -30,6 +30,13 @@ The first implementation may add only a small outbound-polling adapter that:
 * exposes only fixed status-only command handlers;
 * reaches OpenClaw over localhost or private access only;
 * returns non-secret status responses.
+
+Port model:
+
+* if the adapter runs on the Stateful VM, it should reach OpenClaw through the
+  VM-local endpoint on port `8080`;
+* if tests are run from an operator laptop through IAP, the local tunnel endpoint
+  may be `127.0.0.1:18080`.
 
 The first implementation must not add:
 
@@ -105,4 +112,4 @@ The first implementation must keep rollback simple:
 ## Approval State
 
 Implementation remains blocked until the capability request is explicitly
-approved for implementation.
+approved for implementation through an approved change record.

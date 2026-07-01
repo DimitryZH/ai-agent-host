@@ -7,7 +7,7 @@
 
 This document defines the default governance baseline for changing agent runtime
 capabilities. It is intended to prevent OpenClaw, or any future agent runtime,
-from expanding its own privileges without a tracked human-approved change.
+from expanding its own privileges without an approved change record.
 
 This document does not enable any new runtime behavior.
 
@@ -39,7 +39,7 @@ Current safe posture:
 ## Protected Capability Surfaces
 
 Any change to the following surfaces requires a capability request, risk review,
-human approval, tracked config patch, validation, and rollback path:
+operator approval, tracked config patch, validation, and rollback path:
 
 * OpenClaw runtime config
 * tool profile, tool allowlist, and deny list
@@ -62,7 +62,7 @@ An agent may:
 * describe why the capability is needed;
 * describe risks;
 * describe expected validation;
-* wait for human approval.
+* wait for operator approval.
 
 ## Forbidden Self-Modification Behavior
 
@@ -81,8 +81,8 @@ An agent must not:
 ```text
 Need capability
 → request
-→ Codex/reviewer risk review
-→ human approval
+→ reviewer risk review
+→ operator approval
 → tracked config patch
 → image build
 → Terraform rollout if needed

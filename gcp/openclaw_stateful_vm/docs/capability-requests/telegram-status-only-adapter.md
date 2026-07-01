@@ -13,10 +13,10 @@ OpenClaw private-only.
 
 Task scope:
 
-Design and implement only the first status-only Telegram adapter after human
+Design and implement only the first status-only Telegram adapter after operator
 approval. The adapter must not create a Telegram bot, store a token, change
 runtime config, mutate infrastructure, or expand OpenClaw tools without a
-separate approved implementation task.
+separate approved change record.
 
 Initial commands:
 
@@ -51,11 +51,13 @@ Risks:
 
 Proposed policy change:
 
-After human approval, allow a narrowly scoped Telegram adapter service that can
+After operator approval, allow a narrowly scoped Telegram adapter service that can
 poll the Telegram Bot API outbound and call fixed status-only OpenClaw health or
-status endpoints over localhost/private access. No GitHub, Terraform, shell,
-Secret Manager payload-read, PR/write, MCP, browser automation, or DevBox
-capability is requested.
+status endpoints over localhost/private access. If the adapter runs on the
+Stateful VM, that access should use the VM-local OpenClaw runtime endpoint on
+port `8080`; operator laptop tests through IAP may use `127.0.0.1:18080`. No
+GitHub, Terraform, shell, Secret Manager payload-read, PR/write, MCP, browser
+automation, or DevBox capability is requested.
 
 Validation plan:
 
@@ -80,4 +82,4 @@ Rollback / disable plan:
 
 Approval status:
 
-Pending human approval for implementation
+Pending operator approval for implementation

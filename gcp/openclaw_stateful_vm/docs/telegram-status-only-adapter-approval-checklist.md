@@ -5,7 +5,7 @@
 
 ## Purpose
 
-This checklist defines the human approval gates that must be satisfied before
+This checklist defines the operator approval gates that must be satisfied before
 the Telegram status-only adapter can be implemented or enabled.
 
 It complements:
@@ -16,7 +16,7 @@ It complements:
 
 ## Approval Gates
 
-Record explicit human approval for each item before implementation starts:
+Record explicit operator approval for each item before implementation starts:
 
 * approve the status-only Telegram adapter capability request;
 * approve the exact first command set: `/status`, `/health`, `/whoami`, `/help`;
@@ -74,5 +74,5 @@ Final approval status:
 
 ## Current Status
 
-Pending human approval. Do not implement or enable the adapter from this
-checklist alone.
+Pending operator approval. Implementation or enablement also requires an
+approved change record.

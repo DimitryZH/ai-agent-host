@@ -89,7 +89,9 @@ Findings:
 - Artifact Registry convention is
   `us-central1-docker.pkg.dev/<project>/ai-agent-runtime/openclaw-cloud-run`.
 - The image runs as non-root UID/GID `10001:10001`.
-- The existing container contract uses port `8080`.
+- The existing container contract uses the VM-local OpenClaw runtime port
+  `8080`. Operator laptop access may use a separate IAP tunnel bind such as
+  `127.0.0.1:18080`; that local laptop port is not the VM runtime port.
 - The entrypoint renders runtime config and accepts secret values through
   `_FILE` inputs.
 - The native Gemini path uses `GEMINI_API_KEY` and defaults to

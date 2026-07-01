@@ -108,9 +108,18 @@ Expected control-plane signals:
 
 ## Control UI Access Through IAP Tunnel
 
+Port model:
+
+- VM-local OpenClaw runtime port: `8080`
+- operator laptop IAP tunnel port: `18080`
+
+The IAP tunnel maps `http://127.0.0.1:18080/` on the operator laptop to the
+Stateful VM OpenClaw runtime on port `8080`.
+
 Preferred local tunnel command:
 
 ```bash
+# Run on operator laptop.
 gcloud compute start-iap-tunnel openclaw-stateful-wbzf 8080 \
   --project=ai-agent-host-497515 \
   --zone=us-central1-a \
@@ -123,6 +132,7 @@ instance reported by the MIG.
 Then open:
 
 ```text
+Run on operator laptop browser:
 http://127.0.0.1:18080/
 ```
 
@@ -153,6 +163,7 @@ or snapshot restore.
 SSH through IAP:
 
 ```bash
+# Run on operator laptop.
 gcloud compute ssh INSTANCE_NAME \
   --project=ai-agent-host-497515 \
   --zone=us-central1-a \
@@ -198,7 +209,11 @@ replacement event actually occurred.
 
 ## Health And Readiness Checks
 
+These are VM-local checks. Run them on the Stateful VM over SSH; they use the
+OpenClaw runtime port `8080`, not the operator laptop tunnel port.
+
 ```bash
+# Run on Stateful VM over SSH.
 curl -sS -i http://127.0.0.1:8080/health
 curl -sS -i http://127.0.0.1:8080/readyz
 ```
@@ -222,6 +237,7 @@ gcloud secrets versions access latest \
 VM-local use:
 
 ```bash
+# Run on Stateful VM over SSH.
 TOKEN="$(sudo cat /run/openclaw/secrets/OPENCLAW_GATEWAY_TOKEN | tr -d '\r\n')"
 ```
 
@@ -277,6 +293,7 @@ Reason:
 ### List Pending And Paired Devices
 
 ```bash
+# Run on Stateful VM over SSH.
 TOKEN="$(sudo cat /run/openclaw/secrets/OPENCLAW_GATEWAY_TOKEN | tr -d '\r\n')"
 
 curl -sS -i \
@@ -298,6 +315,7 @@ needed for an incident investigation.
 ### Approve One Pairing Request
 
 ```bash
+# Run on Stateful VM over SSH.
 TOKEN="$(sudo cat /run/openclaw/secrets/OPENCLAW_GATEWAY_TOKEN | tr -d '\r\n')"
 
 curl -sS -i \

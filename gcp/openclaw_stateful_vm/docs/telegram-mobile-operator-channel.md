@@ -56,7 +56,7 @@ The first implementation must enforce these controls:
 * never write secrets, bot tokens, or sensitive message content to logs;
 * do not execute shell commands directly from the adapter;
 * do not bypass the OpenClaw tool policy;
-* require a future human-approved capability workflow for any mutating command.
+* require a future approved change record for any mutating command.
 
 The adapter should expose only fixed command handlers. It should not accept raw
 operator text as a shell command, tool invocation, config patch, or Terraform
@@ -73,8 +73,9 @@ The first version is status-only:
 
 ## Later Expansion Gates
 
-Each later capability requires a separate capability request, risk review, human
-approval, tracked config patch, validation, and rollback or disable path:
+Each later capability requires a separate capability request, risk review,
+operator approval, tracked config patch, validation, and rollback or disable
+path:
 
 * `/git-readonly-check`;
 * `/ask`;
@@ -94,6 +95,13 @@ messages.
 Runs a small Telegram adapter on the Stateful VM and polls the Telegram Bot API.
 It can reach OpenClaw over localhost or private VM access and does not require a
 public OpenClaw endpoint.
+
+Port model:
+
+* if the adapter runs on the Stateful VM, it should reach OpenClaw through the
+  VM-local endpoint on port `8080`;
+* if tests are run from an operator laptop through IAP, the local tunnel endpoint
+  may be `127.0.0.1:18080`.
 
 Benefits:
 

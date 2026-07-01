@@ -62,8 +62,8 @@ validation document. It is not a secret.
 
 ## Required Approval Gates
 
-Before enabling GitHub PR mode on the Stateful VM runtime, record explicit human
-approval for all of the following:
+Before enabling GitHub PR mode on the Stateful VM runtime, record explicit
+operator approval for all of the following:
 
 1. approve PR-mode validation scope;
 2. approve using a PR-capable GitHub token secret;

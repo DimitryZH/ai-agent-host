@@ -61,7 +61,7 @@ Reused from Cloud Run:
 
 - Artifact Registry repository convention: `ai-agent-runtime`.
 - Existing OpenClaw container and entrypoint contract.
-- Container port `8080`.
+- VM-local OpenClaw runtime port `8080`.
 - Runtime UID/GID `10001:10001`.
 - OpenClaw state/runtime/workspace environment conventions.
 - Gemini environment variables.
@@ -165,13 +165,23 @@ template expressions first.
 
 ## Access Model
 
+Port model:
+
+- VM-local OpenClaw runtime port: `8080`
+- operator laptop IAP tunnel port: `18080`
+
+The IAP tunnel maps the operator laptop URL
+`http://127.0.0.1:18080/` to the Stateful VM OpenClaw runtime on port `8080`.
+
 Discover the managed instance name and start an IAP tunnel:
 
 ```bash
+# Run on operator laptop.
 gcloud compute instance-groups managed list-instances openclaw-stateful-mig \
   --project=PROJECT_ID \
   --zone=ZONE
 
+# Run on operator laptop.
 gcloud compute start-iap-tunnel INSTANCE_NAME 8080 \
   --project=PROJECT_ID \
   --zone=ZONE \

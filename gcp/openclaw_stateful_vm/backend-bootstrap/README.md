@@ -94,7 +94,7 @@ terraform -chdir=gcp/openclaw_stateful_vm/backend-bootstrap validate
 terraform -chdir=gcp/openclaw_stateful_vm/backend-bootstrap plan -no-color -input=false
 ```
 
-`terraform apply` requires explicit human approval and is intentionally not part
+`terraform apply` requires explicit operator approval and is intentionally not part
 of this preparation phase.
 
 ## Future Runtime State Migration

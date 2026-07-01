@@ -39,6 +39,15 @@ Not implemented:
 * browser automation;
 * MCP or DevBox integration.
 
+## Port Model
+
+If the adapter runs on the Stateful VM, it should reach OpenClaw through the
+VM-local runtime endpoint on port `8080`.
+
+If tests are run from an operator laptop through IAP, the local tunnel endpoint
+may be `127.0.0.1:18080`. That laptop-local tunnel port is not the VM runtime
+port.
+
 ## Local Validation
 
 Run from the repository root:
