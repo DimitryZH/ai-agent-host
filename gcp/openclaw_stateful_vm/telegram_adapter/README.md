@@ -27,6 +27,7 @@ Implemented:
 * safe Telegram bot suffix normalization such as `/status@SomeBot`;
 * safe diagnostic event shape that excludes raw message text and chat IDs;
 * fake transport dispatcher for Telegram-like update dictionaries;
+* dry-run CLI for local JSON fixtures without Telegram access;
 * limited help response for unsupported commands such as `/ask`;
 * unit tests for command routing and non-secret responses.
 
@@ -72,4 +73,27 @@ Run from the repository root:
 
 ```powershell
 python -m unittest discover -s gcp\openclaw_stateful_vm\telegram_adapter\tests
+```
+
+## Dry-Run CLI
+
+Run from the repository root with a local fake update:
+
+```powershell
+python -m gcp.openclaw_stateful_vm.telegram_adapter.dry_run `
+  --allowed-chat-ids 12345 `
+  --update-json '{\"update_id\":1,\"message\":{\"message_id\":10,\"chat\":{\"id\":12345},\"text\":\"/health\"}}'
+```
+
+The dry-run CLI prints sanitized JSON only. It uses a fake status snapshot by
+default, does not require a live OpenClaw runtime, and does not call Telegram.
+
+An operator laptop IAP test URL can be validated explicitly without changing the
+default VM-local model:
+
+```powershell
+python -m gcp.openclaw_stateful_vm.telegram_adapter.dry_run `
+  --allowed-chat-ids 12345 `
+  --openclaw-base-url http://127.0.0.1:18080 `
+  --update-json '{\"update_id\":1,\"message\":{\"message_id\":10,\"chat\":{\"id\":12345},\"text\":\"/help\"}}'
 ```
