@@ -17,6 +17,9 @@ Implemented:
 
 * fixed command normalization;
 * Telegram chat ID allowlist check;
+* non-secret adapter configuration model;
+* fake inbound and outbound message envelopes;
+* application layer that wires config, command handling, and status snapshots;
 * fixed status-only handlers for `/status`, `/health`, `/whoami`, and `/help`;
 * loopback-only OpenClaw `/health` snapshot provider;
 * limited help response for unsupported commands such as `/ask`;
@@ -27,6 +30,7 @@ Not implemented:
 * Telegram bot creation;
 * bot token handling;
 * outbound polling;
+* Telegram Bot API client;
 * runtime service wrapper;
 * non-local OpenClaw API probing;
 * GitHub commands;
