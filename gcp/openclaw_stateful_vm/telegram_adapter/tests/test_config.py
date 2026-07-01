@@ -8,6 +8,11 @@ from gcp.openclaw_stateful_vm.telegram_adapter.config import (
 
 
 class TelegramAdapterConfigTests(unittest.TestCase):
+    def test_config_default_openclaw_url_is_vm_local_runtime_port(self) -> None:
+        config = TelegramAdapterConfig.from_allowed_chat_ids_text("12345")
+
+        self.assertEqual(config.openclaw_base_url, "http://127.0.0.1:8080")
+
     def test_parse_allowed_chat_ids_text_trims_values(self) -> None:
         self.assertEqual(
             parse_allowed_chat_ids_text(" 12345,67890 "),
@@ -32,10 +37,18 @@ class TelegramAdapterConfigTests(unittest.TestCase):
     def test_config_accepts_loopback_openclaw_url(self) -> None:
         config = TelegramAdapterConfig.from_allowed_chat_ids_text(
             "12345",
-            openclaw_base_url="http://127.0.0.1:18080",
+            openclaw_base_url="http://127.0.0.1:8080",
         )
 
         self.assertEqual(config.allowed_chat_ids, frozenset({"12345"}))
+        self.assertEqual(config.openclaw_base_url, "http://127.0.0.1:8080")
+
+    def test_config_accepts_laptop_iap_test_override(self) -> None:
+        config = TelegramAdapterConfig.from_allowed_chat_ids_text(
+            "12345",
+            openclaw_base_url="http://127.0.0.1:18080",
+        )
+
         self.assertEqual(config.openclaw_base_url, "http://127.0.0.1:18080")
 
     def test_config_rejects_non_loopback_openclaw_url(self) -> None:

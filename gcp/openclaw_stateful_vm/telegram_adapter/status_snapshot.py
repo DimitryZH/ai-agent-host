@@ -11,6 +11,10 @@ from urllib.parse import urljoin, urlparse
 from urllib.request import Request, urlopen
 
 from gcp.openclaw_stateful_vm.telegram_adapter.commands import RuntimeSnapshot
+from gcp.openclaw_stateful_vm.telegram_adapter.defaults import (
+    DEFAULT_OPENCLAW_BASE_URL,
+    DEFAULT_OPENCLAW_TIMEOUT_SECONDS,
+)
 
 
 LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
@@ -20,8 +24,8 @@ LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 class OpenClawStatusClient:
     """Read non-secret status from a local/private OpenClaw endpoint."""
 
-    base_url: str = "http://127.0.0.1:18080"
-    timeout_seconds: float = 2.0
+    base_url: str = DEFAULT_OPENCLAW_BASE_URL
+    timeout_seconds: float = DEFAULT_OPENCLAW_TIMEOUT_SECONDS
 
     def __post_init__(self) -> None:
         parsed = urlparse(self.base_url)

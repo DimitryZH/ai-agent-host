@@ -5,8 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Iterable
 
-
-SUPPORTED_COMMANDS = ("/status", "/health", "/whoami", "/help")
+from gcp.openclaw_stateful_vm.telegram_adapter.defaults import SUPPORTED_COMMANDS
 
 
 @dataclass(frozen=True)
@@ -54,12 +53,15 @@ def default_snapshot_provider() -> RuntimeSnapshot:
 
 
 def normalize_command(message_text: str) -> str:
-    """Extract a fixed Telegram command from a message without parsing args."""
+    """Extract a fixed Telegram command without preserving raw message text."""
 
     text = (message_text or "").strip()
     if not text:
         return "/help"
-    return text.split(maxsplit=1)[0].lower()
+    command = text.split(maxsplit=1)[0].lower()
+    if "@" in command:
+        command = command.split("@", maxsplit=1)[0]
+    return command
 
 
 def handle_message(

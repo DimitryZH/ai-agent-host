@@ -5,6 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable
 
+from gcp.openclaw_stateful_vm.telegram_adapter.defaults import (
+    DEFAULT_OPENCLAW_BASE_URL,
+    DEFAULT_OPENCLAW_TIMEOUT_SECONDS,
+)
 from gcp.openclaw_stateful_vm.telegram_adapter.status_snapshot import (
     OpenClawStatusClient,
 )
@@ -15,8 +19,8 @@ class TelegramAdapterConfig:
     """Validated non-secret adapter configuration."""
 
     allowed_chat_ids: frozenset[str]
-    openclaw_base_url: str = "http://127.0.0.1:18080"
-    openclaw_timeout_seconds: float = 2.0
+    openclaw_base_url: str = DEFAULT_OPENCLAW_BASE_URL
+    openclaw_timeout_seconds: float = DEFAULT_OPENCLAW_TIMEOUT_SECONDS
 
     def __post_init__(self) -> None:
         if not self.allowed_chat_ids:
@@ -31,8 +35,8 @@ class TelegramAdapterConfig:
     def from_allowed_chat_ids(
         cls,
         allowed_chat_ids: Iterable[str | int],
-        openclaw_base_url: str = "http://127.0.0.1:18080",
-        openclaw_timeout_seconds: float = 2.0,
+        openclaw_base_url: str = DEFAULT_OPENCLAW_BASE_URL,
+        openclaw_timeout_seconds: float = DEFAULT_OPENCLAW_TIMEOUT_SECONDS,
     ) -> "TelegramAdapterConfig":
         return cls(
             allowed_chat_ids=parse_allowed_chat_ids(allowed_chat_ids),
@@ -44,8 +48,8 @@ class TelegramAdapterConfig:
     def from_allowed_chat_ids_text(
         cls,
         allowed_chat_ids_text: str,
-        openclaw_base_url: str = "http://127.0.0.1:18080",
-        openclaw_timeout_seconds: float = 2.0,
+        openclaw_base_url: str = DEFAULT_OPENCLAW_BASE_URL,
+        openclaw_timeout_seconds: float = DEFAULT_OPENCLAW_TIMEOUT_SECONDS,
     ) -> "TelegramAdapterConfig":
         return cls.from_allowed_chat_ids(
             parse_allowed_chat_ids_text(allowed_chat_ids_text),
