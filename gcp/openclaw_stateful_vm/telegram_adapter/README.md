@@ -31,6 +31,7 @@ Implemented:
 * safe diagnostic event shape that excludes raw message text and chat IDs;
 * fake transport dispatcher for Telegram-like update dictionaries;
 * dry-run CLI for local JSON fixtures without Telegram access;
+* disabled Telegram Bot API client skeleton with fake HTTP transport tests;
 * limited help response for unsupported commands such as `/ask`;
 * unit tests for command routing and non-secret responses.
 
@@ -39,8 +40,8 @@ Not implemented:
 * Telegram bot creation;
 * bot token handling;
 * outbound polling;
-* Telegram Bot API client;
-* `getUpdates` or `sendMessage` calls;
+* enabled Telegram Bot API client;
+* real `getUpdates` or `sendMessage` calls;
 * runtime service wrapper;
 * non-local OpenClaw API probing;
 * GitHub commands;
@@ -90,6 +91,13 @@ python -m gcp.openclaw_stateful_vm.telegram_adapter.dry_run `
 
 The dry-run CLI prints sanitized JSON only. It uses a fake status snapshot by
 default, does not require a live OpenClaw runtime, and does not call Telegram.
+
+## Disabled Telegram Client Skeleton
+
+`telegram_client.py` defines a small Telegram Bot API client skeleton for future
+use. It is disabled, not wired into polling, and has no real HTTP transport.
+Tests use `FakeTelegramHttpTransport` only, with fake token strings and no
+Telegram network access.
 
 An operator laptop IAP test URL can be validated explicitly without changing the
 default VM-local model:
