@@ -18,6 +18,7 @@ Implemented:
 * fixed command normalization;
 * Telegram chat ID allowlist check;
 * fixed status-only handlers for `/status`, `/health`, `/whoami`, and `/help`;
+* loopback-only OpenClaw `/health` snapshot provider;
 * limited help response for unsupported commands such as `/ask`;
 * unit tests for command routing and non-secret responses.
 
@@ -27,7 +28,7 @@ Not implemented:
 * bot token handling;
 * outbound polling;
 * runtime service wrapper;
-* OpenClaw API probing;
+* non-local OpenClaw API probing;
 * GitHub commands;
 * Terraform commands;
 * shell execution;
