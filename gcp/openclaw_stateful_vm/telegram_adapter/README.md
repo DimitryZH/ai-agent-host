@@ -32,6 +32,7 @@ Implemented:
 * fake transport dispatcher for Telegram-like update dictionaries;
 * dry-run CLI for local JSON fixtures without Telegram access;
 * disabled Telegram Bot API client skeleton with fake HTTP transport tests;
+* disabled poll-once coordinator with fake client/transport tests;
 * limited help response for unsupported commands such as `/ask`;
 * unit tests for command routing and non-secret responses.
 
@@ -42,6 +43,7 @@ Not implemented:
 * outbound polling;
 * enabled Telegram Bot API client;
 * real `getUpdates` or `sendMessage` calls;
+* polling loop, background loop, or retry daemon behavior;
 * runtime service wrapper;
 * non-local OpenClaw API probing;
 * GitHub commands;
@@ -98,6 +100,14 @@ default, does not require a live OpenClaw runtime, and does not call Telegram.
 use. It is disabled, not wired into polling, and has no real HTTP transport.
 Tests use `FakeTelegramHttpTransport` only, with fake token strings and no
 Telegram network access.
+
+## Disabled Poll-Once Coordinator
+
+`polling.py` defines a disabled poll-once coordinator for future review. It
+models one injected-client cycle only: get updates, dispatch fake updates, and
+send safe outbound responses through the injected client. It is not run
+automatically and adds no polling loop, service, systemd, token, Secret Manager,
+Terraform, or runtime wiring. Tests use fake client/transport objects only.
 
 An operator laptop IAP test URL can be validated explicitly without changing the
 default VM-local model:
