@@ -33,6 +33,7 @@ Implemented:
 * dry-run CLI for local JSON fixtures without Telegram access;
 * disabled Telegram Bot API client skeleton with fake HTTP transport tests;
 * disabled poll-once coordinator with fake client/transport tests;
+* disabled runtime preflight for non-secret configuration shape;
 * limited help response for unsupported commands such as `/ask`;
 * unit tests for command routing and non-secret responses.
 
@@ -45,6 +46,7 @@ Not implemented:
 * real `getUpdates` or `sendMessage` calls;
 * polling loop, background loop, or retry daemon behavior;
 * runtime service wrapper;
+* runtime preflight token file reads;
 * non-local OpenClaw API probing;
 * GitHub commands;
 * Terraform commands;
@@ -108,6 +110,14 @@ models one injected-client cycle only: get updates, dispatch fake updates, and
 send safe outbound responses through the injected client. It is not run
 automatically and adds no polling loop, service, systemd, token, Secret Manager,
 Terraform, or runtime wiring. Tests use fake client/transport objects only.
+
+## Runtime Preflight
+
+`runtime_preflight.py` validates non-secret runtime configuration shape from
+environment variables: `TELEGRAM_ALLOWED_CHAT_IDS`, `TELEGRAM_BOT_TOKEN_FILE`,
+and `OPENCLAW_BASE_URL`. It prints sanitized JSON, does not read token contents,
+does not call Telegram, does not call OpenClaw, and does not start polling or a
+service.
 
 An operator laptop IAP test URL can be validated explicitly without changing the
 default VM-local model:
