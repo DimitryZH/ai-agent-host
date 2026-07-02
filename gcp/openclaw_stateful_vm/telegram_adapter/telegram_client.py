@@ -1,14 +1,16 @@
 """Disabled Telegram Bot API client skeleton.
 
-This module intentionally provides no real HTTP implementation and is not wired
-into polling or runtime startup. Future enablement must inject an approved
-transport explicitly.
+This module is not wired into polling or runtime startup. Future enablement
+must inject an approved transport explicitly.
 """
 
 from __future__ import annotations
 
+import json
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
-from typing import Any, Mapping, Protocol
+from typing import Any, Protocol
+from urllib.request import Request, urlopen
 
 
 class TelegramApiError(RuntimeError):
@@ -81,6 +83,102 @@ class FakeTelegramHttpTransport:
         if self.responses:
             return self.responses.pop(0)
         return {"ok": True, "result": []}
+
+
+class UrllibTelegramHttpTransport:
+    """Explicit-only Telegram HTTP transport using the standard library."""
+
+    def __init__(
+        self,
+        *,
+        post_json: Callable[
+            [str, bytes, Mapping[str, str], float],
+            bytes,
+        ]
+        | None = None,
+        timeout_seconds: float = 30.0,
+        base_url: str = "https://api.telegram.org",
+    ) -> None:
+        self._post_json = post_json or _urllib_post_json
+        self._timeout_seconds = timeout_seconds
+        self._base_url = base_url.rstrip("/")
+
+    def __repr__(self) -> str:
+        return (
+            "UrllibTelegramHttpTransport("
+            "base_url=<redacted>, "
+            f"timeout_seconds={self._timeout_seconds!r})"
+        )
+
+    def post_json(
+        self,
+        *,
+        token: str,
+        method: str,
+        payload: Mapping[str, Any],
+    ) -> Mapping[str, Any]:
+        url = f"{self._base_url}/bot{token}/{method}"
+        body = json.dumps(dict(payload)).encode("utf-8")
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        }
+
+        http_failed = False
+        try:
+            raw_response = self._post_json(
+                url,
+                body,
+                headers,
+                self._timeout_seconds,
+            )
+        except Exception:
+            http_failed = True
+
+        if http_failed:
+            raise TelegramApiError(
+                "Telegram API HTTP transport failed",
+                method=method,
+                reason="http_error",
+            )
+
+        invalid_json = False
+        try:
+            response = json.loads(raw_response.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            invalid_json = True
+
+        if invalid_json:
+            raise TelegramApiError(
+                "Telegram API returned invalid JSON",
+                method=method,
+                reason="invalid_json",
+            )
+
+        if not isinstance(response, Mapping):
+            raise TelegramApiError(
+                "Telegram API returned an invalid response",
+                method=method,
+                reason="invalid_response",
+            )
+
+        return response
+
+
+def _urllib_post_json(
+    url: str,
+    body: bytes,
+    headers: Mapping[str, str],
+    timeout_seconds: float,
+) -> bytes:
+    request = Request(
+        url,
+        data=body,
+        headers=dict(headers),
+        method="POST",
+    )
+    with urlopen(request, timeout=timeout_seconds) as response:
+        return response.read(1024 * 1024)
 
 
 class TelegramBotApiClient:

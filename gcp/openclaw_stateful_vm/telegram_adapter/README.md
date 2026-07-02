@@ -35,6 +35,8 @@ Implemented:
 * fake transport dispatcher for Telegram-like update dictionaries;
 * dry-run CLI for local JSON fixtures without Telegram access;
 * disabled Telegram Bot API client skeleton with fake HTTP transport tests;
+* explicit-only Telegram token file reader for future approved wiring;
+* disabled real Telegram HTTP transport with injected network function tests;
 * disabled poll-once coordinator with fake client/transport tests;
 * disabled runtime preflight for non-secret configuration shape;
 * limited help response for unsupported commands such as `/ask`;
@@ -43,9 +45,9 @@ Implemented:
 Not implemented:
 
 * Telegram bot creation;
-* bot token handling;
+* enabled bot token handling;
 * outbound polling;
-* enabled Telegram Bot API client;
+* enabled Telegram Bot API client or real HTTP transport wiring;
 * real `getUpdates` or `sendMessage` calls;
 * polling loop, background loop, or retry daemon behavior;
 * runtime service wrapper;
@@ -102,9 +104,16 @@ default, does not require a live OpenClaw runtime, and does not call Telegram.
 ## Disabled Telegram Client Skeleton
 
 `telegram_client.py` defines a small Telegram Bot API client skeleton for future
-use. It is disabled, not wired into polling, and has no real HTTP transport.
-Tests use `FakeTelegramHttpTransport` only, with fake token strings and no
-Telegram network access.
+use. It is disabled and not wired into polling. The real HTTP transport remains
+explicit-only and is tested with an injected fake network function; default tests
+do not call Telegram.
+
+## Disabled Token File Reader
+
+`token_file.py` defines an explicit-only token file reader for future approved
+wiring. It requires an absolute path, validates fake token-shaped test values,
+does not read Secret Manager payloads, and is not called by runtime startup,
+preflight, polling, or dry-run code.
 
 ## Disabled Poll-Once Coordinator
 
