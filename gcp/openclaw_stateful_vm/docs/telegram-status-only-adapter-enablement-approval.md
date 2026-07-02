@@ -21,6 +21,7 @@ The repository currently contains a local-only Telegram adapter scaffold:
 * dry-run CLI for local JSON fixtures;
 * prepared runner wiring for future explicit runtime execution;
 * prepared disabled systemd service template;
+* default-disabled Terraform/bootstrap wiring for future approved rollout;
 * unit tests for command routing, allowlist behavior, malformed input, and
   non-secret responses.
 
@@ -153,6 +154,10 @@ must not be installed, enabled, or started until the final operator approval
 gate, Terraform/runtime rollout plan, validation window, and rollback path are
 approved. The Telegram token value remains only in Secret Manager and the
 runtime token file path remains `/run/openclaw/secrets/TELEGRAM_BOT_TOKEN`.
+
+Terraform/bootstrap support is prepared with `telegram_adapter_enabled = false`
+as the default. No Terraform apply or runtime rollout has happened in this
+repository state, and no real Telegram chat ID is committed.
 
 ## Approval Record
 

@@ -26,10 +26,11 @@ Current state:
 * explicit-only token file reader;
 * prepared runner wiring;
 * disabled systemd service template;
+* default-disabled Terraform/bootstrap wiring;
 * no committed token value;
 * no running polling;
 * no installed systemd service;
-* no Terraform;
+* no Terraform apply;
 * no live runtime wiring.
 
 ## Operator Inputs Needed Later
@@ -150,6 +151,6 @@ This guide does not approve:
 A separate approved implementation task is required before adding:
 
 * service installation;
-* Secret Manager mapping;
-* Terraform/runtime wiring;
+* Secret Manager runtime retrieval beyond the existing token mapping;
+* Terraform apply or runtime rollout;
 * live VM validation.

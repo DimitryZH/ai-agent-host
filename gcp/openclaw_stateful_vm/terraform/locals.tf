@@ -60,6 +60,17 @@ locals {
     "${env_name}=${local.runtime_environment[env_name]}"
   ])
 
+  telegram_adapter_environment = {
+    OPENCLAW_BASE_URL         = var.telegram_adapter_openclaw_base_url
+    TELEGRAM_ALLOWED_CHAT_IDS = var.telegram_allowed_chat_ids
+    TELEGRAM_BOT_TOKEN_FILE   = var.telegram_bot_token_file
+  }
+
+  telegram_adapter_environment_file = join("\n", [
+    for env_name in sort(keys(local.telegram_adapter_environment)) :
+    "${env_name}=${local.telegram_adapter_environment[env_name]}"
+  ])
+
   systemd_unit = templatefile("${path.module}/../systemd/openclaw.service.tftpl", {
     container_image  = var.container_image
     openclaw_gid     = var.openclaw_gid
@@ -68,21 +79,32 @@ locals {
     state_mount_path = var.state_mount_path
   })
 
+  telegram_adapter_systemd_unit = templatefile("${path.module}/../systemd/openclaw-telegram-adapter.service.tftpl", {
+    openclaw_gid                           = var.openclaw_gid
+    openclaw_uid                           = var.openclaw_uid
+    telegram_adapter_poll_interval_seconds = var.telegram_adapter_poll_interval_seconds
+    telegram_adapter_working_directory     = var.telegram_adapter_working_directory
+    telegram_bot_token_file                = var.telegram_bot_token_file
+  })
+
   bootstrap_script = templatefile("${path.module}/../scripts/bootstrap-openclaw.sh.tftpl", {
-    container_image_b64        = base64encode(var.container_image)
-    data_disk_device_name_b64  = base64encode(var.data_disk_device_name)
-    install_ops_agent          = var.install_ops_agent
-    openclaw_gid               = var.openclaw_gid
-    openclaw_runtime_dir_b64   = base64encode(var.openclaw_runtime_dir)
-    openclaw_state_dir_b64     = base64encode(var.openclaw_state_dir)
-    openclaw_uid               = var.openclaw_uid
-    openclaw_workspace_dir_b64 = base64encode(var.openclaw_workspace_dir)
-    project_id_b64             = base64encode(var.project_id)
-    runtime_environment_b64    = base64encode("${local.runtime_environment_file}\n")
-    secret_project_id_b64      = base64encode(local.secret_project_id)
-    secret_map_json_b64        = base64encode(jsonencode(local.runtime_secret_ids))
-    state_mount_path_b64       = base64encode(var.state_mount_path)
-    systemd_unit_b64           = base64encode(local.systemd_unit)
+    container_image_b64               = base64encode(var.container_image)
+    data_disk_device_name_b64         = base64encode(var.data_disk_device_name)
+    install_ops_agent                 = var.install_ops_agent
+    openclaw_gid                      = var.openclaw_gid
+    openclaw_runtime_dir_b64          = base64encode(var.openclaw_runtime_dir)
+    openclaw_state_dir_b64            = base64encode(var.openclaw_state_dir)
+    openclaw_uid                      = var.openclaw_uid
+    openclaw_workspace_dir_b64        = base64encode(var.openclaw_workspace_dir)
+    project_id_b64                    = base64encode(var.project_id)
+    runtime_environment_b64           = base64encode("${local.runtime_environment_file}\n")
+    secret_project_id_b64             = base64encode(local.secret_project_id)
+    secret_map_json_b64               = base64encode(jsonencode(local.runtime_secret_ids))
+    state_mount_path_b64              = base64encode(var.state_mount_path)
+    systemd_unit_b64                  = base64encode(local.systemd_unit)
+    telegram_adapter_enabled          = var.telegram_adapter_enabled
+    telegram_adapter_environment_b64  = base64encode("${local.telegram_adapter_environment_file}\n")
+    telegram_adapter_systemd_unit_b64 = base64encode(local.telegram_adapter_systemd_unit)
   })
 }
 
@@ -107,5 +129,19 @@ check "persistent_paths_under_mount" {
       startswith(var.openclaw_workspace_dir, "${var.state_mount_path}/")
     )
     error_message = "openclaw_state_dir and openclaw_workspace_dir must remain under state_mount_path."
+  }
+}
+
+check "telegram_adapter_requires_allowlist" {
+  assert {
+    condition     = !var.telegram_adapter_enabled || trimspace(var.telegram_allowed_chat_ids) != ""
+    error_message = "telegram_allowed_chat_ids must be set before enabling the Telegram adapter."
+  }
+}
+
+check "telegram_adapter_requires_token_mapping" {
+  assert {
+    condition     = !var.telegram_adapter_enabled || contains(keys(local.runtime_secret_ids), "TELEGRAM_BOT_TOKEN")
+    error_message = "runtime_secret_ids must include TELEGRAM_BOT_TOKEN before enabling the Telegram adapter."
   }
 }

@@ -44,6 +44,7 @@ Implemented:
 * disabled runtime preflight for non-secret configuration shape;
 * explicit runtime runner for future approved execution;
 * disabled systemd service template for future approved rollout;
+* default-disabled Terraform/bootstrap wiring for future approved rollout;
 * limited help response for unsupported commands such as `/ask`;
 * unit tests for command routing and non-secret responses.
 
@@ -149,6 +150,12 @@ The prepared systemd template is tracked at:
 
 The adapter remains not rolled out until a final operator approval gate,
 Terraform/runtime rollout, validation window, and rollback path are approved.
+
+Terraform defaults keep rollout disabled:
+
+```text
+telegram_adapter_enabled = false
+```
 
 An operator laptop IAP test URL can be validated explicitly without changing the
 default VM-local model:

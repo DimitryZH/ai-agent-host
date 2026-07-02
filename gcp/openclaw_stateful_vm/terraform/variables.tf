@@ -213,6 +213,67 @@ variable "runtime_secret_ids" {
   }
 }
 
+variable "telegram_adapter_enabled" {
+  description = "Install and start the Telegram status-only adapter during an approved rollout. Keep false unless final operator approval is recorded."
+  type        = bool
+  default     = false
+}
+
+variable "telegram_allowed_chat_ids" {
+  description = "Comma-separated approved Telegram chat IDs for the status-only adapter. Use placeholders in tracked files; do not commit real chat IDs."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.telegram_allowed_chat_ids == "" || can(regex("^\\s*-?[0-9]+\\s*(,\\s*-?[0-9]+\\s*)*$", var.telegram_allowed_chat_ids))
+    error_message = "telegram_allowed_chat_ids must be empty or a comma-separated list of numeric chat IDs."
+  }
+}
+
+variable "telegram_adapter_openclaw_base_url" {
+  description = "VM-local OpenClaw endpoint used by the Telegram adapter."
+  type        = string
+  default     = "http://127.0.0.1:8080"
+
+  validation {
+    condition     = var.telegram_adapter_openclaw_base_url == "http://127.0.0.1:8080"
+    error_message = "telegram_adapter_openclaw_base_url must remain the VM-local OpenClaw endpoint."
+  }
+}
+
+variable "telegram_bot_token_file" {
+  description = "Runtime file path for the Telegram bot token. The value is a path only, never the token."
+  type        = string
+  default     = "/run/openclaw/secrets/TELEGRAM_BOT_TOKEN"
+
+  validation {
+    condition     = startswith(var.telegram_bot_token_file, "/run/openclaw/secrets/")
+    error_message = "telegram_bot_token_file must stay under /run/openclaw/secrets/."
+  }
+}
+
+variable "telegram_adapter_working_directory" {
+  description = "Working directory that will contain the Telegram adapter Python package during a future approved rollout."
+  type        = string
+  default     = "/opt/ai-agent-host"
+
+  validation {
+    condition     = startswith(var.telegram_adapter_working_directory, "/")
+    error_message = "telegram_adapter_working_directory must be an absolute path."
+  }
+}
+
+variable "telegram_adapter_poll_interval_seconds" {
+  description = "Polling interval for the future Telegram adapter service."
+  type        = number
+  default     = 5
+
+  validation {
+    condition     = var.telegram_adapter_poll_interval_seconds >= 1 && var.telegram_adapter_poll_interval_seconds <= 60
+    error_message = "telegram_adapter_poll_interval_seconds must be between 1 and 60 seconds."
+  }
+}
+
 variable "github_pr_secret_id" {
   description = "Existing Secret Manager secret ID for the controlled PR token. Required only when openclaw_github_mode is pr."
   type        = string
