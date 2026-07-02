@@ -32,14 +32,26 @@ The initial Telegram/mobile channel does not allow:
 
 Recommended first architecture:
 
-```text
-Telegram App
-        ↓
-Telegram Bot API
-        ↓ outbound polling
-Telegram adapter on Stateful VM
-        ↓ localhost/private access
-OpenClaw runtime
+The adapter uses outbound polling so the Stateful VM does not need a public
+inbound endpoint.
+
+```mermaid
+flowchart TD
+    phone["Operator phone<br/>Telegram App"]
+    telegram["Telegram Bot API"]
+    adapter["Telegram status-only adapter<br/>on Stateful VM"]
+    openclaw["OpenClaw runtime<br/>VM-local: 127.0.0.1:8080"]
+    sm["GCP Secret Manager<br/>Telegram bot token<br/>future approved source"]
+    iap["Operator laptop<br/>IAP tunnel: 127.0.0.1:18080"]
+    boundary["No public OpenClaw endpoint<br/>No webhook ingress to VM"]
+
+    phone -->|/status /health /whoami /help| telegram
+    adapter -->|outbound getUpdates| telegram
+    adapter -->|outbound sendMessage| telegram
+    adapter -->|localhost/private only| openclaw
+    adapter -.->|future approved token source| sm
+    iap -.->|manual UI/testing only| openclaw
+    boundary -.-> adapter
 ```
 
 The adapter polls Telegram outbound from the Stateful VM. OpenClaw remains
@@ -89,6 +101,25 @@ still be approved separately if it exposes task history, file paths, or operator
 messages.
 
 ## Implementation Options
+
+The first proof of concept should prefer outbound polling over webhook ingress:
+
+```mermaid
+flowchart LR
+    subgraph Rejected["Rejected for first version: webhook"]
+        tg1["Telegram Bot API"] -->|requires public HTTPS endpoint| public["Public webhook endpoint"]
+        public --> adapter1["Adapter"]
+        adapter1 --> openclaw1["OpenClaw runtime"]
+    end
+
+    subgraph Selected["Selected for first version: outbound polling"]
+        adapter2["Adapter on private Stateful VM"] -->|outbound HTTPS getUpdates| tg2["Telegram Bot API"]
+        adapter2 -->|localhost only| openclaw2["OpenClaw runtime"]
+    end
+
+    reason["Reason:<br/>OpenClaw stays private-only<br/>No public VM endpoint<br/>No webhook ingress"]
+    reason -.-> Selected
+```
 
 ### Stateful VM Adapter With Outbound Polling
 

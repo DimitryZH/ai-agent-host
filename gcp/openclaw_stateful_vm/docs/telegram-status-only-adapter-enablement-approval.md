@@ -42,6 +42,33 @@ Out of scope: `/last-run`, `/ask`, GitHub commands, Terraform commands, shell
 commands, PR/write mode, DevBox execution, browser automation, MCP, and
 tool/skill expansion.
 
+Telegram messages pass through the adapter allowlist and fixed command router
+before any local OpenClaw status check is attempted.
+
+```mermaid
+flowchart TD
+    update["Telegram update"]
+    allowlist{"Chat ID approved?"}
+    command{"Command allowed?"}
+    status["/status"]
+    health["/health"]
+    whoami["/whoami"]
+    help["/help"]
+    reject["Safe rejection<br/>Access denied"]
+    limited["Limited help<br/>Unsupported command"]
+    openclaw["OpenClaw local status/health<br/>127.0.0.1:8080"]
+    response["Non-secret Telegram response"]
+
+    update --> allowlist
+    allowlist -->|no| reject --> response
+    allowlist -->|yes| command
+    command -->|/status| status --> openclaw --> response
+    command -->|/health| health --> openclaw
+    command -->|/whoami| whoami --> response
+    command -->|/help| help --> response
+    command -->|/ask / shell / Terraform / GitHub write| limited --> response
+```
+
 ## Port Model
 
 * VM-local OpenClaw runtime port: `8080`
