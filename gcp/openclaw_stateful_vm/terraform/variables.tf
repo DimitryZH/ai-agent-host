@@ -200,6 +200,7 @@ variable "runtime_secret_ids" {
     OPENCLAW_GATEWAY_TOKEN = "openclaw-gateway-token-experimental"
     GEMINI_API_KEY         = "gemini-api-key-experimental"
     GH_TOKEN               = "openclaw-github-readonly-token-experimental"
+    TELEGRAM_BOT_TOKEN     = "openclaw-telegram-bot-token"
   }
 
   validation {

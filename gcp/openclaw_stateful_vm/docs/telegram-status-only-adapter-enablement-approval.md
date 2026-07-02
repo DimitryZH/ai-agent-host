@@ -90,6 +90,13 @@ TELEGRAM_BOT_TOKEN_FILE
 OPENCLAW_BASE_URL
 ```
 
+Tracked secret mapping prepared for a future approved rollout:
+
+```text
+Secret Manager secret: openclaw-telegram-bot-token
+Runtime file path: /run/openclaw/secrets/TELEGRAM_BOT_TOKEN
+```
+
 No token value may be committed. No token value may be printed in logs or
 evidence. Secret Manager payload reads must be narrowly scoped to the Telegram
 bot token only. Arbitrary Secret Manager reads remain out of scope.

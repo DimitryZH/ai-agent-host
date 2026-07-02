@@ -79,6 +79,16 @@ The adapter reads only that token file during future approved enablement.
 This guide does not create the secret, grant IAM, or read Secret Manager
 payloads. Arbitrary Secret Manager reads remain out of scope.
 
+Tracked mapping preparation:
+
+```text
+TELEGRAM_BOT_TOKEN = openclaw-telegram-bot-token
+TELEGRAM_BOT_TOKEN_FILE = /run/openclaw/secrets/TELEGRAM_BOT_TOKEN
+```
+
+The mapping contains only a Secret Manager secret identifier and a runtime file
+path. The file is created on the VM only after a future approved rollout.
+
 ## Port Model
 
 * VM-local OpenClaw runtime port: `8080`
