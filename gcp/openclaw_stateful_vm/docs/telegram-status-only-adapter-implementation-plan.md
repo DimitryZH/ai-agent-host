@@ -19,7 +19,7 @@ and storing the token in Secret Manager are documented in:
 
 ## Preconditions
 
-Implementation must not start until all of the following are true:
+Runtime rollout must not start until all of the following are true:
 
 * the Telegram status-only adapter capability request has operator approval;
 * the target Telegram bot exists outside the repository;
@@ -86,12 +86,13 @@ only the specific bot token value needed to authenticate to Telegram.
 
 1. Add the adapter code with fixed command handlers only.
 2. Add unit tests for command routing, unknown users, and unknown commands.
-3. Add a minimal service wrapper or runtime integration only after approval.
+3. Add prepared runner and disabled service template without installing them.
 4. Add non-secret configuration placeholders or documented environment names.
 5. Add operator validation notes for approved chat IDs and token handling.
 6. Validate locally without real secrets where possible.
-7. Validate on the Stateful VM only in the approved implementation window.
-8. Record evidence and keep rollback instructions current.
+7. Install or enable runtime wiring only in the approved implementation window.
+8. Validate on the Stateful VM only after the approved rollout step.
+9. Record evidence and keep rollback instructions current.
 
 ## Validation Checklist
 
@@ -120,3 +121,7 @@ The first implementation must keep rollback simple:
 
 Implementation remains blocked until the capability request is explicitly
 approved for implementation through an approved change record.
+
+The prepared runner and service template do not by themselves enable Telegram
+access. The adapter remains not rolled out until Terraform/runtime changes are
+applied through a final operator approval gate.

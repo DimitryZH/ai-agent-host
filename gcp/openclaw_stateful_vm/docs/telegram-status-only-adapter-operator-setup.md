@@ -23,11 +23,14 @@ Current state:
 * disabled Bot API client skeleton;
 * disabled poll-once coordinator;
 * disabled runtime preflight;
-* no token;
-* no polling;
-* no systemd;
+* explicit-only token file reader;
+* prepared runner wiring;
+* disabled systemd service template;
+* no committed token value;
+* no running polling;
+* no installed systemd service;
 * no Terraform;
-* no runtime wiring.
+* no live runtime wiring.
 
 ## Operator Inputs Needed Later
 
@@ -129,7 +132,7 @@ This guide does not approve:
 
 * creating or committing token values;
 * enabling polling;
-* adding systemd;
+* installing, enabling, or starting systemd service wiring;
 * changing Terraform;
 * changing runtime config;
 * reading Secret Manager payloads;
@@ -146,8 +149,7 @@ This guide does not approve:
 
 A separate approved implementation task is required before adding:
 
-* polling loop;
-* systemd service;
+* service installation;
 * Secret Manager mapping;
 * Terraform/runtime wiring;
 * live VM validation.

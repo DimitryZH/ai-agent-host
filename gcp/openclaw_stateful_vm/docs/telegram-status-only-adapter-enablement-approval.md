@@ -19,11 +19,13 @@ The repository currently contains a local-only Telegram adapter scaffold:
 * loopback-only OpenClaw status snapshot provider;
 * fake transport dispatcher for Telegram-like update dictionaries;
 * dry-run CLI for local JSON fixtures;
+* prepared runner wiring for future explicit runtime execution;
+* prepared disabled systemd service template;
 * unit tests for command routing, allowlist behavior, malformed input, and
   non-secret responses.
 
-It has no Telegram token, no polling, no Telegram Bot API client, no systemd
-unit, no Terraform wiring, and no runtime config change.
+It has no committed Telegram token value, no committed real chat ID, no running
+polling, no installed systemd unit, no Terraform apply, and no runtime rollout.
 
 ## Proposed Enablement Scope
 
@@ -122,6 +124,7 @@ Future enablement must not change:
 
 Before enablement is accepted:
 
+* final operator approval and an approved change record are present;
 * adapter starts only after explicit approval;
 * bot token is not in the repository;
 * only approved chat IDs get responses;
@@ -142,6 +145,14 @@ Rollback path:
 * rotate Telegram bot token if exposure is suspected;
 * confirm OpenClaw still private-only;
 * revert tracked adapter enablement patch if needed.
+
+## Prepared Patch Boundary
+
+The tracked runner and service template are enablement preparation only. They
+must not be installed, enabled, or started until the final operator approval
+gate, Terraform/runtime rollout plan, validation window, and rollback path are
+approved. The Telegram token value remains only in Secret Manager and the
+runtime token file path remains `/run/openclaw/secrets/TELEGRAM_BOT_TOKEN`.
 
 ## Approval Record
 

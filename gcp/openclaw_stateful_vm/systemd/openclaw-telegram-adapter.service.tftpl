@@ -1,0 +1,35 @@
+[Unit]
+Description=OpenClaw Telegram status-only adapter
+Documentation=https://github.com/openclaw/openclaw
+Requires=openclaw.service
+After=network-online.target openclaw.service
+Wants=network-online.target
+ConditionPathExists=/run/openclaw/secrets/TELEGRAM_BOT_TOKEN
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=${adapter_user}
+Group=${adapter_group}
+WorkingDirectory=${adapter_working_directory}
+Environment=TELEGRAM_ALLOWED_CHAT_IDS=${telegram_allowed_chat_ids}
+Environment=TELEGRAM_BOT_TOKEN_FILE=/run/openclaw/secrets/TELEGRAM_BOT_TOKEN
+Environment=OPENCLAW_BASE_URL=http://127.0.0.1:8080
+ExecStart=/usr/bin/python3 -m gcp.openclaw_stateful_vm.telegram_adapter.runner --loop --poll-interval-seconds ${poll_interval_seconds}
+Restart=on-failure
+RestartSec=30s
+TimeoutStartSec=60
+TimeoutStopSec=30
+KillMode=process
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/run/openclaw
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=openclaw-telegram-adapter
+
+[Install]
+WantedBy=multi-user.target

@@ -16,7 +16,7 @@ Operator bootstrap guide:
 
 It is not wired into:
 
-* systemd;
+* installed or enabled systemd service;
 * Terraform;
 * Secret Manager;
 * Telegram Bot API polling;
@@ -42,6 +42,8 @@ Implemented:
 * disabled real Telegram HTTP transport with injected network function tests;
 * disabled poll-once coordinator with fake client/transport tests;
 * disabled runtime preflight for non-secret configuration shape;
+* explicit runtime runner for future approved execution;
+* disabled systemd service template for future approved rollout;
 * limited help response for unsupported commands such as `/ask`;
 * unit tests for command routing and non-secret responses.
 
@@ -49,11 +51,11 @@ Not implemented:
 
 * Telegram bot creation;
 * enabled bot token handling;
-* outbound polling;
+* started outbound polling;
 * enabled Telegram Bot API client or real HTTP transport wiring;
 * real `getUpdates` or `sendMessage` calls;
-* polling loop, background loop, or retry daemon behavior;
-* runtime service wrapper;
+* started polling loop, background loop, or retry daemon behavior;
+* installed runtime service wrapper;
 * runtime preflight token file reads;
 * non-local OpenClaw API probing;
 * GitHub commands;
@@ -133,6 +135,20 @@ environment variables: `TELEGRAM_ALLOWED_CHAT_IDS`, `TELEGRAM_BOT_TOKEN_FILE`,
 and `OPENCLAW_BASE_URL`. It prints sanitized JSON, does not read token contents,
 does not call Telegram, does not call OpenClaw, and does not start polling or a
 service.
+
+## Prepared Runtime Runner
+
+`runner.py` wires the token file reader, Telegram client, HTTP transport,
+poll-once coordinator, adapter app, and loopback-only OpenClaw status client for
+future approved runtime execution. It is explicit-only: without an operator
+invocation it does nothing, and the service template is not installed or enabled
+by this repository state.
+
+The prepared systemd template is tracked at:
+`gcp/openclaw_stateful_vm/systemd/openclaw-telegram-adapter.service.tftpl`
+
+The adapter remains not rolled out until a final operator approval gate,
+Terraform/runtime rollout, validation window, and rollback path are approved.
 
 An operator laptop IAP test URL can be validated explicitly without changing the
 default VM-local model:
