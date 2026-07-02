@@ -14,6 +14,10 @@ It complements:
 * `gcp/openclaw_stateful_vm/docs/capability-requests/telegram-status-only-adapter.md`
 * `gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-implementation-plan.md`
 * `gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-enablement-approval.md`
+* `gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-operator-bootstrap.md`
+
+Operator bootstrap steps for creating the Telegram bot, collecting the chat ID,
+and storing the token in Secret Manager are documented in the bootstrap guide.
 
 ## Approval Gates
 

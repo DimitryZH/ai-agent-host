@@ -11,6 +11,9 @@ Enablement approval package:
 Operator setup guide:
 `gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-operator-setup.md`
 
+Operator bootstrap guide:
+`gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-operator-bootstrap.md`
+
 It is not wired into:
 
 * systemd;

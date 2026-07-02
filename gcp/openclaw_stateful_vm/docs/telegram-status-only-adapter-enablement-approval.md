@@ -6,6 +6,10 @@
 Operator setup guide:
 `gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-operator-setup.md`
 
+Operator bootstrap steps for creating the Telegram bot, collecting the chat ID,
+and storing the token in Secret Manager are documented in:
+`gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-operator-bootstrap.md`
+
 ## Current Non-Enabled State
 
 The repository currently contains a local-only Telegram adapter scaffold:

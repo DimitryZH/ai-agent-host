@@ -13,6 +13,10 @@ adapter.
 The enablement approval package is tracked in
 `gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-enablement-approval.md`.
 
+Operator bootstrap steps for creating the Telegram bot, collecting the chat ID,
+and storing the token in Secret Manager are documented in:
+`gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-operator-bootstrap.md`
+
 ## Preconditions
 
 Implementation must not start until all of the following are true:

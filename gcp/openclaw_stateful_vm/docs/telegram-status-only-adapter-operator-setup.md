@@ -10,6 +10,10 @@ status-only adapter.
 
 This document does not enable Telegram access.
 
+Operator bootstrap steps for creating the Telegram bot, collecting the chat ID,
+and storing the token in Secret Manager are documented in:
+`gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-operator-bootstrap.md`
+
 ## Current Safety State
 
 Current state:
@@ -142,8 +146,6 @@ This guide does not approve:
 
 A separate approved implementation task is required before adding:
 
-* token file reader;
-* real HTTP transport;
 * polling loop;
 * systemd service;
 * Secret Manager mapping;
