@@ -200,16 +200,16 @@ variable "runtime_secret_ids" {
     OPENCLAW_GATEWAY_TOKEN = "openclaw-gateway-token-experimental"
     GEMINI_API_KEY         = "gemini-api-key-experimental"
     GH_TOKEN               = "openclaw-github-readonly-token-experimental"
-    TELEGRAM_BOT_TOKEN     = "openclaw-telegram-bot-token"
   }
 
   validation {
     condition = alltrue([
       for env_name, secret_id in var.runtime_secret_ids :
       can(regex("^[A-Z][A-Z0-9_]*$", env_name)) &&
-      can(regex("^[a-zA-Z0-9_-]+$", secret_id))
+      can(regex("^[a-zA-Z0-9_-]+$", secret_id)) &&
+      env_name != "TELEGRAM_BOT_TOKEN"
     ])
-    error_message = "runtime_secret_ids must map uppercase environment variable names to Secret Manager secret IDs."
+    error_message = "runtime_secret_ids must map uppercase environment variable names to Secret Manager secret IDs; TELEGRAM_BOT_TOKEN is controlled by telegram_bot_token_secret_id."
   }
 }
 
@@ -217,6 +217,17 @@ variable "telegram_adapter_enabled" {
   description = "Install and start the Telegram status-only adapter during an approved rollout. Keep false unless final operator approval is recorded."
   type        = bool
   default     = false
+}
+
+variable "telegram_bot_token_secret_id" {
+  description = "Existing Secret Manager secret ID for the Telegram bot token. Identifier only, never the token value. Used only when telegram_adapter_enabled is true."
+  type        = string
+  default     = "openclaw-telegram-bot-token"
+
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9_-]+$", var.telegram_bot_token_secret_id))
+    error_message = "telegram_bot_token_secret_id must be a Secret Manager secret identifier."
+  }
 }
 
 variable "telegram_allowed_chat_ids" {

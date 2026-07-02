@@ -17,7 +17,7 @@ Operator bootstrap guide:
 It is not wired into:
 
 * installed or enabled systemd service;
-* Terraform;
+* applied Terraform/runtime rollout;
 * Secret Manager;
 * Telegram Bot API polling;
 * the live OpenClaw runtime.
@@ -127,7 +127,7 @@ preflight, polling, or dry-run code.
 models one injected-client cycle only: get updates, dispatch fake updates, and
 send safe outbound responses through the injected client. It is not run
 automatically and adds no polling loop, service, systemd, token, Secret Manager,
-Terraform, or runtime wiring. Tests use fake client/transport objects only.
+or live runtime wiring. Tests use fake client/transport objects only.
 
 ## Runtime Preflight
 
@@ -156,6 +156,11 @@ Terraform defaults keep rollout disabled:
 ```text
 telegram_adapter_enabled = false
 ```
+
+The Telegram token Secret Manager identifier is tracked separately as
+`telegram_bot_token_secret_id`. It is merged into runtime secret retrieval only
+when `telegram_adapter_enabled = true`, so the default-disabled rollout does not
+expose `/run/openclaw/secrets/TELEGRAM_BOT_TOKEN`.
 
 An operator laptop IAP test URL can be validated explicitly without changing the
 default VM-local model:

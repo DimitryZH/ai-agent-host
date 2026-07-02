@@ -21,7 +21,10 @@ locals {
     var.runtime_secret_ids,
     var.github_pr_secret_id == null ? {} : {
       GITHUB_PR_TOKEN = var.github_pr_secret_id
-    }
+    },
+    var.telegram_adapter_enabled ? {
+      TELEGRAM_BOT_TOKEN = var.telegram_bot_token_secret_id
+    } : {}
   )
 
   runtime_environment = merge(
@@ -142,6 +145,13 @@ check "telegram_adapter_requires_allowlist" {
 check "telegram_adapter_requires_token_mapping" {
   assert {
     condition     = !var.telegram_adapter_enabled || contains(keys(local.runtime_secret_ids), "TELEGRAM_BOT_TOKEN")
-    error_message = "runtime_secret_ids must include TELEGRAM_BOT_TOKEN before enabling the Telegram adapter."
+    error_message = "TELEGRAM_BOT_TOKEN must be available through telegram_bot_token_secret_id before enabling the Telegram adapter."
+  }
+}
+
+check "telegram_adapter_token_mapping_disabled_by_default" {
+  assert {
+    condition     = var.telegram_adapter_enabled || !contains(keys(local.runtime_secret_ids), "TELEGRAM_BOT_TOKEN")
+    error_message = "TELEGRAM_BOT_TOKEN must not be active when telegram_adapter_enabled is false."
   }
 }

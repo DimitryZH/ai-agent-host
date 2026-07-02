@@ -90,12 +90,14 @@ payloads. Arbitrary Secret Manager reads remain out of scope.
 Tracked mapping preparation:
 
 ```text
-TELEGRAM_BOT_TOKEN = openclaw-telegram-bot-token
+telegram_bot_token_secret_id = openclaw-telegram-bot-token
 TELEGRAM_BOT_TOKEN_FILE = /run/openclaw/secrets/TELEGRAM_BOT_TOKEN
 ```
 
 The mapping contains only a Secret Manager secret identifier and a runtime file
-path. The file is created on the VM only after a future approved rollout.
+path. The Telegram token secret identifier is merged into runtime secret
+retrieval only when `telegram_adapter_enabled = true`. The token file is created
+on the VM only after a future approved rollout.
 
 ## Port Model
 

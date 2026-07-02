@@ -24,10 +24,10 @@ runtime_secret_ids = {
   OPENCLAW_GATEWAY_TOKEN = "openclaw-gateway-token-experimental"
   GEMINI_API_KEY         = "gemini-api-key-experimental"
   GH_TOKEN               = "openclaw-github-readonly-token-experimental"
-  TELEGRAM_BOT_TOKEN     = "openclaw-telegram-bot-token"
 }
 
 telegram_adapter_enabled            = false
+telegram_bot_token_secret_id        = "openclaw-telegram-bot-token"
 telegram_allowed_chat_ids           = ""
 telegram_adapter_openclaw_base_url  = "http://127.0.0.1:8080"
 telegram_bot_token_file             = "/run/openclaw/secrets/TELEGRAM_BOT_TOKEN"

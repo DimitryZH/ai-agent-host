@@ -100,13 +100,15 @@ OPENCLAW_BASE_URL
 Tracked secret mapping prepared for a future approved rollout:
 
 ```text
-Secret Manager secret: openclaw-telegram-bot-token
+Terraform variable: telegram_bot_token_secret_id = openclaw-telegram-bot-token
 Runtime file path: /run/openclaw/secrets/TELEGRAM_BOT_TOKEN
 ```
 
 No token value may be committed. No token value may be printed in logs or
 evidence. Secret Manager payload reads must be narrowly scoped to the Telegram
-bot token only. Arbitrary Secret Manager reads remain out of scope.
+bot token only. Arbitrary Secret Manager reads remain out of scope. The
+Telegram token secret identifier is tracked separately and is merged into
+runtime secret retrieval only when `telegram_adapter_enabled = true`.
 
 ## Runtime Boundary
 
@@ -157,7 +159,8 @@ runtime token file path remains `/run/openclaw/secrets/TELEGRAM_BOT_TOKEN`.
 
 Terraform/bootstrap support is prepared with `telegram_adapter_enabled = false`
 as the default. No Terraform apply or runtime rollout has happened in this
-repository state, and no real Telegram chat ID is committed.
+repository state, no real Telegram chat ID is committed, and the default-disabled
+rollout does not expose `/run/openclaw/secrets/TELEGRAM_BOT_TOKEN`.
 
 ## Approval Record
 
