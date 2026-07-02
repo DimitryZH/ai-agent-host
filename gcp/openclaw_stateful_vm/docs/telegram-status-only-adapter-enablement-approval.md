@@ -3,6 +3,9 @@
 **Status:** Approval package; no enablement granted by this document
 **Scope:** Future Telegram status-only adapter on the OpenClaw Stateful VM
 
+Operator setup guide:
+`gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-operator-setup.md`
+
 ## Current Non-Enabled State
 
 The repository currently contains a local-only Telegram adapter scaffold:

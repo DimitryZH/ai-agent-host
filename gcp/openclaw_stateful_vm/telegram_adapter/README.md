@@ -8,6 +8,9 @@ Current status: non-enabled skeleton only.
 Enablement approval package:
 `gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-enablement-approval.md`
 
+Operator setup guide:
+`gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-operator-setup.md`
+
 It is not wired into:
 
 * systemd;
