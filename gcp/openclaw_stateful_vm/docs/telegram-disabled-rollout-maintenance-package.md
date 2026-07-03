@@ -3,6 +3,9 @@
 Status: Maintenance rollout package only; Terraform apply not approved by this
 document.
 
+Future enabled rollout approval package:
+`gcp/openclaw_stateful_vm/docs/telegram-enabled-rollout-approval-package.md`
+
 ## Plan Summary
 
 Reviewed plan:

@@ -228,11 +228,8 @@ Expected:
 
 Local browser use:
 
-```bash
-gcloud secrets versions access latest \
-  --secret=openclaw-gateway-token-experimental \
-  --project=ai-agent-host-497515 | tr -d '\r\n'; echo
-```
+Use the approved operator secret retrieval procedure for the gateway token.
+Do not include the token value in repository files, tickets, logs, or evidence.
 
 VM-local use:
 

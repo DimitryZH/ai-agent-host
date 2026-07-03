@@ -250,7 +250,8 @@ gcloud secrets versions list "$SECRET_NAME" \
 
 Expected result: at least one enabled secret version exists.
 
-Do not run `gcloud secrets versions access` during routine evidence capture because it returns the secret payload.
+Do not run Secret Manager payload-access commands during routine evidence
+capture because they return secret payloads.
 
 ## 6. Confirm Nothing Was Added to Git
 

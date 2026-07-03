@@ -8,6 +8,9 @@ Current status: non-enabled skeleton only.
 Enablement approval package:
 `gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-enablement-approval.md`
 
+Enabled rollout approval package:
+`gcp/openclaw_stateful_vm/docs/telegram-enabled-rollout-approval-package.md`
+
 Operator setup guide:
 `gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-operator-setup.md`
 
