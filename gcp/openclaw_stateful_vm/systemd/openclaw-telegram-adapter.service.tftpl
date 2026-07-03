@@ -10,8 +10,8 @@ StartLimitBurst=5
 
 [Service]
 Type=simple
-User=${openclaw_uid}
-Group=${openclaw_gid}
+User=openclaw-telegram
+Group=openclaw-telegram
 WorkingDirectory=${telegram_adapter_working_directory}
 EnvironmentFile=/etc/openclaw/openclaw-telegram-adapter.env
 ExecStart=/usr/bin/python3 -m gcp.openclaw_stateful_vm.telegram_adapter.runner --loop --poll-interval-seconds ${telegram_adapter_poll_interval_seconds}

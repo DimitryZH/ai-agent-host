@@ -83,8 +83,6 @@ locals {
   })
 
   telegram_adapter_systemd_unit = templatefile("${path.module}/../systemd/openclaw-telegram-adapter.service.tftpl", {
-    openclaw_gid                           = var.openclaw_gid
-    openclaw_uid                           = var.openclaw_uid
     telegram_adapter_poll_interval_seconds = var.telegram_adapter_poll_interval_seconds
     telegram_adapter_working_directory     = var.telegram_adapter_working_directory
     telegram_bot_token_file                = var.telegram_bot_token_file

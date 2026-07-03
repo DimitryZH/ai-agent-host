@@ -165,6 +165,12 @@ The Telegram token Secret Manager identifier is tracked separately as
 when `telegram_adapter_enabled = true`, so the default-disabled rollout does not
 expose `/run/openclaw/secrets/TELEGRAM_BOT_TOKEN`.
 
+Initial enabled rollout recovery note: the first service start failed before
+adapter startup with systemd `status=217/USER` because the configured service
+user/group did not exist. The bootstrap now provisions a dedicated
+`openclaw-telegram` system user/group and grants that group read access only to
+the Telegram token file.
+
 An operator laptop IAP test URL can be validated explicitly without changing the
 default VM-local model:
 

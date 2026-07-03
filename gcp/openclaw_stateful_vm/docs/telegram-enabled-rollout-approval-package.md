@@ -243,3 +243,10 @@ Stop after apply and rollback/disable if:
 * unsupported commands execute anything beyond limited help;
 * service repeatedly crashes;
 * final Terraform plan is not no-op.
+
+## Recovery Finding
+
+Initial enabled rollout failed before adapter startup with systemd
+`status=217/USER` because the configured service user/group did not exist.
+Recovery fix provisions a dedicated `openclaw-telegram` system user/group and
+grants read access only to `/run/openclaw/secrets/TELEGRAM_BOT_TOKEN`.

@@ -26,6 +26,8 @@ OPENCLAW_RUNTIME_DIR="$(decode '${openclaw_runtime_dir_b64}')"
 OPENCLAW_UID='${openclaw_uid}'
 OPENCLAW_GID='${openclaw_gid}'
 DATA_DEVICE="/dev/disk/by-id/google-$DATA_DISK_DEVICE_NAME"
+TELEGRAM_ADAPTER_USER="openclaw-telegram"
+TELEGRAM_ADAPTER_GROUP="openclaw-telegram"
 
 [[ "$EUID" -eq 0 ]] || fail "Bootstrap must run as root."
 [[ "$CONTAINER_IMAGE" == *@sha256:* ]] || fail "Container image must be pinned by digest."
@@ -87,6 +89,20 @@ chmod 0750 "$STATE_MOUNT_PATH"
 install -d -o "$OPENCLAW_UID" -g "$OPENCLAW_GID" -m 0700 "$OPENCLAW_STATE_DIR"
 install -d -o "$OPENCLAW_UID" -g "$OPENCLAW_GID" -m 0700 "$OPENCLAW_WORKSPACE_DIR"
 
+%{ if telegram_adapter_enabled ~}
+if ! getent group "$TELEGRAM_ADAPTER_GROUP" >/dev/null; then
+  groupadd --system "$TELEGRAM_ADAPTER_GROUP"
+fi
+
+if ! id -u "$TELEGRAM_ADAPTER_USER" >/dev/null 2>&1; then
+  useradd --system \
+    --gid "$TELEGRAM_ADAPTER_GROUP" \
+    --home-dir /nonexistent \
+    --shell /usr/sbin/nologin \
+    "$TELEGRAM_ADAPTER_USER"
+fi
+%{ endif ~}
+
 install -d -o root -g root -m 0750 /etc/openclaw
 install -d -o root -g root -m 0755 /usr/local/sbin
 
@@ -103,6 +119,7 @@ CONTAINER_IMAGE=$CONTAINER_IMAGE
 OPENCLAW_UID=$OPENCLAW_UID
 OPENCLAW_GID=$OPENCLAW_GID
 OPENCLAW_RUNTIME_DIR=$OPENCLAW_RUNTIME_DIR
+TELEGRAM_ADAPTER_GROUP=$TELEGRAM_ADAPTER_GROUP
 EOF
 chmod 0640 /etc/openclaw/openclaw-host.env
 
@@ -120,8 +137,16 @@ fail() {
 source /etc/openclaw/openclaw-host.env
 
 install -d -o "$OPENCLAW_UID" -g "$OPENCLAW_GID" -m 0750 "$OPENCLAW_RUNTIME_DIR"
+%{ if telegram_adapter_enabled ~}
+chgrp "$TELEGRAM_ADAPTER_GROUP" /run/openclaw
+chmod 0710 /run/openclaw
+%{ endif ~}
 rm -rf /run/openclaw/secrets
 install -d -o "$OPENCLAW_UID" -g "$OPENCLAW_GID" -m 0700 /run/openclaw/secrets
+%{ if telegram_adapter_enabled ~}
+chgrp "$TELEGRAM_ADAPTER_GROUP" /run/openclaw/secrets
+chmod 0710 /run/openclaw/secrets
+%{ endif ~}
 
 ACCESS_TOKEN="$(
   curl -fsS \
@@ -149,6 +174,13 @@ while IFS=$'\t' read -r env_name secret_id; do
   chmod 0400 "$temp_path"
   mv -f "$temp_path" "$secret_path"
 done < <(jq -r 'to_entries[] | [.key, .value] | @tsv' /etc/openclaw/secret-map.json)
+
+%{ if telegram_adapter_enabled ~}
+if [[ -e /run/openclaw/secrets/TELEGRAM_BOT_TOKEN ]]; then
+  chown "root:$TELEGRAM_ADAPTER_GROUP" /run/openclaw/secrets/TELEGRAM_BOT_TOKEN
+  chmod 0440 /run/openclaw/secrets/TELEGRAM_BOT_TOKEN
+fi
+%{ endif ~}
 
 REGISTRY_HOST="$${CONTAINER_IMAGE%%/*}"
 printf '%s' "$ACCESS_TOKEN" |
