@@ -28,6 +28,7 @@ OPENCLAW_GID='${openclaw_gid}'
 DATA_DEVICE="/dev/disk/by-id/google-$DATA_DISK_DEVICE_NAME"
 TELEGRAM_ADAPTER_USER="openclaw-telegram"
 TELEGRAM_ADAPTER_GROUP="openclaw-telegram"
+TELEGRAM_ADAPTER_WORKING_DIR="$(decode '${telegram_adapter_working_dir_b64}')"
 
 [[ "$EUID" -eq 0 ]] || fail "Bootstrap must run as root."
 [[ "$CONTAINER_IMAGE" == *@sha256:* ]] || fail "Container image must be pinned by digest."
@@ -101,6 +102,35 @@ if ! id -u "$TELEGRAM_ADAPTER_USER" >/dev/null 2>&1; then
     --shell /usr/sbin/nologin \
     "$TELEGRAM_ADAPTER_USER"
 fi
+
+install -d -o root -g root -m 0755 /opt
+install -d -o root -g "$TELEGRAM_ADAPTER_GROUP" -m 0750 "$TELEGRAM_ADAPTER_WORKING_DIR"
+install -d -o root -g "$TELEGRAM_ADAPTER_GROUP" -m 0750 "$TELEGRAM_ADAPTER_WORKING_DIR/gcp"
+install -d -o root -g "$TELEGRAM_ADAPTER_GROUP" -m 0750 "$TELEGRAM_ADAPTER_WORKING_DIR/gcp/openclaw_stateful_vm"
+install -d -o root -g "$TELEGRAM_ADAPTER_GROUP" -m 0750 "$TELEGRAM_ADAPTER_WORKING_DIR/gcp/openclaw_stateful_vm/telegram_adapter"
+
+for package_init in \
+  "$TELEGRAM_ADAPTER_WORKING_DIR/gcp/__init__.py" \
+  "$TELEGRAM_ADAPTER_WORKING_DIR/gcp/openclaw_stateful_vm/__init__.py"; do
+  : > "$package_init"
+  chown "root:$TELEGRAM_ADAPTER_GROUP" "$package_init"
+  chmod 0640 "$package_init"
+done
+
+while IFS=$'\t' read -r relative_path content_b64; do
+  [[ "$relative_path" == gcp/openclaw_stateful_vm/telegram_adapter/*.py ]] ||
+    fail "Invalid Telegram adapter package path."
+  [[ "$relative_path" != *".."* ]] ||
+    fail "Invalid Telegram adapter package path."
+
+  target_path="$TELEGRAM_ADAPTER_WORKING_DIR/$relative_path"
+  temp_path="$target_path.tmp"
+  install -d -o root -g "$TELEGRAM_ADAPTER_GROUP" -m 0750 "$(dirname "$target_path")"
+  printf '%s' "$content_b64" | base64 -d > "$temp_path"
+  chown "root:$TELEGRAM_ADAPTER_GROUP" "$temp_path"
+  chmod 0640 "$temp_path"
+  mv -f "$temp_path" "$target_path"
+done < <(decode '${telegram_adapter_package_files_b64}' | jq -r 'to_entries[] | [.key, .value] | @tsv')
 %{ endif ~}
 
 install -d -o root -g root -m 0750 /etc/openclaw

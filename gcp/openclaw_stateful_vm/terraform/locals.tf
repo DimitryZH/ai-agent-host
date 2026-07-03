@@ -74,6 +74,11 @@ locals {
     "${env_name}=${local.telegram_adapter_environment[env_name]}"
   ])
 
+  telegram_adapter_package_files = {
+    for file_name in sort(fileset("${path.module}/../telegram_adapter", "*.py")) :
+    "gcp/openclaw_stateful_vm/telegram_adapter/${file_name}" => base64encode(file("${path.module}/../telegram_adapter/${file_name}"))
+  }
+
   systemd_unit = templatefile("${path.module}/../systemd/openclaw.service.tftpl", {
     container_image  = var.container_image
     openclaw_gid     = var.openclaw_gid
@@ -89,23 +94,25 @@ locals {
   })
 
   bootstrap_script = templatefile("${path.module}/../scripts/bootstrap-openclaw.sh.tftpl", {
-    container_image_b64               = base64encode(var.container_image)
-    data_disk_device_name_b64         = base64encode(var.data_disk_device_name)
-    install_ops_agent                 = var.install_ops_agent
-    openclaw_gid                      = var.openclaw_gid
-    openclaw_runtime_dir_b64          = base64encode(var.openclaw_runtime_dir)
-    openclaw_state_dir_b64            = base64encode(var.openclaw_state_dir)
-    openclaw_uid                      = var.openclaw_uid
-    openclaw_workspace_dir_b64        = base64encode(var.openclaw_workspace_dir)
-    project_id_b64                    = base64encode(var.project_id)
-    runtime_environment_b64           = base64encode("${local.runtime_environment_file}\n")
-    secret_project_id_b64             = base64encode(local.secret_project_id)
-    secret_map_json_b64               = base64encode(jsonencode(local.runtime_secret_ids))
-    state_mount_path_b64              = base64encode(var.state_mount_path)
-    systemd_unit_b64                  = base64encode(local.systemd_unit)
-    telegram_adapter_enabled          = var.telegram_adapter_enabled
-    telegram_adapter_environment_b64  = base64encode("${local.telegram_adapter_environment_file}\n")
-    telegram_adapter_systemd_unit_b64 = base64encode(local.telegram_adapter_systemd_unit)
+    container_image_b64                = base64encode(var.container_image)
+    data_disk_device_name_b64          = base64encode(var.data_disk_device_name)
+    install_ops_agent                  = var.install_ops_agent
+    openclaw_gid                       = var.openclaw_gid
+    openclaw_runtime_dir_b64           = base64encode(var.openclaw_runtime_dir)
+    openclaw_state_dir_b64             = base64encode(var.openclaw_state_dir)
+    openclaw_uid                       = var.openclaw_uid
+    openclaw_workspace_dir_b64         = base64encode(var.openclaw_workspace_dir)
+    project_id_b64                     = base64encode(var.project_id)
+    runtime_environment_b64            = base64encode("${local.runtime_environment_file}\n")
+    secret_project_id_b64              = base64encode(local.secret_project_id)
+    secret_map_json_b64                = base64encode(jsonencode(local.runtime_secret_ids))
+    state_mount_path_b64               = base64encode(var.state_mount_path)
+    systemd_unit_b64                   = base64encode(local.systemd_unit)
+    telegram_adapter_enabled           = var.telegram_adapter_enabled
+    telegram_adapter_environment_b64   = base64encode("${local.telegram_adapter_environment_file}\n")
+    telegram_adapter_package_files_b64 = base64encode(jsonencode(local.telegram_adapter_package_files))
+    telegram_adapter_systemd_unit_b64  = base64encode(local.telegram_adapter_systemd_unit)
+    telegram_adapter_working_dir_b64   = base64encode(var.telegram_adapter_working_directory)
   })
 }
 

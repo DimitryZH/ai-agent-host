@@ -250,3 +250,8 @@ Initial enabled rollout failed before adapter startup with systemd
 `status=217/USER` because the configured service user/group did not exist.
 Recovery fix provisions a dedicated `openclaw-telegram` system user/group and
 grants read access only to `/run/openclaw/secrets/TELEGRAM_BOT_TOKEN`.
+
+Second recovery finding: service failed before Python startup with
+`status=200/CHDIR` because `WorkingDirectory=/opt/ai-agent-host` did not exist.
+The fix provisions the VM-local adapter package directory and makes the
+Telegram adapter package importable by host Python.

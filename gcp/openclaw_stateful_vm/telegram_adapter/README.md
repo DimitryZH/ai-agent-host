@@ -171,6 +171,11 @@ user/group did not exist. The bootstrap now provisions a dedicated
 `openclaw-telegram` system user/group and grants that group read access only to
 the Telegram token file.
 
+Second recovery note: the next service start failed before Python startup with
+systemd `status=200/CHDIR` because `/opt/ai-agent-host` did not exist. The
+bootstrap now renders the runtime Telegram adapter Python package into that
+root-owned VM-local directory so host Python can import the service module.
+
 An operator laptop IAP test URL can be validated explicitly without changing the
 default VM-local model:
 
