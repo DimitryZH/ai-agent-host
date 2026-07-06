@@ -393,6 +393,16 @@ Applicable baseline cloud charges can still continue while the VM is stopped,
 including preserved Persistent Disk, snapshots, and other retained
 infrastructure resources.
 
+## Observability And Alerting Plan
+
+The Phase 8 planning baseline is tracked in
+`stateful-vm-observability-alerting-plan.md`.
+
+It covers the current Ops Agent, Cloud Logging, Cloud Monitoring writer role,
+MIG autohealing, health/readiness, disk, snapshot, and Telegram adapter
+observability posture. It also defines alert candidates and implementation
+sequencing without creating alert policies or notification channels.
+
 ## Manual Pre-Upgrade Snapshot
 
 A manual pre-upgrade snapshot must be application-consistent.

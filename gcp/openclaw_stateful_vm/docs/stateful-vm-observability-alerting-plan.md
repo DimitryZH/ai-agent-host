@@ -1,0 +1,155 @@
+# OpenClaw Stateful VM Observability and Alerting Plan
+
+## Status
+
+Status: Phase 8-A planning baseline.
+
+This document defines the compact observability baseline and alerting plan for
+the OpenClaw Stateful VM runtime. It does not create alert policies,
+notification channels, Terraform resources, or runtime changes.
+
+## Current Runtime Baseline
+
+Runtime shape:
+
+- private zonal Stateful MIG with target size `1`;
+- one authoritative preserved state disk mounted at `/var/lib/openclaw`;
+- systemd-managed `openclaw.service`;
+- systemd-managed status-only `openclaw-telegram-adapter.service`;
+- VM-local OpenClaw endpoint on `127.0.0.1:8080`;
+- operator access through IAP SSH and IAP TCP tunnel only;
+- GitHub mode remains read-only;
+- PR/write and MCP remain disabled.
+
+Repository and Terraform inspection found these existing observability and
+resilience controls:
+
+- Ops Agent installation is enabled by default through `install_ops_agent`;
+- runtime service account has `roles/logging.logWriter`;
+- runtime service account has `roles/monitoring.metricWriter`;
+- MIG autohealing uses a conservative health check;
+- current health-check default is TCP on the OpenClaw port, not HTTP
+  readiness;
+- the Stateful MIG has `target_size = 1` and preserves the state disk with
+  `delete_rule = "NEVER"`;
+- daily scheduled snapshots are attached to the state disk;
+- snapshot retention is at least 14 days;
+- runbook coverage exists for service checks, health/readiness checks, state
+  disk checks, snapshot/restore, rollback, and autohealing-loop response.
+
+No Terraform-managed Cloud Monitoring alert policies or notification channels
+are currently defined in this repository path.
+
+## Read-Only Baseline Evidence
+
+Read-only checks on 2026-07-06 confirmed:
+
+- the managed instance group was stable with target size `1`;
+- one managed instance was `RUNNING`, `HEALTHY`, and had action `NONE`;
+- Ops Agent was active;
+- `openclaw.service` was active;
+- `openclaw-telegram-adapter.service` was active;
+- `/var/lib/openclaw` was mounted on a 30 GB disk with about 1% used;
+- local OpenClaw `/health` returned live status;
+- local OpenClaw `/readyz` returned ready status;
+- the daily snapshot policy was `READY`;
+- recent scheduled snapshots for the state disk were present and `READY`.
+
+The checks did not dump logs, read secret files, read Secret Manager payloads,
+call Telegram, restart services, or run OpenClaw tools.
+
+## Observability Gaps
+
+- Service failure detection is not yet represented as alert policy code.
+- Telegram adapter restart or crash-loop detection is not yet represented as
+  alert policy code.
+- OpenClaw `/health` and `/readyz` are private VM-local endpoints; public uptime
+  checks are not a direct fit without adding a private checker pattern.
+- Current MIG autohealing uses TCP reachability, which is useful for repair but
+  weaker than application readiness alerting.
+- Disk capacity is visible from the VM, but no alert policy is defined yet.
+- Snapshot policy exists, but snapshot freshness alerting likely needs a custom
+  scheduled validation or a logs/metrics-based check.
+- Notification channel ownership and routing are not yet documented.
+
+## Alert Candidates
+
+| Candidate | Purpose | Signal source | Likely implementation approach | Severity | First threshold | Validation method | Rollback / disable impact |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `openclaw.service` failure | Detect gateway outage before operator reports it. | systemd state through Ops Agent metrics or logs-based metric. | Prefer Ops Agent/systemd signal if available; otherwise create a logs-based metric from systemd journal entries forwarded to Cloud Logging. | Critical | Service inactive for 2 consecutive checks or 5 minutes. | Stop-free validation by querying metric history; later use a controlled non-production service failure test. | Disabling removes direct gateway service failure paging; MIG autohealing may still repair TCP failures. |
+| `openclaw-telegram-adapter.service` failure | Detect loss of mobile status channel. | systemd state through Ops Agent metrics or logs-based metric. | Same pattern as OpenClaw service, with a separate policy and lower severity. | Warning | Service inactive for 5 minutes. | Stop-free validation by metric query; later use a controlled non-production service failure test. | Disabling removes Telegram adapter outage notification only; OpenClaw runtime remains private and usable through IAP. |
+| OpenClaw `/health` failure | Detect live endpoint failure on the private runtime. | VM-local HTTP probe result. | Use a lightweight internal checker or Ops Agent script-style/custom metric if approved later; public uptime checks are not appropriate for the private endpoint. | Critical | 2 failures over 5 minutes. | Run checker in dry-run mode against `127.0.0.1:8080/health`; compare with manual IAP SSH curl. | Disabling removes application liveness alerting; TCP autohealing remains as a weaker signal. |
+| OpenClaw `/readyz` failure | Detect application readiness problems that TCP checks can miss. | VM-local HTTP probe result. | Same private checker/custom metric approach as `/health`; consider separate policy because readiness can fail while process is alive. | Critical | 2 failures over 5 minutes. | Run checker in dry-run mode against `127.0.0.1:8080/readyz`; compare with manual IAP SSH curl. | Disabling removes readiness alerting; service and MIG alerts still cover broader failures. |
+| MIG unhealthy or no healthy active instance | Detect failed repair, missing writer, or unhealthy replacement. | Compute Engine MIG health state and instance count. | Cloud Monitoring alert on MIG/instance group metrics, or logs-based alert for repair failures if metric coverage is insufficient. | Critical | Healthy instance count below 1 for 5 minutes, or current action stuck outside `NONE` for 10 minutes. | Compare alert query with `gcloud compute instance-groups managed list-instances`. | Disabling removes infrastructure-level outage notification; service checks may still catch some failures. |
+| State disk capacity threshold | Prevent state disk exhaustion. | Ops Agent disk metrics for `/var/lib/openclaw`. | Cloud Monitoring metric threshold on disk percent used for the mount. | Warning, then Critical | Warning at 75% for 15 minutes; critical at 90% for 5 minutes. | Compare metric value with `df -h /var/lib/openclaw`. | Disabling risks silent disk exhaustion; backups and state writes may fail without early warning. |
+| Snapshot freshness / backup policy health | Detect missing scheduled backups. | Snapshot metadata, resource policy status, or scheduled validation result. | Likely custom scheduled validation that records latest READY snapshot age as a metric; direct policy health alone is not enough. | Critical | No READY state-disk snapshot newer than 36 hours. | Compare custom metric with `gcloud compute snapshots list` filtered to the state disk. | Disabling removes backup freshness paging; restore confidence becomes manual-only. |
+| VM recreation or unexpected restart signal | Detect unexpected replacement or reboot that may indicate instability. | Compute audit logs, MIG events, uptime metric, or instance lifecycle metadata. | Alert on unexpected recreate/restart events outside approved maintenance windows. Implementation detail needs validation against available audit log fields. | Warning | Any unapproved recreate/restart event; critical if repeated twice in 30 minutes. | Compare alert events with MIG describe/list-instances and instance lifecycle timestamps. | Disabling removes early instability signal; service/MIG health alerts still cover hard outages. |
+| Telegram adapter restart or crash loop | Detect unstable mobile adapter even if it recovers. | systemd journal logs, process uptime, or restart counter if exported. | Logs-based metric on repeated adapter starts/failures; consider Ops Agent process metric if stable. | Warning | 3 restarts or failures in 15 minutes. | Query metric without dumping raw logs; later test in non-production. | Disabling removes crash-loop signal; simple service-active alert may miss quick recoveries. |
+| Ops Agent absent or inactive | Detect blind spots in metrics/logging collection. | Ops Agent service state and agent self-observability metrics. | Alert on missing Ops Agent heartbeat/metrics or inactive systemd state if exported. | Warning | No expected Ops Agent metric for 10 minutes or service inactive for 5 minutes. | Compare metric presence with `systemctl is-active google-cloud-ops-agent`. | Disabling may hide other alert sources; keep manual IAP checks as fallback. |
+
+## Notification Strategy
+
+Phase 8 should discover existing notification channels before creating any new
+ones. Recommended routing:
+
+- critical runtime alerts: operator-owned primary channel;
+- warning alerts: lower-noise operator channel or daily review route;
+- backup freshness alerts: same route as critical runtime alerts until a formal
+  backup owner exists.
+
+Do not place notification channel identifiers, operator chat identifiers,
+token values, or webhook payload details in public documentation. Terraform
+should reference approved channel identifiers through variables or data sources
+after ownership is confirmed.
+
+## Recommended Implementation Sequence
+
+### Phase 8-B: Terraform alerting skeleton and notification discovery
+
+- Add no-op-safe Terraform structure for monitoring resources.
+- Discover existing notification channel ownership and approved routing.
+- Keep notification identifiers out of public docs when sensitive.
+- Validate with `terraform fmt`, `terraform validate`, and plan-only review.
+
+### Phase 8-C: OpenClaw and Telegram service failure alerts
+
+- Implement the lowest-risk service failure policies first.
+- Prefer native Ops Agent/systemd signals if available.
+- Use logs-based metrics only when they can avoid sensitive log content.
+
+### Phase 8-D: Health, readiness, disk capacity, and snapshot freshness
+
+- Add private `/health` and `/readyz` checker design only after the service
+  alert path is stable.
+- Add disk capacity thresholds for `/var/lib/openclaw`.
+- Add snapshot freshness validation with an explicit custom check if Cloud
+  Monitoring does not expose a direct freshness signal.
+
+### Phase 8-E: Backup/restore recurring drill schedule
+
+- Convert the existing restore-drill runbook into a recurring operator
+  schedule.
+- Keep destructive cleanup and restore exercises approval-gated.
+- Record sanitized drill evidence outside public docs when needed.
+
+### Phase 8-F: Final operations closeout
+
+- Update the operations runbook with the implemented alert inventory.
+- Document rollback/disable steps for each policy.
+- Confirm no Telegram, GitHub PR/write, MCP, Terraform execution, or OpenClaw
+  tool capability expansion occurred as part of observability work.
+
+## Safety Boundaries
+
+Phase 8 observability work must preserve the current security posture:
+
+- no public OpenClaw endpoint;
+- no Telegram command expansion;
+- no GitHub PR/write enablement;
+- no MCP enablement;
+- no shell, Terraform, browser automation, or DevBox execution through
+  Telegram;
+- no Secret Manager payload reads in validation evidence;
+- no token values, real operator chat identifiers, webhook payloads, or
+  sensitive logs in public docs;
+- no service restarts or destructive recovery steps without separate approval.

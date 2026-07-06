@@ -110,7 +110,8 @@ The bot will not reply until a backend adapter is implemented and enabled. That 
 
 After sending `/start` to the bot, use a local helper script to call `getUpdates` and inspect the resulting update metadata.
 
-Create a temporary file named `get_chat_id.py` outside the tracked repository, or remove it before committing anything.
+Create a temporary file named `get-telegram-chat-identifier.py` outside the
+tracked repository, or remove it before committing anything.
 
 ```python
 import getpass
@@ -145,7 +146,7 @@ print(json.dumps(data, indent=2, ensure_ascii=False))
 Run it locally:
 
 ```bash
-python ./get_chat_id.py
+python ./get-telegram-chat-identifier.py
 ```
 
 Find the private chat ID in the output:
@@ -164,7 +165,7 @@ Do not publish real chat IDs in public docs if avoidable.
 Remove the helper script after use:
 
 ```bash
-rm -f get_chat_id.py
+rm -f get-telegram-chat-identifier.py
 ```
 
 ## 3. Create the Secret Manager Secret
@@ -266,7 +267,7 @@ Expected: no token files and no temporary helper scripts are tracked.
 Remove any temporary helper file if needed:
 
 ```bash
-rm -f get_chat_id.py
+rm -f get-telegram-chat-identifier.py
 ```
 
 ## 7. Operator Decision Record
