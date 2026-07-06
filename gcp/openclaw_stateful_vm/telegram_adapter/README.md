@@ -104,27 +104,25 @@ python -m gcp.openclaw_stateful_vm.telegram_adapter.dry_run `
 The dry-run CLI prints sanitized JSON only. It uses a fake status snapshot by
 default, does not require a live OpenClaw runtime, and does not call Telegram.
 
-## Disabled Telegram Client Skeleton
+## Telegram Client
 
-`telegram_client.py` defines a small Telegram Bot API client skeleton for future
-use. It is disabled and not wired into polling. The real HTTP transport remains
-explicit-only and is tested with an injected fake network function; default tests
-do not call Telegram.
+`telegram_client.py` defines the Telegram Bot API client used by the approved
+status-only runtime runner. The HTTP transport is injected and covered by fake
+network tests; local tests do not call Telegram.
 
-## Disabled Token File Reader
+## Token File Reader
 
-`token_file.py` defines an explicit-only token file reader for future approved
-wiring. It requires an absolute path, validates fake token-shaped test values,
-does not read Secret Manager payloads, and is not called by runtime startup,
-preflight, polling, or dry-run code.
+`token_file.py` defines the explicit token file reader used by the approved
+runtime runner. It requires an absolute path, validates token shape, and does
+not read Secret Manager payloads. Runtime validation checks token file presence
+and permissions only; token contents are not printed in evidence.
 
-## Disabled Poll-Once Coordinator
+## Poll-Once Coordinator
 
-`polling.py` defines a disabled poll-once coordinator for future review. It
-models one injected-client cycle only: get updates, dispatch fake updates, and
-send safe outbound responses through the injected client. It is not run
-automatically and adds no polling loop, service, systemd, token, Secret Manager,
-or live runtime wiring. Tests use fake client/transport objects only.
+`polling.py` defines one injected-client polling cycle: get updates, dispatch
+updates, and send safe outbound responses through the injected client. The live
+runner uses it for the approved status-only Telegram adapter service. Tests use
+fake client/transport objects only.
 
 ## Runtime Preflight
 
@@ -134,19 +132,18 @@ and `OPENCLAW_BASE_URL`. It prints sanitized JSON, does not read token contents,
 does not call Telegram, does not call OpenClaw, and does not start polling or a
 service.
 
-## Prepared Runtime Runner
+## Runtime Runner
 
 `runner.py` wires the token file reader, Telegram client, HTTP transport,
-poll-once coordinator, adapter app, and loopback-only OpenClaw status client for
-future approved runtime execution. It is explicit-only: without an operator
-invocation it does nothing, and the service template is not installed or enabled
-by this repository state.
+poll-once coordinator, adapter app, and loopback-only OpenClaw status client.
+It is used by the approved status-only runtime service.
 
 The prepared systemd template is tracked at:
 `gcp/openclaw_stateful_vm/systemd/openclaw-telegram-adapter.service.tftpl`
 
-The adapter remains not rolled out until a final operator approval gate,
-Terraform/runtime rollout, validation window, and rollback path are approved.
+The approved rollout installed and enabled the adapter service for status-only
+scope. Runtime closeout is recorded at:
+`gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-runtime-closeout.md`
 
 Terraform defaults keep rollout disabled:
 
@@ -156,8 +153,8 @@ telegram_adapter_enabled = false
 
 The Telegram token Secret Manager identifier is tracked separately as
 `telegram_bot_token_secret_id`. It is merged into runtime secret retrieval only
-when `telegram_adapter_enabled = true`, so the default-disabled rollout does not
-expose `/run/openclaw/secrets/TELEGRAM_BOT_TOKEN`.
+when `telegram_adapter_enabled = true`, so disabled rollouts do not expose
+`/run/openclaw/secrets/TELEGRAM_BOT_TOKEN`.
 
 Initial enabled rollout recovery note: the first service start failed before
 adapter startup with systemd `status=217/USER` because the configured service

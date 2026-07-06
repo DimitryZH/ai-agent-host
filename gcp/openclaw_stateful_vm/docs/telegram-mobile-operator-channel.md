@@ -96,9 +96,8 @@ path:
 * browser automation;
 * MCP.
 
-`/last-run` may be considered later as a status-only extension, but it should
-still be approved separately if it exposes task history, file paths, or operator
-messages.
+Additional status-only commands require separate approval if they expose task
+history, file paths, or operator messages.
 
 ## Implementation Options
 

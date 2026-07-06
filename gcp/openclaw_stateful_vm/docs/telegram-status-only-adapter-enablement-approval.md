@@ -54,9 +54,9 @@ Approved initial commands:
 * `/whoami`
 * `/help`
 
-Out of scope: `/last-run`, `/ask`, GitHub commands, Terraform commands, shell
-commands, PR/write mode, DevBox execution, browser automation, MCP, and
-tool/skill expansion.
+Out of scope: `/ask`, GitHub commands, Terraform commands, shell commands,
+PR/write mode, DevBox execution, browser automation, MCP, and tool/skill
+expansion.
 
 Telegram messages pass through the adapter allowlist and fixed command router
 before any local OpenClaw status check is attempted.

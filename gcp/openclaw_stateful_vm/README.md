@@ -102,9 +102,12 @@ gcp/openclaw_stateful_vm/
 |   `-- bootstrap-openclaw.sh.tftpl
 |-- systemd/
 |   `-- openclaw.service.tftpl
+|-- telegram_adapter/
+|   `-- README.md
 `-- docs/
     |-- stateful-vm-implementation-summary.md
     |-- stateful-vm-runtime-validation-summary.md
+    |-- telegram-status-only-adapter-runtime-closeout.md
     `-- stateful-vm-operations-runbook.md
 ```
 
@@ -226,12 +229,18 @@ Validated on the Stateful VM runtime:
 - `admin-http-rpc` plugin availability;
 - Control UI device pairing through admin RPC;
 - Control UI continuity across local IAP tunnel termination and
-  re-establishment.
+  re-establishment;
+- service restart persistence;
+- Stateful MIG recreate persistence;
+- isolated snapshot restore drill;
+- GitHub read-only runtime mode;
+- Telegram status-only adapter runtime closeout.
 
 Still intentionally deferred:
 
-- restart and recreate persistence drill after validated UI pairing;
-- snapshot restore drill;
+- observability and alerting for OpenClaw and Telegram adapter services;
+- disk capacity and snapshot freshness alerting;
+- recurring backup/restore drill schedule;
 - final GitHub PR-mode decision on the VM runtime;
 - Vertex AI migration decision;
 - long-term always-on versus start-stop operating model.
@@ -251,4 +260,5 @@ Still intentionally deferred:
 
 - `docs/stateful-vm-implementation-summary.md`
 - `docs/stateful-vm-runtime-validation-summary.md`
+- `docs/telegram-status-only-adapter-runtime-closeout.md`
 - `docs/stateful-vm-operations-runbook.md`

@@ -18,7 +18,10 @@ Cloud Run proof-of-concept
 Stateful VM runtime
         |
         v
-Closure drills and operating model decisions
+Controlled GitHub read-only and Telegram status-only operations
+        |
+        v
+Observability and operational resilience
 ```
 
 The Cloud Run runtime proved the container contract, Gemini integration,
@@ -76,7 +79,9 @@ The stateful VM implementation now provides:
 - Secret Manager runtime retrieval;
 - Cloud NAT for private outbound access;
 - TCP health check first;
-- daily snapshot policy.
+- daily snapshot policy;
+- GitHub read-only mode;
+- Telegram status-only mobile operator channel.
 
 Validated outcomes now include:
 
@@ -86,7 +91,13 @@ Validated outcomes now include:
 - Gemini-backed response path;
 - Control UI over IAP;
 - explicit opt-in `admin-http-rpc` onboarding and pairing path;
-- device pairing validation without disabling gateway token auth or pairing.
+- device pairing validation without disabling gateway token auth or pairing;
+- service restart and Stateful MIG recreate persistence validation;
+- isolated snapshot restore drill;
+- Telegram status-only adapter runtime closeout.
+
+Telegram status-only runtime closeout:
+`gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-runtime-closeout.md`
 
 ### AWS
 
@@ -112,12 +123,17 @@ Secret values should not be committed to this repository.
 
 ## What Remains Open
 
-The stateful VM runtime is running, but Phase 5 is not fully closed yet.
+The stateful VM runtime is running and the Phase 7D status-only mobile operator
+channel is closed for its approved scope. The next operational priority is
+Phase 8 observability and resilience before expanding Telegram beyond
+status-only or enabling GitHub PR/write.
 
 Remaining closure work includes:
 
-- restart and recreate persistence validation after UI pairing;
-- snapshot restore drill;
+- monitoring and alerting for OpenClaw and Telegram adapter services;
+- unhealthy MIG / readiness alerting;
+- disk capacity and snapshot freshness alerting;
+- recurring backup/restore drill schedule;
 - GitHub PR mode decision on the VM runtime;
 - Vertex AI migration decision;
 - final always-on versus start-stop operating model.
