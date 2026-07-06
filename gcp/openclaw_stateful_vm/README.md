@@ -104,6 +104,10 @@ gcp/openclaw_stateful_vm/
 |   `-- bootstrap-openclaw.sh.tftpl
 |-- systemd/
 |   `-- openclaw.service.tftpl
+|-- monitoring/
+|   |-- service_state_checker.py
+|   |-- README.md
+|   `-- tests/
 |-- telegram_adapter/
 |   `-- README.md
 `-- docs/

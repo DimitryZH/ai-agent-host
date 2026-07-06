@@ -415,6 +415,10 @@ Service failure signal validation is recorded in
 path is a custom service-state checker that exports bounded service metadata,
 not raw logs or secret-bearing runtime data.
 
+The repository-local checker skeleton lives under
+`../monitoring/service_state_checker.py`. It is not deployed, scheduled, or
+wired into Terraform.
+
 ## Manual Pre-Upgrade Snapshot
 
 A manual pre-upgrade snapshot must be application-consistent.

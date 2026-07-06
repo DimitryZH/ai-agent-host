@@ -185,6 +185,15 @@ Read-only signal discovery found:
 - recommended signal path: custom checker that exports bounded service-state
   metrics without reading logs, environments, or secrets.
 
+Repository-local checker skeleton:
+
+```text
+gcp/openclaw_stateful_vm/monitoring/service_state_checker.py
+```
+
+The checker is local code only. It is not deployed, scheduled, or wired into
+Terraform, and it does not create metrics or alerts.
+
 The service alert skeleton defines the OpenClaw and Telegram adapter service
 targets and a disabled-by-default service alert gate. It does not create
 logs-based metrics or alert policies. This is intentional because broad log
@@ -256,13 +265,13 @@ Observability work must preserve the current security posture:
 
 ## Next Implementation Gate
 
-Custom Service-State Checker Design.
+Custom Service-State Checker Runtime Design.
 
 Scope for the next gate:
 
 - OpenClaw `openclaw.service` failure alerting;
 - Telegram `openclaw-telegram-adapter.service` failure alerting;
-- checker design review before implementation;
+- checker runtime design review before deployment;
 - notification routing approval before activation;
 - Terraform plan review before any apply.
 

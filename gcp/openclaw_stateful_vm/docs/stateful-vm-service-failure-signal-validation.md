@@ -101,6 +101,16 @@ Recommended runtime location:
 - run under a narrowly scoped local execution model;
 - publish only numeric or bounded-label health state to Cloud Monitoring.
 
+Repository status:
+
+- local checker skeleton:
+  `gcp/openclaw_stateful_vm/monitoring/service_state_checker.py`;
+- local tests:
+  `gcp/openclaw_stateful_vm/monitoring/tests/test_service_state_checker.py`;
+- the checker is not deployed, scheduled, or wired into Terraform;
+- the checker does not create metrics, alert policies, or notification
+  channels.
+
 ## Recommended Signal Path
 
 Recommended option: custom checker path.
@@ -160,7 +170,8 @@ If future service-failure alerting causes noise or false positives:
 
 ## Next Implementation Step
 
-Create a custom service-state checker design and approval package.
+Review the local service-state checker skeleton and decide the future runtime
+execution model.
 
 The next step should remain limited to service-failure alerting for
 `openclaw.service` and `openclaw-telegram-adapter.service`. It should not add
