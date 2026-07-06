@@ -403,6 +403,12 @@ MIG autohealing, health/readiness, disk, snapshot, and Telegram adapter
 observability posture. It also defines alert candidates and implementation
 sequencing without creating alert policies or notification channels.
 
+The Terraform monitoring skeleton lives at
+`../terraform/monitoring.tf`. It is intentionally resource-free until alert
+routing and notification channel ownership are approved. Do not run
+`terraform apply` for monitoring work until a later phase has reviewed the
+specific alert policy plan.
+
 ## Manual Pre-Upgrade Snapshot
 
 A manual pre-upgrade snapshot must be application-consistent.

@@ -2,11 +2,12 @@
 
 ## Status
 
-Status: Phase 8-A planning baseline.
+Status: Phase 8-B monitoring skeleton baseline.
 
 This document defines the compact observability baseline and alerting plan for
-the OpenClaw Stateful VM runtime. It does not create alert policies,
-notification channels, Terraform resources, or runtime changes.
+the OpenClaw Stateful VM runtime. Phase 8-B adds a Terraform-ready monitoring
+skeleton, but it does not create alert policies, notification channels, or
+runtime changes.
 
 ## Current Runtime Baseline
 
@@ -97,10 +98,64 @@ ones. Recommended routing:
 - backup freshness alerts: same route as critical runtime alerts until a formal
   backup owner exists.
 
-Do not place notification channel identifiers, operator chat identifiers,
-token values, or webhook payload details in public documentation. Terraform
+Do not place notification channel identifiers, operator chat identifiers, token
+values, or external callback payload details in public documentation. Terraform
 should reference approved channel identifiers through variables or data sources
 after ownership is confirmed.
+
+## Phase 8-B Monitoring Skeleton
+
+Terraform skeleton location:
+
+```text
+gcp/openclaw_stateful_vm/terraform/monitoring.tf
+```
+
+The skeleton defines:
+
+- `monitoring_alerts_enabled`, default `false`;
+- `monitoring_notification_channel_ids`, default empty and sensitive;
+- local naming conventions for future alert display names;
+- local monitored resource label conventions for the Stateful MIG, zone, and
+  state disk;
+- future alert candidate names for service failure, MIG health, disk capacity,
+  and snapshot freshness.
+
+The skeleton intentionally defines no active `google_monitoring_alert_policy`
+resources and no active `google_monitoring_notification_channel` resources.
+The default Terraform configuration therefore remains a planning-only baseline
+for monitoring.
+
+Notification channel discovery used the local supported command:
+
+```text
+gcloud beta monitoring channels list --project=ai-agent-host-497515 --format="csv[no-heading](type,enabled)"
+```
+
+The sanitized discovery returned no visible notification channel rows. No
+channel identifiers, display names, email addresses, phone numbers, or callback
+URLs were printed or committed.
+
+Routing decision status:
+
+- no operator-owned Cloud Monitoring notification channel was confirmed;
+- Phase 8-C must wait for explicit operator approval of alert routing;
+- future Terraform alert policies must attach only approved existing
+  notification channel identifiers supplied outside public docs.
+
+Alert policies are not created in Phase 8-B because the signal choice and
+routing ownership still need review. This keeps the repository ready for
+Terraform-managed alerting without causing notification noise or changing live
+Cloud Monitoring state.
+
+Plan-only note:
+
+- the Phase 8-B monitoring skeleton does not introduce alert policy,
+  notification channel, or monitoring-related resource changes;
+- the local plan-only check showed unrelated existing runtime/Telegram
+  configuration drift;
+- do not apply monitoring work until the runtime variable set is reconciled
+  and the next phase has an approved alert policy plan.
 
 ## Recommended Implementation Sequence
 
@@ -116,6 +171,7 @@ after ownership is confirmed.
 - Implement the lowest-risk service failure policies first.
 - Prefer native Ops Agent/systemd signals if available.
 - Use logs-based metrics only when they can avoid sensitive log content.
+- Review the exact Terraform policy plan before any `terraform apply`.
 
 ### Phase 8-D: Health, readiness, disk capacity, and snapshot freshness
 
@@ -150,6 +206,21 @@ Phase 8 observability work must preserve the current security posture:
 - no shell, Terraform, browser automation, or DevBox execution through
   Telegram;
 - no Secret Manager payload reads in validation evidence;
-- no token values, real operator chat identifiers, webhook payloads, or
+- no token values, real operator chat identifiers, callback payloads, or
   sensitive logs in public docs;
 - no service restarts or destructive recovery steps without separate approval.
+
+## Next Implementation Gate
+
+Phase 8-C - Service Failure Alert Policy Plan/Implementation.
+
+Scope for Phase 8-C:
+
+- OpenClaw `openclaw.service` failure alerting;
+- Telegram `openclaw-telegram-adapter.service` failure alerting;
+- signal selection review before implementation;
+- notification routing approval before activation;
+- Terraform plan review before any apply.
+
+Phase 8-C must not expand Telegram scope, enable GitHub PR/write, add MCP, run
+OpenClaw tools, or create unrelated monitoring resources.

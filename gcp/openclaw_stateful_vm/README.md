@@ -96,6 +96,7 @@ gcp/openclaw_stateful_vm/
 |   |-- mig.tf
 |   |-- health_check.tf
 |   |-- snapshot_policy.tf
+|   |-- monitoring.tf
 |   |-- outputs.tf
 |   `-- terraform.tfvars.example
 |-- scripts/
@@ -148,6 +149,10 @@ terraform fmt -check -recursive
 terraform init -backend=false
 terraform validate
 ```
+
+The monitoring skeleton in `terraform/monitoring.tf` is intentionally
+resource-free until alert routing and notification channel ownership are
+approved in a later Phase 8 gate.
 
 Run ShellCheck against a rendered bootstrap script when available. The source
 is a Terraform template and cannot be checked directly without rendering its
