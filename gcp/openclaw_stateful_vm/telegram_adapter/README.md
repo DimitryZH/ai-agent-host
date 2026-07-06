@@ -1,9 +1,9 @@
 # Telegram Status-Only Adapter Scaffold
 
-This directory contains the first non-enabled command-handling scaffold for the
-future Telegram status-only adapter.
+This directory contains the Telegram status-only adapter scaffold and runtime
+modules.
 
-Current status: non-enabled skeleton only.
+Current status: status-only runtime rollout complete.
 
 Enablement approval package:
 `gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-enablement-approval.md`
@@ -11,23 +11,22 @@ Enablement approval package:
 Enabled rollout approval package:
 `gcp/openclaw_stateful_vm/docs/telegram-enabled-rollout-approval-package.md`
 
+Runtime closeout:
+`gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-runtime-closeout.md`
+
 Operator setup guide:
 `gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-operator-setup.md`
 
 Operator bootstrap guide:
 `gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-operator-bootstrap.md`
 
-It is not wired into:
-
-* installed or enabled systemd service;
-* applied Terraform/runtime rollout;
-* Secret Manager;
-* Telegram Bot API polling;
-* the live OpenClaw runtime.
+Runtime closeout is limited to the approved status-only command scope. It does
+not approve `/ask`, GitHub commands, PR/write, Terraform, shell, browser
+automation, MCP, DevBox, or OpenClaw self-upgrade behavior.
 
 ## Current Scope
 
-Implemented:
+Implemented and validated for status-only scope:
 
 * fixed command normalization;
 * Telegram chat ID allowlist check;
@@ -40,28 +39,23 @@ Implemented:
 * safe diagnostic event shape that excludes raw message text and chat IDs;
 * fake transport dispatcher for Telegram-like update dictionaries;
 * dry-run CLI for local JSON fixtures without Telegram access;
-* disabled Telegram Bot API client skeleton with fake HTTP transport tests;
-* explicit-only Telegram token file reader for future approved wiring;
-* disabled real Telegram HTTP transport with injected network function tests;
-* disabled poll-once coordinator with fake client/transport tests;
+* Telegram Bot API client with injected HTTP transport tests;
+* explicit-only Telegram token file reader;
+* real Telegram HTTP transport used only by the approved runtime runner;
+* poll-once coordinator with fake client/transport tests;
 * disabled runtime preflight for non-secret configuration shape;
-* explicit runtime runner for future approved execution;
-* disabled systemd service template for future approved rollout;
-* default-disabled Terraform/bootstrap wiring for future approved rollout;
+* explicit runtime runner for approved execution;
+* systemd service template for approved rollout;
+* default-disabled Terraform/bootstrap wiring with an approved enabled rollout;
 * limited help response for unsupported commands such as `/ask`;
 * unit tests for command routing and non-secret responses.
 
-Not implemented:
+Not available in the approved runtime:
 
 * Telegram bot creation;
-* enabled bot token handling;
-* started outbound polling;
-* enabled Telegram Bot API client or real HTTP transport wiring;
-* real `getUpdates` or `sendMessage` calls;
-* started polling loop, background loop, or retry daemon behavior;
-* installed runtime service wrapper;
 * runtime preflight token file reads;
 * non-local OpenClaw API probing;
+* `/ask` execution;
 * GitHub commands;
 * Terraform commands;
 * shell execution;

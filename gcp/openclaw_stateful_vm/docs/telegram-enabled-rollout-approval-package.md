@@ -5,6 +5,9 @@
 Status: Enabled rollout approval package only; Terraform apply is not approved
 by this document.
 
+Runtime closeout for the completed status-only rollout:
+`gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-runtime-closeout.md`
+
 ## Reviewed Plan Summary
 
 Reviewed enabled plan:

@@ -13,6 +13,9 @@ and storing the token in Secret Manager are documented in:
 Enabled rollout approval package for the first real enablement:
 `gcp/openclaw_stateful_vm/docs/telegram-enabled-rollout-approval-package.md`
 
+Runtime closeout after approved status-only rollout:
+`gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-runtime-closeout.md`
+
 ## Current Non-Enabled State
 
 The repository currently contains a local-only Telegram adapter scaffold:
