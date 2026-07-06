@@ -45,9 +45,10 @@ locals {
   }
 }
 
-# Phase 8-B is intentionally a no-resource monitoring skeleton.
+# This file is intentionally a no-resource monitoring skeleton.
 # Do not add google_monitoring_alert_policy or
-# google_monitoring_notification_channel resources until a later approved phase.
+# google_monitoring_notification_channel resources until a later approved
+# change has confirmed signal safety and alert routing.
 # Future alert policies should use existing notification channel IDs supplied
 # through monitoring_notification_channel_ids after routing ownership is
 # explicitly approved.

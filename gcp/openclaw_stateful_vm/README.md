@@ -97,6 +97,7 @@ gcp/openclaw_stateful_vm/
 |   |-- health_check.tf
 |   |-- snapshot_policy.tf
 |   |-- monitoring.tf
+|   |-- monitoring_service_alerts.tf
 |   |-- outputs.tf
 |   `-- terraform.tfvars.example
 |-- scripts/
@@ -150,9 +151,9 @@ terraform init -backend=false
 terraform validate
 ```
 
-The monitoring skeleton in `terraform/monitoring.tf` is intentionally
-resource-free until alert routing and notification channel ownership are
-approved in a later Phase 8 gate.
+The monitoring skeleton files are intentionally resource-free until alert
+routing, signal safety, and notification channel ownership are approved in a
+later operations gate.
 
 Run ShellCheck against a rendered bootstrap script when available. The source
 is a Terraform template and cannot be checked directly without rendering its

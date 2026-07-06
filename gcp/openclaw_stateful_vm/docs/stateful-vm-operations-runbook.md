@@ -395,7 +395,7 @@ infrastructure resources.
 
 ## Observability And Alerting Plan
 
-The Phase 8 planning baseline is tracked in
+The observability and alerting planning baseline is tracked in
 `stateful-vm-observability-alerting-plan.md`.
 
 It covers the current Ops Agent, Cloud Logging, Cloud Monitoring writer role,
@@ -404,10 +404,11 @@ observability posture. It also defines alert candidates and implementation
 sequencing without creating alert policies or notification channels.
 
 The Terraform monitoring skeleton lives at
-`../terraform/monitoring.tf`. It is intentionally resource-free until alert
-routing and notification channel ownership are approved. Do not run
-`terraform apply` for monitoring work until a later phase has reviewed the
-specific alert policy plan.
+`../terraform/monitoring.tf` and
+`../terraform/monitoring_service_alerts.tf`. It is intentionally resource-free
+until alert routing, signal safety, and notification channel ownership are
+approved. Do not run `terraform apply` for monitoring work until the specific
+alert policy plan has been reviewed.
 
 ## Manual Pre-Upgrade Snapshot
 
