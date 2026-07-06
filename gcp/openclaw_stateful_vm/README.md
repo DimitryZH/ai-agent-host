@@ -111,6 +111,7 @@ gcp/openclaw_stateful_vm/
     |-- stateful-vm-runtime-validation-summary.md
     |-- telegram-status-only-adapter-runtime-closeout.md
     |-- stateful-vm-observability-alerting-plan.md
+    |-- stateful-vm-service-failure-signal-validation.md
     `-- stateful-vm-operations-runbook.md
 ```
 
@@ -269,4 +270,5 @@ Still intentionally deferred:
 - `docs/stateful-vm-runtime-validation-summary.md`
 - `docs/telegram-status-only-adapter-runtime-closeout.md`
 - `docs/stateful-vm-observability-alerting-plan.md`
+- `docs/stateful-vm-service-failure-signal-validation.md`
 - `docs/stateful-vm-operations-runbook.md`

@@ -348,7 +348,7 @@ Re-pairing can be required after:
 - Control UI reconnect from a new browser profile;
 - future restart or recreate drills that change runtime state unexpectedly;
 - a restore exercise from an older snapshot;
-- manual device cleanup performed during an approved recovery workflow.
+- manual device cleanup performed during an approved recovery procedure.
 
 The current stateful VM design is intended to preserve paired state across VM
 recreation, and that behavior has now been validated through controlled restart
@@ -409,6 +409,11 @@ The Terraform monitoring skeleton lives at
 until alert routing, signal safety, and notification channel ownership are
 approved. Do not run `terraform apply` for monitoring work until the specific
 alert policy plan has been reviewed.
+
+Service failure signal validation is recorded in
+`stateful-vm-service-failure-signal-validation.md`. The current recommended
+path is a custom service-state checker that exports bounded service metadata,
+not raw logs or secret-bearing runtime data.
 
 ## Manual Pre-Upgrade Snapshot
 

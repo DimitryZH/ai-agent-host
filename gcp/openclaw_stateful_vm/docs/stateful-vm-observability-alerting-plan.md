@@ -169,15 +169,21 @@ Terraform service alert skeleton location:
 gcp/openclaw_stateful_vm/terraform/monitoring_service_alerts.tf
 ```
 
+Signal validation note:
+
+```text
+gcp/openclaw_stateful_vm/docs/stateful-vm-service-failure-signal-validation.md
+```
+
 Read-only signal discovery found:
 
-- systemd metric availability: unclear, because local gcloud does not expose a
-  supported metric descriptor list command;
-- logs-based metric path: available as a Terraform/provider pattern, but no
-  existing user logs-based metrics were visible;
-- service-unit log existence: not confirmed by timestamp-only query;
-- recommended signal path: continue with signal validation before creating
-  logs-based metrics or alert policies.
+- native metric path: unclear, because the available CLI did not expose metric
+  descriptor discovery;
+- logs-based metric path: not confirmed, because metadata-only service-unit
+  queries returned no rows;
+- VM service metadata: confirmed through selected `systemctl show` properties;
+- recommended signal path: custom checker that exports bounded service-state
+  metrics without reading logs, environments, or secrets.
 
 The service alert skeleton defines the OpenClaw and Telegram adapter service
 targets and a disabled-by-default service alert gate. It does not create
@@ -187,6 +193,7 @@ future filters must be reviewed before they are committed or applied.
 
 Activation prerequisites:
 
+- design and review the custom service-state checker;
 - confirm the service failure signal source;
 - approve notification routing;
 - provide approved notification channel identifiers outside public docs;
@@ -249,13 +256,13 @@ Observability work must preserve the current security posture:
 
 ## Next Implementation Gate
 
-Service Failure Signal Validation.
+Custom Service-State Checker Design.
 
 Scope for the next gate:
 
 - OpenClaw `openclaw.service` failure alerting;
 - Telegram `openclaw-telegram-adapter.service` failure alerting;
-- signal selection review before implementation;
+- checker design review before implementation;
 - notification routing approval before activation;
 - Terraform plan review before any apply.
 

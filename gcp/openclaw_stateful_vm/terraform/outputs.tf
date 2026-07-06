@@ -34,7 +34,7 @@ output "iap_gateway_tunnel_command" {
 }
 
 output "required_apis_not_managed" {
-  description = "APIs required before apply. Phase 5.3 intentionally does not enable them."
+  description = "APIs required before apply. This Terraform root intentionally does not enable them."
   value = [
     "artifactregistry.googleapis.com",
     "compute.googleapis.com",
