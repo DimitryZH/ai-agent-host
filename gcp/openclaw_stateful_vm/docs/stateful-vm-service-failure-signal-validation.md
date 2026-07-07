@@ -105,11 +105,13 @@ Repository status:
 
 - local checker skeleton:
   `gcp/openclaw_stateful_vm/monitoring/service_state_checker.py`;
+- local checker supports `text`, `json`, and metric-shaped `metrics-json`
+  output;
 - local tests:
   `gcp/openclaw_stateful_vm/monitoring/tests/test_service_state_checker.py`;
 - the checker is not deployed, scheduled, or wired into Terraform;
-- the checker does not create metrics, alert policies, or notification
-  channels.
+- the checker does not write Cloud Monitoring metrics, create custom metrics,
+  create alert policies, or create notification channels.
 
 ## Recommended Signal Path
 
@@ -130,7 +132,9 @@ Expected future metric behavior:
   `Result=success`;
 - unhealthy value when the service is inactive, failed, missing, or has a
   non-success result;
-- no free-form log messages or unbounded labels.
+- only the service name as a metric label;
+- no timestamps, free-form log messages, raw command output, or unbounded
+  labels.
 
 ## Why No Alert Resources Were Created
 

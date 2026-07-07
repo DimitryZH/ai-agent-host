@@ -142,7 +142,7 @@ URLs were printed or committed.
 Routing decision status:
 
 - no operator-owned Cloud Monitoring notification channel was confirmed;
-- the service failure alert gate must wait for explicit operator approval of
+- service failure alert activation must wait for explicit operator approval of
   alert routing;
 - future Terraform alert policies must attach only approved existing
   notification channel identifiers supplied outside public docs.
@@ -159,7 +159,7 @@ Plan-only note:
 - the local plan-only check showed unrelated existing runtime/Telegram
   configuration drift;
 - do not apply monitoring work until the runtime variable set is reconciled and
-  the next operations gate has an approved alert policy plan.
+  the next operations review has an approved alert policy plan.
 
 ## Service Failure Alert Review
 
@@ -191,11 +191,12 @@ Repository-local checker skeleton:
 gcp/openclaw_stateful_vm/monitoring/service_state_checker.py
 ```
 
-The checker is local code only. It is not deployed, scheduled, or wired into
-Terraform, and it does not create metrics or alerts.
+The checker is local code only. It supports `text`, `json`, and metric-shaped
+`metrics-json` output for review. It is not deployed, scheduled, or wired into
+Terraform, and it does not write Cloud Monitoring metrics or create alerts.
 
 The service alert skeleton defines the OpenClaw and Telegram adapter service
-targets and a disabled-by-default service alert gate. It does not create
+targets and a disabled-by-default service alert switch. It does not create
 logs-based metrics or alert policies. This is intentional because broad log
 payload matching could accidentally include sensitive operational data; any
 future filters must be reviewed before they are committed or applied.
@@ -238,7 +239,7 @@ Activation prerequisites:
 
 - Convert the existing restore-drill runbook into a recurring operator
   schedule.
-- Keep destructive cleanup and restore exercises approval-gated.
+- Keep destructive cleanup and restore exercises approval-controlled.
 - Record sanitized drill evidence outside public docs when needed.
 
 ### Final operations closeout
@@ -263,11 +264,11 @@ Observability work must preserve the current security posture:
   sensitive logs in public docs;
 - no service restarts or destructive recovery steps without separate approval.
 
-## Next Implementation Gate
+## Next Implementation Step
 
 Custom Service-State Checker Runtime Design.
 
-Scope for the next gate:
+Scope for the next implementation step:
 
 - OpenClaw `openclaw.service` failure alerting;
 - Telegram `openclaw-telegram-adapter.service` failure alerting;
@@ -275,5 +276,6 @@ Scope for the next gate:
 - notification routing approval before activation;
 - Terraform plan review before any apply.
 
-The next gate must not expand Telegram scope, enable GitHub PR/write, add MCP,
-run OpenClaw tools, or create unrelated monitoring resources.
+The next implementation step must not expand Telegram scope, enable GitHub
+PR/write, add MCP, run OpenClaw tools, or create unrelated monitoring
+resources.

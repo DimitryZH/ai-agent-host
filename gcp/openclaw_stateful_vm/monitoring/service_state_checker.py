@@ -27,6 +27,13 @@ DEFAULT_SERVICES = (
     "openclaw-telegram-adapter.service",
 )
 
+METRIC_NAMES = (
+    "openclaw_service_state_healthy",
+    "openclaw_service_state_available",
+    "openclaw_service_state_active",
+    "openclaw_service_state_running",
+)
+
 SYSTEMCTL_TIMEOUT_SECONDS = 5
 
 
@@ -95,6 +102,18 @@ class ServiceState:
             },
         }
 
+    def to_metric_values(self, *, strict: bool = False) -> dict[str, int]:
+        return {
+            "openclaw_service_state_healthy": int(self.is_healthy(strict=strict)),
+            "openclaw_service_state_available": int(self.available),
+            "openclaw_service_state_active": int(
+                self.properties.get("ActiveState") == "active"
+            ),
+            "openclaw_service_state_running": int(
+                self.properties.get("SubState") == "running"
+            ),
+        }
+
 
 def parse_systemctl_show(output: str) -> dict[str, str]:
     properties: dict[str, str] = {name: "" for name in ALLOWED_PROPERTIES}
@@ -154,6 +173,29 @@ def render_json(states: Sequence[ServiceState], *, strict: bool = False) -> str:
     return json.dumps(payload, indent=2, sort_keys=True)
 
 
+def render_metrics_json(states: Sequence[ServiceState], *, strict: bool = False) -> str:
+    metrics = []
+    for state in states:
+        values = state.to_metric_values(strict=strict)
+        for metric_name in METRIC_NAMES:
+            metrics.append(
+                {
+                    "name": metric_name,
+                    "value": values[metric_name],
+                    "labels": {
+                        "service": state.service,
+                    },
+                }
+            )
+
+    payload = {
+        "ok": all(state.is_healthy(strict=strict) for state in states),
+        "strict": strict,
+        "metrics": metrics,
+    }
+    return json.dumps(payload, indent=2, sort_keys=True)
+
+
 def render_text(states: Sequence[ServiceState], *, strict: bool = False) -> str:
     lines = []
     for state in states:
@@ -189,7 +231,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--format",
-        choices=("json", "text"),
+        choices=("json", "text", "metrics-json"),
         default="text",
         help="Output format.",
     )
@@ -209,6 +251,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.format == "json":
         print(render_json(states, strict=args.strict))
+    elif args.format == "metrics-json":
+        print(render_metrics_json(states, strict=args.strict))
     else:
         print(render_text(states, strict=args.strict))
 

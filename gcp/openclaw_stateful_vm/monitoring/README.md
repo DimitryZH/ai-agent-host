@@ -57,6 +57,13 @@ python -m gcp.openclaw_stateful_vm.monitoring.service_state_checker \
   --format json
 ```
 
+Print metric-shaped JSON for future ingestion review:
+
+```bash
+python -m gcp.openclaw_stateful_vm.monitoring.service_state_checker \
+  --format metrics-json
+```
+
 Require stricter loaded/enabled/success metadata:
 
 ```bash
@@ -68,6 +75,52 @@ Exit behavior:
 - exit `0` when all requested services are healthy;
 - exit non-zero when any requested service is inactive, failed, missing, or
   unavailable.
+
+## Metric Output
+
+The `metrics-json` format emits deterministic metric-shaped JSON. It is local
+output only and does not write to Cloud Monitoring.
+
+Metric names:
+
+- `openclaw_service_state_healthy`
+- `openclaw_service_state_available`
+- `openclaw_service_state_active`
+- `openclaw_service_state_running`
+
+Each metric value is numeric:
+
+- `1` when the condition is true;
+- `0` when the condition is false.
+
+Allowed metric labels:
+
+- `service`
+
+The metric output intentionally excludes:
+
+- timestamps as labels;
+- load, active, sub-state, result, exit status, and unit-file state as labels;
+- raw `systemctl` output;
+- journal logs;
+- environment variables;
+- process command lines;
+- secret values;
+- Telegram payloads or message content;
+- hostnames, instance names, project identifiers, and zone names;
+- notification channel identifiers and external callback URLs.
+
+Example:
+
+```bash
+python -m gcp.openclaw_stateful_vm.monitoring.service_state_checker \
+  --service openclaw.service \
+  --format metrics-json
+```
+
+Future ingestion into Cloud Monitoring needs a separate runtime design,
+least-privilege review, metric descriptor review, Terraform plan review, and
+explicit deployment approval.
 
 ## Deployment Status
 
