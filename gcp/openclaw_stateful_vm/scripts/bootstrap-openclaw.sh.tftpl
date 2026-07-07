@@ -29,6 +29,9 @@ DATA_DEVICE="/dev/disk/by-id/google-$DATA_DISK_DEVICE_NAME"
 TELEGRAM_ADAPTER_USER="openclaw-telegram"
 TELEGRAM_ADAPTER_GROUP="openclaw-telegram"
 TELEGRAM_ADAPTER_WORKING_DIR="$(decode '${telegram_adapter_working_dir_b64}')"
+SERVICE_STATE_EXPORTER_USER='${service_state_exporter_user}'
+SERVICE_STATE_EXPORTER_GROUP='${service_state_exporter_group}'
+SERVICE_STATE_EXPORTER_WORKING_DIR="$(decode '${service_state_exporter_working_dir_b64}')"
 
 [[ "$EUID" -eq 0 ]] || fail "Bootstrap must run as root."
 [[ "$CONTAINER_IMAGE" == *@sha256:* ]] || fail "Container image must be pinned by digest."
@@ -133,6 +136,49 @@ while IFS=$'\t' read -r relative_path content_b64; do
 done < <(decode '${telegram_adapter_package_files_b64}' | jq -r 'to_entries[] | [.key, .value] | @tsv')
 %{ endif ~}
 
+%{ if service_state_exporter_enabled ~}
+if ! getent group "$SERVICE_STATE_EXPORTER_GROUP" >/dev/null; then
+  groupadd --system "$SERVICE_STATE_EXPORTER_GROUP"
+fi
+
+if ! id -u "$SERVICE_STATE_EXPORTER_USER" >/dev/null 2>&1; then
+  useradd --system \
+    --gid "$SERVICE_STATE_EXPORTER_GROUP" \
+    --home-dir /nonexistent \
+    --shell /usr/sbin/nologin \
+    "$SERVICE_STATE_EXPORTER_USER"
+fi
+
+install -d -o root -g root -m 0755 /opt
+install -d -o root -g "$SERVICE_STATE_EXPORTER_GROUP" -m 0750 "$SERVICE_STATE_EXPORTER_WORKING_DIR"
+install -d -o root -g "$SERVICE_STATE_EXPORTER_GROUP" -m 0750 "$SERVICE_STATE_EXPORTER_WORKING_DIR/gcp"
+install -d -o root -g "$SERVICE_STATE_EXPORTER_GROUP" -m 0750 "$SERVICE_STATE_EXPORTER_WORKING_DIR/gcp/openclaw_stateful_vm"
+install -d -o root -g "$SERVICE_STATE_EXPORTER_GROUP" -m 0750 "$SERVICE_STATE_EXPORTER_WORKING_DIR/gcp/openclaw_stateful_vm/monitoring"
+
+for package_init in \
+  "$SERVICE_STATE_EXPORTER_WORKING_DIR/gcp/__init__.py" \
+  "$SERVICE_STATE_EXPORTER_WORKING_DIR/gcp/openclaw_stateful_vm/__init__.py"; do
+  : > "$package_init"
+  chown "root:$SERVICE_STATE_EXPORTER_GROUP" "$package_init"
+  chmod 0640 "$package_init"
+done
+
+while IFS=$'\t' read -r relative_path content_b64; do
+  [[ "$relative_path" == gcp/openclaw_stateful_vm/monitoring/*.py ]] ||
+    fail "Invalid service-state exporter package path."
+  [[ "$relative_path" != *".."* ]] ||
+    fail "Invalid service-state exporter package path."
+
+  target_path="$SERVICE_STATE_EXPORTER_WORKING_DIR/$relative_path"
+  temp_path="$target_path.tmp"
+  install -d -o root -g "$SERVICE_STATE_EXPORTER_GROUP" -m 0750 "$(dirname "$target_path")"
+  printf '%s' "$content_b64" | base64 -d > "$temp_path"
+  chown "root:$SERVICE_STATE_EXPORTER_GROUP" "$temp_path"
+  chmod 0640 "$temp_path"
+  mv -f "$temp_path" "$target_path"
+done < <(decode '${service_state_exporter_package_files_b64}' | jq -r 'to_entries[] | [.key, .value] | @tsv')
+%{ endif ~}
+
 install -d -o root -g root -m 0750 /etc/openclaw
 install -d -o root -g root -m 0755 /usr/local/sbin
 
@@ -234,6 +280,14 @@ decode '${telegram_adapter_systemd_unit_b64}' > /etc/systemd/system/openclaw-tel
 chmod 0644 /etc/systemd/system/openclaw-telegram-adapter.service
 %{ endif ~}
 
+%{ if service_state_exporter_enabled ~}
+decode '${service_state_exporter_systemd_unit_b64}' > /etc/systemd/system/openclaw-service-state-exporter.service
+chmod 0644 /etc/systemd/system/openclaw-service-state-exporter.service
+
+decode '${service_state_exporter_systemd_timer_b64}' > /etc/systemd/system/openclaw-service-state-exporter.timer
+chmod 0644 /etc/systemd/system/openclaw-service-state-exporter.timer
+%{ endif ~}
+
 systemctl daemon-reload
 systemctl enable openclaw.service
 systemctl restart openclaw.service
@@ -241,6 +295,10 @@ systemctl restart openclaw.service
 %{ if telegram_adapter_enabled ~}
 systemctl enable openclaw-telegram-adapter.service
 systemctl restart openclaw-telegram-adapter.service
+%{ endif ~}
+
+%{ if service_state_exporter_enabled ~}
+systemctl enable --now openclaw-service-state-exporter.timer
 %{ endif ~}
 
 log "Bootstrap completed without printing secret values."

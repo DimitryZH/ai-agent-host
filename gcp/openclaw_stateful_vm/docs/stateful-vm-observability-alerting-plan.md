@@ -212,9 +212,9 @@ gcp/openclaw_stateful_vm/monitoring/service_state_monitor_runner.py
 The checker is local code only. It supports `text`, `json`, and metric-shaped
 `metrics-json` output for review. The writer validates that output and builds a
 dry-run Cloud Monitoring custom metric write model. The runner composes both
-helpers into a local dry-run entrypoint. These helpers are not deployed,
-scheduled, or wired into Terraform, and they do not write Cloud Monitoring
-metrics or create alerts.
+helpers into a local dry-run entrypoint. These helpers are not deployed or
+scheduled by default, and they do not write Cloud Monitoring metrics or create
+alerts.
 
 Disabled deployment skeleton:
 
@@ -224,8 +224,10 @@ gcp/openclaw_stateful_vm/systemd/openclaw-service-state-exporter.service.tftpl
 gcp/openclaw_stateful_vm/systemd/openclaw-service-state-exporter.timer.tftpl
 ```
 
-The skeleton is disabled by default and is not wired into bootstrap install,
-start, or enable behavior.
+The skeleton is disabled by default. Bootstrap install, start, and enable
+behavior is gated by `service_state_exporter_enabled`. When enabled, it
+installs the helper package and dry-run systemd timer only; live metric writes
+remain disabled and unimplemented.
 
 The service alert skeleton defines the OpenClaw and Telegram adapter service
 targets and a disabled-by-default service alert switch. It does not create
@@ -238,7 +240,7 @@ Activation prerequisites:
 - design and review the custom service-state checker;
 - design and review the custom metric writer runtime;
 - design and review the scheduled runner execution model;
-- approve the service-state exporter deployment package;
+- approve enabling the service-state exporter install wiring;
 - confirm the service failure signal source;
 - approve notification routing;
 - provide approved notification channel identifiers outside public docs;

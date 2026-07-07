@@ -8,6 +8,7 @@ TERRAFORM_DIR = STATEFUL_VM_ROOT / "terraform"
 SYSTEMD_DIR = STATEFUL_VM_ROOT / "systemd"
 
 EXPORTER_TF = TERRAFORM_DIR / "service_state_exporter.tf"
+LOCALS_TF = TERRAFORM_DIR / "locals.tf"
 TFVARS_EXAMPLE = TERRAFORM_DIR / "terraform.tfvars.example"
 SERVICE_TEMPLATE = SYSTEMD_DIR / "openclaw-service-state-exporter.service.tftpl"
 TIMER_TEMPLATE = SYSTEMD_DIR / "openclaw-service-state-exporter.timer.tftpl"
@@ -27,6 +28,17 @@ def variable_block(terraform_text: str, variable_name: str) -> str:
     if match is None:
         raise AssertionError(f"Missing Terraform variable {variable_name}")
     return match.group("body")
+
+
+def exporter_bootstrap_blocks(bootstrap_text: str) -> str:
+    blocks = re.findall(
+        r"%\{ if service_state_exporter_enabled ~\}(.*?)%\{ endif ~\}",
+        bootstrap_text,
+        flags=re.DOTALL,
+    )
+    if not blocks:
+        raise AssertionError("Missing service_state_exporter_enabled bootstrap block")
+    return "\n".join(blocks)
 
 
 class ServiceStateExporterDeploymentSkeletonTests(unittest.TestCase):
@@ -57,12 +69,18 @@ class ServiceStateExporterDeploymentSkeletonTests(unittest.TestCase):
 
     def test_terraform_renders_templates_only_as_locals(self) -> None:
         terraform_text = read(EXPORTER_TF)
-        all_terraform = "\n".join(path.read_text(encoding="utf-8") for path in TERRAFORM_DIR.glob("*.tf"))
+        locals_text = read(LOCALS_TF)
 
         self.assertIn("service_state_exporter_systemd_unit = templatefile(", terraform_text)
         self.assertIn("service_state_exporter_systemd_timer = templatefile(", terraform_text)
-        self.assertEqual(all_terraform.count("service_state_exporter_systemd_unit"), 1)
-        self.assertEqual(all_terraform.count("service_state_exporter_systemd_timer"), 1)
+        self.assertIn("service_state_exporter_package_files", terraform_text)
+        self.assertRegex(
+            locals_text,
+            r"service_state_exporter_enabled\s+=\s+var\.service_state_exporter_enabled",
+        )
+        self.assertIn("service_state_exporter_package_files_b64", locals_text)
+        self.assertIn("service_state_exporter_systemd_timer_b64", locals_text)
+        self.assertIn("service_state_exporter_systemd_unit_b64", locals_text)
 
     def test_terraform_skeleton_does_not_create_active_resources(self) -> None:
         terraform_text = read(EXPORTER_TF)
@@ -89,11 +107,53 @@ class ServiceStateExporterDeploymentSkeletonTests(unittest.TestCase):
             with self.subTest(term=term):
                 self.assertNotIn(term, terraform_text)
 
-    def test_bootstrap_has_no_exporter_install_start_or_enable_wiring(self) -> None:
+    def test_bootstrap_exporter_install_wiring_is_gated(self) -> None:
         bootstrap_text = read(BOOTSTRAP_TEMPLATE)
+        exporter_blocks = exporter_bootstrap_blocks(bootstrap_text)
 
-        self.assertNotIn("openclaw-service-state-exporter", bootstrap_text)
-        self.assertNotIn("service_state_exporter", bootstrap_text)
+        self.assertIn("SERVICE_STATE_EXPORTER_USER", bootstrap_text)
+        self.assertIn("SERVICE_STATE_EXPORTER_WORKING_DIR", bootstrap_text)
+        self.assertIn("groupadd --system \"$SERVICE_STATE_EXPORTER_GROUP\"", exporter_blocks)
+        self.assertIn("useradd --system", exporter_blocks)
+        self.assertIn("gcp/openclaw_stateful_vm/monitoring/*.py", exporter_blocks)
+        self.assertIn("openclaw-service-state-exporter.service", exporter_blocks)
+        self.assertIn("openclaw-service-state-exporter.timer", exporter_blocks)
+        self.assertIn("systemctl enable --now openclaw-service-state-exporter.timer", exporter_blocks)
+
+    def test_bootstrap_exporter_wiring_does_not_add_unsafe_actions(self) -> None:
+        exporter_blocks = exporter_bootstrap_blocks(read(BOOTSTRAP_TEMPLATE))
+        forbidden_terms = {
+            "--write",
+            "gcloud secrets versions access",
+            "api.telegram.org",
+            "TELEGRAM_BOT_TOKEN",
+            "/api/v1/admin/rpc",
+            "/v1/",
+            "systemctl restart openclaw.service",
+            "systemctl stop openclaw.service",
+            "systemctl reload openclaw.service",
+            "openclaw-telegram-adapter.service",
+            "notificationChannels/",
+            "callbackUrl",
+            "webhook",
+        }
+
+        for term in forbidden_terms:
+            with self.subTest(term=term):
+                self.assertNotIn(term, exporter_blocks)
+
+    def test_bootstrap_has_no_unconditional_exporter_enable_or_start(self) -> None:
+        bootstrap_text = read(BOOTSTRAP_TEMPLATE)
+        outside_exporter_blocks = re.sub(
+            r"%\{ if service_state_exporter_enabled ~\}.*?%\{ endif ~\}",
+            "",
+            bootstrap_text,
+            flags=re.DOTALL,
+        )
+
+        self.assertNotIn("openclaw-service-state-exporter.service", outside_exporter_blocks)
+        self.assertNotIn("openclaw-service-state-exporter.timer", outside_exporter_blocks)
+        self.assertNotIn("systemctl enable --now openclaw-service-state-exporter.timer", outside_exporter_blocks)
 
     def test_service_template_is_dry_run_only_and_hardened(self) -> None:
         service_text = read(SERVICE_TEMPLATE)
@@ -162,10 +222,13 @@ class ServiceStateExporterDeploymentSkeletonTests(unittest.TestCase):
             "raw token assignment": r"token\s*=",
         }
 
-        self.assertIn("service_state_exporter_enabled                    = false", tfvars_text)
-        self.assertIn("service_state_exporter_live_writes_enabled        = false", tfvars_text)
-        self.assertIn('service_state_exporter_metric_prefix              = "custom.googleapis.com/openclaw/service_state"', tfvars_text)
-        self.assertIn('telegram_allowed_chat_ids           = ""', tfvars_text)
+        self.assertRegex(tfvars_text, r"service_state_exporter_enabled\s+=\s+false")
+        self.assertRegex(tfvars_text, r"service_state_exporter_live_writes_enabled\s+=\s+false")
+        self.assertRegex(
+            tfvars_text,
+            r'service_state_exporter_metric_prefix\s+=\s+"custom\.googleapis\.com/openclaw/service_state"',
+        )
+        self.assertRegex(tfvars_text, r'telegram_allowed_chat_ids\s+=\s+""')
 
         for label, pattern in forbidden_patterns.items():
             with self.subTest(label=label):

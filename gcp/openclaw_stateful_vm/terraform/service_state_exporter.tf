@@ -38,7 +38,7 @@ variable "service_state_exporter_metric_prefix" {
 variable "service_state_exporter_working_directory" {
   description = "Working directory expected to contain the local monitoring helper package during a future approved rollout."
   type        = string
-  default     = "/opt/ai-agent-host"
+  default     = "/opt/openclaw-service-state-exporter"
 
   validation {
     condition     = startswith(var.service_state_exporter_working_directory, "/")
@@ -83,6 +83,11 @@ locals {
   service_state_exporter_service_name = "openclaw-service-state-exporter.service"
   service_state_exporter_timer_name   = "openclaw-service-state-exporter.timer"
 
+  service_state_exporter_package_files = {
+    for file_name in sort(fileset("${path.module}/../monitoring", "*.py")) :
+    "gcp/openclaw_stateful_vm/monitoring/${file_name}" => base64encode(file("${path.module}/../monitoring/${file_name}"))
+  }
+
   service_state_exporter_systemd_unit = templatefile("${path.module}/../systemd/openclaw-service-state-exporter.service.tftpl", {
     metric_prefix                            = var.service_state_exporter_metric_prefix
     project_id                               = var.project_id
@@ -97,9 +102,8 @@ locals {
   })
 }
 
-# Deployment is intentionally not wired into bootstrap metadata in this
-# skeleton. Future work must explicitly install the rendered service/timer and
-# keep enablement disabled by default until deployment is approved.
+# Bootstrap install wiring is intentionally gated by service_state_exporter_enabled.
+# Defaults keep the exporter absent from live hosts until explicitly approved.
 
 check "service_state_exporter_live_writes_require_exporter" {
   assert {

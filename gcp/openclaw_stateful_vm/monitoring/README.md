@@ -12,9 +12,8 @@ approved runtime services:
 - `openclaw.service`
 - `openclaw-telegram-adapter.service`
 
-It is intended to become the basis for a future metric-producing checker after
-separate review. It is not deployed, installed, scheduled, or wired into
-Terraform.
+It is intended to become the basis for a metric-producing checker after
+separate review. It is not deployed, installed, or scheduled by default.
 
 `service_state_metric_writer.py` validates the checker `metrics-json` output
 and builds a dry-run Cloud Monitoring custom metric write model. Dry-run is the
@@ -255,15 +254,17 @@ Disabled deployment skeleton:
 - `../systemd/openclaw-service-state-exporter.service.tftpl`
 - `../systemd/openclaw-service-state-exporter.timer.tftpl`
 
-The skeleton renders a dry-run service and timer for review. It does not
-install files on the VM, enable the timer, start the exporter, or add live
-metric write behavior by default.
+The skeleton renders a dry-run service and timer for review. Bootstrap wiring
+can install the helper package and enable the timer only when
+`service_state_exporter_enabled` is explicitly set to `true`; defaults keep it
+absent from live hosts and live metric writes remain unimplemented.
 
 ## Deployment Status
 
-These helpers are repository-local only. They do not create Cloud Monitoring
-metrics, logs-based metrics, alert policies, notification channels, systemd
-units, startup-script wiring, or Terraform resources.
+These helpers are repository-local unless the disabled exporter install wiring
+is explicitly enabled. They do not create Cloud Monitoring metrics,
+logs-based metrics, alert policies, notification channels, or live metric
+writes.
 
 Before deployment, the checker, writer, and runner need a separate design
 review covering:

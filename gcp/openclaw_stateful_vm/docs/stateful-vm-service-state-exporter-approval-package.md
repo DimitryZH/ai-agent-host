@@ -2,14 +2,13 @@
 
 ## Purpose
 
-This package defines the proposed deployment design for a future service-state
-metric exporter on the OpenClaw Stateful VM runtime. It is a review artifact
-only. It does not deploy the exporter, create systemd units, create timers,
-modify Terraform, write Cloud Monitoring metrics, create custom metrics, create
-alert policies, or create notification channels.
+This package defines the proposed deployment design for a service-state metric
+exporter on the OpenClaw Stateful VM runtime. It documents disabled-by-default
+install wiring and the approval boundary for enabling it. It does not deploy
+the exporter to live hosts, write Cloud Monitoring metrics, create custom
+metrics, create alert policies, or create notification channels.
 
-The goal is to make the next implementation step explicit before any runtime
-change is made.
+The goal is to make the next runtime change explicit before it is made.
 
 ## Current Local Helper Inventory
 
@@ -29,8 +28,9 @@ Current posture:
 - disabled Terraform deployment skeleton exists;
 - rendered exporter systemd service template exists;
 - rendered exporter systemd timer template exists;
-- not installed by bootstrap;
-- not enabled by default;
+- bootstrap install wiring exists but is gated by
+  `service_state_exporter_enabled`;
+- not installed, started, or enabled by default;
 - no cron job;
 - no Cloud Monitoring live writes;
 - no live custom metric creation;
@@ -61,10 +61,12 @@ Default Terraform posture:
 - `service_state_exporter_enabled = false`
 - `service_state_exporter_live_writes_enabled = false`
 
-The skeleton renders service and timer templates for review, but it does not
-install helper files on the VM, create live systemd units, enable a timer,
-start an exporter, add Cloud Monitoring client dependencies, or implement live
-metric writes.
+The skeleton renders service and timer templates for review. Bootstrap can
+install the helper files and dry-run systemd timer only when
+`service_state_exporter_enabled` is explicitly set to `true`. Defaults keep the
+exporter absent from live hosts, and the service command still omits `--write`.
+The skeleton does not add Cloud Monitoring client dependencies or implement
+live metric writes.
 
 ## Proposed Runtime Execution Model
 
@@ -202,16 +204,17 @@ Current disabled skeleton:
 - Terraform variable for metric prefix;
 - Terraform validation checks for safe enablement;
 - systemd service template for a oneshot dry-run exporter run;
-- systemd timer template for scheduling.
+- systemd timer template for scheduling;
+- bootstrap install wiring gated by `service_state_exporter_enabled`.
 
 Future implementation work may still include:
 
-- startup/bootstrap wiring that installs the helper and systemd templates;
 - optional alert policy resources in a later task only.
 
 Current repository structure already uses Terraform templates for the existing
 OpenClaw and Telegram adapter systemd units. The exporter skeleton follows that
-template style, but it does not add active install, start, or enable behavior.
+template style, while keeping install, start, and enable behavior inactive by
+default.
 
 ## Proposed Rollout Sequence
 
@@ -221,7 +224,8 @@ template style, but it does not add active install, start, or enable behavior.
 4. Review the plan for file placement, local user, permissions, and default
    disabled behavior.
 5. Approve rollout explicitly.
-6. Deploy with exporter disabled, or dry-run only if supported.
+6. Deploy with exporter disabled, or enable the dry-run timer only after
+   explicit approval.
 7. Validate the local runner on the VM without live metric writes.
 8. Approve live metric write activation explicitly.
 9. Enable live metric writes.
@@ -242,7 +246,8 @@ Before live metric writes:
   suffixes, service labels, and `0` or `1` values;
 - confirm the dry-run output does not include logs, secrets, command lines,
   hostnames, instance names, zones, or notification identifiers;
-- confirm the systemd timer is disabled until explicitly enabled.
+- confirm the systemd timer remains absent or disabled until explicitly
+  enabled.
 
 After live metric writes are approved:
 
@@ -302,8 +307,8 @@ disable metric export.
 
 This approval package does not approve:
 
-- deploying the checker, writer, or runner;
-- creating systemd services or timers;
+- enabling the checker, writer, or runner on live hosts;
+- enabling systemd services or timers;
 - creating cron jobs;
 - creating Cloud Scheduler jobs;
 - creating Cloud Functions or Cloud Run services;

@@ -416,8 +416,8 @@ path is a custom service-state checker that exports bounded service metadata,
 not raw logs or secret-bearing runtime data.
 
 The repository-local checker skeleton lives under
-`../monitoring/service_state_checker.py`. It is not deployed, scheduled, or
-wired into Terraform.
+`../monitoring/service_state_checker.py`. It is not deployed or scheduled by
+default.
 
 The service-state exporter deployment approval package is tracked in
 `stateful-vm-service-state-exporter-approval-package.md`. It defines the
@@ -426,8 +426,10 @@ rollback review items without deploying the exporter.
 
 A disabled deployment skeleton exists in
 `../terraform/service_state_exporter.tf` and
-`../systemd/openclaw-service-state-exporter.timer.tftpl`. It is not installed,
-started, or enabled by default.
+`../systemd/openclaw-service-state-exporter.timer.tftpl`. Bootstrap wiring can
+install the helper package and dry-run timer only when
+`service_state_exporter_enabled` is explicitly set to `true`; defaults keep it
+absent from live hosts.
 
 ## Manual Pre-Upgrade Snapshot
 

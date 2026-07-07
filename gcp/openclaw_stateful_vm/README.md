@@ -168,9 +168,10 @@ routing, signal safety, and notification channel ownership are approved in a
 later operations review.
 
 The service-state exporter deployment skeleton is disabled by default through
-`terraform/service_state_exporter.tf`. It renders future systemd service and
-timer templates for review, but it does not install, start, or enable the
-exporter.
+`terraform/service_state_exporter.tf`. Bootstrap wiring can install the helper
+package and dry-run systemd service/timer only when
+`service_state_exporter_enabled` is explicitly set to `true`; the example and
+variable defaults keep it absent from live hosts.
 
 Run ShellCheck against a rendered bootstrap script when available. The source
 is a Terraform template and cannot be checked directly without rendering its
