@@ -107,11 +107,15 @@ Repository status:
   `gcp/openclaw_stateful_vm/monitoring/service_state_checker.py`;
 - local checker supports `text`, `json`, and metric-shaped `metrics-json`
   output;
+- local writer skeleton:
+  `gcp/openclaw_stateful_vm/monitoring/service_state_metric_writer.py`;
+- the writer validates `metrics-json` input and emits a dry-run write model;
 - local tests:
   `gcp/openclaw_stateful_vm/monitoring/tests/test_service_state_checker.py`;
-- the checker is not deployed, scheduled, or wired into Terraform;
-- the checker does not write Cloud Monitoring metrics, create custom metrics,
-  create alert policies, or create notification channels.
+  `gcp/openclaw_stateful_vm/monitoring/tests/test_service_state_metric_writer.py`;
+- the checker and writer are not deployed, scheduled, or wired into Terraform;
+- they do not write Cloud Monitoring metrics, create custom metrics, create
+  alert policies, or create notification channels.
 
 ## Recommended Signal Path
 
@@ -135,6 +139,11 @@ Expected future metric behavior:
 - only the service name as a metric label;
 - no timestamps, free-form log messages, raw command output, or unbounded
   labels.
+
+The local writer skeleton already models the intended bounded metric shape in
+dry-run mode, but live metric publication still needs separate runtime,
+least-privilege, metric descriptor, and Terraform plan review before any
+deployment.
 
 ## Why No Alert Resources Were Created
 

@@ -1,8 +1,8 @@
 # OpenClaw Stateful VM Monitoring Helpers
 
 This directory contains local monitoring helper code for the private OpenClaw
-Stateful VM runtime. The current helper is a service-state checker skeleton for
-future service failure alerting.
+Stateful VM runtime. The current helpers prepare bounded service-state metrics
+for future service failure alerting.
 
 ## Purpose
 
@@ -15,6 +15,10 @@ approved runtime services:
 It is intended to become the basis for a future metric-producing checker after
 separate review. It is not deployed, installed, scheduled, or wired into
 Terraform.
+
+`service_state_metric_writer.py` validates the checker `metrics-json` output
+and builds a dry-run Cloud Monitoring custom metric write model. Dry-run is the
+default and only implemented behavior; it does not call Cloud Monitoring.
 
 ## Safe Data Model
 
@@ -122,13 +126,80 @@ Future ingestion into Cloud Monitoring needs a separate runtime design,
 least-privilege review, metric descriptor review, Terraform plan review, and
 explicit deployment approval.
 
+## Metric Writer Dry Run
+
+The writer accepts checker `metrics-json` input from a file or stdin and
+prepares the bounded model that a future Cloud Monitoring writer would submit.
+
+Input from a file:
+
+```bash
+python -m gcp.openclaw_stateful_vm.monitoring.service_state_metric_writer \
+  --project ai-agent-host-497515 \
+  --input-file metrics.json
+```
+
+Input from stdin:
+
+```bash
+python -m gcp.openclaw_stateful_vm.monitoring.service_state_metric_writer \
+  --project ai-agent-host-497515 < metrics.json
+```
+
+The default metric prefix is:
+
+```text
+custom.googleapis.com/openclaw/service_state
+```
+
+The writer accepts only these metric names:
+
+- `openclaw_service_state_healthy`
+- `openclaw_service_state_available`
+- `openclaw_service_state_active`
+- `openclaw_service_state_running`
+
+The writer accepts only these services:
+
+- `openclaw.service`
+- `openclaw-telegram-adapter.service`
+
+The writer accepts only:
+
+- label key: `service`;
+- metric values: `0` or `1`;
+- checker top-level fields: `ok`, `strict`, and `metrics`;
+- metric entry fields: `name`, `value`, and `labels`.
+
+The writer fails closed on unknown metric names, unknown services, extra
+labels, non-numeric values, values other than `0` or `1`, unexpected top-level
+fields, and unexpected metric entry fields.
+
+The dry-run model intentionally excludes:
+
+- hostnames, instance names, project identifiers as labels, and zones;
+- timestamps as labels;
+- raw input payloads;
+- raw `systemctl` output;
+- raw logs;
+- environment variables;
+- process command lines;
+- tokens and Secret Manager payloads;
+- Telegram chat identifiers;
+- notification channel identifiers;
+- external callback URLs.
+
+`--write` is reserved for a future live writer. It currently returns a clear
+not-implemented error without making Cloud Monitoring API calls.
+
 ## Deployment Status
 
-This checker is repository-local only. It does not create Cloud Monitoring
+These helpers are repository-local only. They do not create Cloud Monitoring
 metrics, logs-based metrics, alert policies, notification channels, systemd
 units, startup-script wiring, or Terraform resources.
 
-Before deployment, the checker needs a separate design review covering:
+Before deployment, the checker and writer need a separate design review
+covering:
 
 - runtime execution model;
 - least-privilege local permissions;
