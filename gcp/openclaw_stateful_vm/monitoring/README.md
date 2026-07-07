@@ -20,6 +20,10 @@ Terraform.
 and builds a dry-run Cloud Monitoring custom metric write model. Dry-run is the
 default and only implemented behavior; it does not call Cloud Monitoring.
 
+`service_state_monitor_runner.py` composes the checker and writer in memory. It
+checks the approved services, builds checker `metrics-json`, validates it
+through the writer, and prints the bounded dry-run model.
+
 ## Safe Data Model
 
 The checker reads only selected `systemctl show` properties:
@@ -192,14 +196,67 @@ The dry-run model intentionally excludes:
 `--write` is reserved for a future live writer. It currently returns a clear
 not-implemented error without making Cloud Monitoring API calls.
 
+## Dry-Run Runner
+
+The runner is the local dry-run entrypoint for the full service-state monitoring
+flow:
+
+```text
+bounded systemctl metadata -> checker metrics-json -> writer dry-run model
+```
+
+Example:
+
+```bash
+python -m gcp.openclaw_stateful_vm.monitoring.service_state_monitor_runner \
+  --project ai-agent-host-497515
+```
+
+The runner checks both approved services by default:
+
+- `openclaw.service`
+- `openclaw-telegram-adapter.service`
+
+Check one approved service:
+
+```bash
+python -m gcp.openclaw_stateful_vm.monitoring.service_state_monitor_runner \
+  --project ai-agent-host-497515 \
+  --service openclaw.service
+```
+
+Require stricter loaded/enabled/success metadata:
+
+```bash
+python -m gcp.openclaw_stateful_vm.monitoring.service_state_monitor_runner \
+  --project ai-agent-host-497515 \
+  --strict
+```
+
+Runner output is the writer dry-run JSON model with `dry_run: true`,
+`metric_prefix`, and bounded `time_series` entries. The only supported output
+format is JSON.
+
+Exit behavior:
+
+- exit `0` when all requested services are healthy and the dry-run model is
+  valid;
+- exit non-zero when any requested service is unhealthy;
+- exit non-zero when writer validation fails.
+
+The runner is intended to shape a future scheduled exporter entrypoint, but it
+is not deployed or scheduled. It does not create systemd units, cron jobs,
+Terraform resources, alert policies, notification channels, custom metrics, or
+Cloud Monitoring live writes.
+
 ## Deployment Status
 
 These helpers are repository-local only. They do not create Cloud Monitoring
 metrics, logs-based metrics, alert policies, notification channels, systemd
 units, startup-script wiring, or Terraform resources.
 
-Before deployment, the checker and writer need a separate design review
-covering:
+Before deployment, the checker, writer, and runner need a separate design
+review covering:
 
 - runtime execution model;
 - least-privilege local permissions;

@@ -110,10 +110,15 @@ Repository status:
 - local writer skeleton:
   `gcp/openclaw_stateful_vm/monitoring/service_state_metric_writer.py`;
 - the writer validates `metrics-json` input and emits a dry-run write model;
+- local dry-run runner:
+  `gcp/openclaw_stateful_vm/monitoring/service_state_monitor_runner.py`;
+- the runner composes checker evaluation and writer validation in memory;
 - local tests:
   `gcp/openclaw_stateful_vm/monitoring/tests/test_service_state_checker.py`;
   `gcp/openclaw_stateful_vm/monitoring/tests/test_service_state_metric_writer.py`;
-- the checker and writer are not deployed, scheduled, or wired into Terraform;
+  `gcp/openclaw_stateful_vm/monitoring/tests/test_service_state_monitor_runner.py`;
+- the checker, writer, and runner are not deployed, scheduled, or wired into
+  Terraform;
 - they do not write Cloud Monitoring metrics, create custom metrics, create
   alert policies, or create notification channels.
 
@@ -140,10 +145,10 @@ Expected future metric behavior:
 - no timestamps, free-form log messages, raw command output, or unbounded
   labels.
 
-The local writer skeleton already models the intended bounded metric shape in
-dry-run mode, but live metric publication still needs separate runtime,
-least-privilege, metric descriptor, and Terraform plan review before any
-deployment.
+The local writer and runner skeletons already model the intended bounded metric
+shape in dry-run mode, but live metric publication still needs separate
+runtime, least-privilege, metric descriptor, and Terraform plan review before
+any deployment.
 
 ## Why No Alert Resources Were Created
 

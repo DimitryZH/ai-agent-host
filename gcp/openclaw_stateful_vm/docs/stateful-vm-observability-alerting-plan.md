@@ -197,11 +197,18 @@ Repository-local writer skeleton:
 gcp/openclaw_stateful_vm/monitoring/service_state_metric_writer.py
 ```
 
+Repository-local dry-run runner:
+
+```text
+gcp/openclaw_stateful_vm/monitoring/service_state_monitor_runner.py
+```
+
 The checker is local code only. It supports `text`, `json`, and metric-shaped
 `metrics-json` output for review. The writer validates that output and builds a
-dry-run Cloud Monitoring custom metric write model. Neither helper is deployed,
-scheduled, or wired into Terraform, and neither writes Cloud Monitoring metrics
-or creates alerts.
+dry-run Cloud Monitoring custom metric write model. The runner composes both
+helpers into a local dry-run entrypoint. These helpers are not deployed,
+scheduled, or wired into Terraform, and they do not write Cloud Monitoring
+metrics or create alerts.
 
 The service alert skeleton defines the OpenClaw and Telegram adapter service
 targets and a disabled-by-default service alert switch. It does not create
@@ -213,6 +220,7 @@ Activation prerequisites:
 
 - design and review the custom service-state checker;
 - design and review the custom metric writer runtime;
+- design and review the scheduled runner execution model;
 - confirm the service failure signal source;
 - approve notification routing;
 - provide approved notification channel identifiers outside public docs;
