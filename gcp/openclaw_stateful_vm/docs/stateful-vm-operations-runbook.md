@@ -419,6 +419,11 @@ The repository-local checker skeleton lives under
 `../monitoring/service_state_checker.py`. It is not deployed, scheduled, or
 wired into Terraform.
 
+The service-state exporter deployment approval package is tracked in
+`stateful-vm-service-state-exporter-approval-package.md`. It defines the
+proposed future systemd timer, IAM, metric model, rollout, validation, and
+rollback review items without deploying the exporter.
+
 ## Manual Pre-Upgrade Snapshot
 
 A manual pre-upgrade snapshot must be application-consistent.

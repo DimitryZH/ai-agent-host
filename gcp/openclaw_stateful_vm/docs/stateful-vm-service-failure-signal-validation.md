@@ -150,6 +150,12 @@ shape in dry-run mode, but live metric publication still needs separate
 runtime, least-privilege, metric descriptor, and Terraform plan review before
 any deployment.
 
+Deployment approval package:
+
+```text
+gcp/openclaw_stateful_vm/docs/stateful-vm-service-state-exporter-approval-package.md
+```
+
 ## Why No Alert Resources Were Created
 
 No alert resources were created because the signal source still needs an

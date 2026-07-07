@@ -116,6 +116,7 @@ gcp/openclaw_stateful_vm/
     |-- telegram-status-only-adapter-runtime-closeout.md
     |-- stateful-vm-observability-alerting-plan.md
     |-- stateful-vm-service-failure-signal-validation.md
+    |-- stateful-vm-service-state-exporter-approval-package.md
     `-- stateful-vm-operations-runbook.md
 ```
 
@@ -158,7 +159,7 @@ terraform validate
 
 The monitoring skeleton files are intentionally resource-free until alert
 routing, signal safety, and notification channel ownership are approved in a
-later operations gate.
+later operations review.
 
 Run ShellCheck against a rendered bootstrap script when available. The source
 is a Terraform template and cannot be checked directly without rendering its
@@ -275,4 +276,5 @@ Still intentionally deferred:
 - `docs/telegram-status-only-adapter-runtime-closeout.md`
 - `docs/stateful-vm-observability-alerting-plan.md`
 - `docs/stateful-vm-service-failure-signal-validation.md`
+- `docs/stateful-vm-service-state-exporter-approval-package.md`
 - `docs/stateful-vm-operations-runbook.md`

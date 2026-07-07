@@ -175,6 +175,12 @@ Signal validation note:
 gcp/openclaw_stateful_vm/docs/stateful-vm-service-failure-signal-validation.md
 ```
 
+Exporter deployment approval package:
+
+```text
+gcp/openclaw_stateful_vm/docs/stateful-vm-service-state-exporter-approval-package.md
+```
+
 Read-only signal discovery found:
 
 - native metric path: unclear, because the available CLI did not expose metric
@@ -221,6 +227,7 @@ Activation prerequisites:
 - design and review the custom service-state checker;
 - design and review the custom metric writer runtime;
 - design and review the scheduled runner execution model;
+- approve the service-state exporter deployment package;
 - confirm the service failure signal source;
 - approve notification routing;
 - provide approved notification channel identifiers outside public docs;
