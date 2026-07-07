@@ -424,6 +424,11 @@ The service-state exporter deployment approval package is tracked in
 proposed future systemd timer, IAM, metric model, rollout, validation, and
 rollback review items without deploying the exporter.
 
+A disabled deployment skeleton exists in
+`../terraform/service_state_exporter.tf` and
+`../systemd/openclaw-service-state-exporter.timer.tftpl`. It is not installed,
+started, or enabled by default.
+
 ## Manual Pre-Upgrade Snapshot
 
 A manual pre-upgrade snapshot must be application-consistent.

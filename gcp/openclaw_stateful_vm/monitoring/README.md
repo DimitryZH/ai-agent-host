@@ -249,6 +249,16 @@ is not deployed or scheduled. It does not create systemd units, cron jobs,
 Terraform resources, alert policies, notification channels, custom metrics, or
 Cloud Monitoring live writes.
 
+Disabled deployment skeleton:
+
+- `../terraform/service_state_exporter.tf`
+- `../systemd/openclaw-service-state-exporter.service.tftpl`
+- `../systemd/openclaw-service-state-exporter.timer.tftpl`
+
+The skeleton renders a dry-run service and timer for review. It does not
+install files on the VM, enable the timer, start the exporter, or add live
+metric write behavior by default.
+
 ## Deployment Status
 
 These helpers are repository-local only. They do not create Cloud Monitoring

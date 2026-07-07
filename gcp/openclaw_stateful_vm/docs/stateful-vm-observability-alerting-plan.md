@@ -216,6 +216,17 @@ helpers into a local dry-run entrypoint. These helpers are not deployed,
 scheduled, or wired into Terraform, and they do not write Cloud Monitoring
 metrics or create alerts.
 
+Disabled deployment skeleton:
+
+```text
+gcp/openclaw_stateful_vm/terraform/service_state_exporter.tf
+gcp/openclaw_stateful_vm/systemd/openclaw-service-state-exporter.service.tftpl
+gcp/openclaw_stateful_vm/systemd/openclaw-service-state-exporter.timer.tftpl
+```
+
+The skeleton is disabled by default and is not wired into bootstrap install,
+start, or enable behavior.
+
 The service alert skeleton defines the OpenClaw and Telegram adapter service
 targets and a disabled-by-default service alert switch. It does not create
 logs-based metrics or alert policies. This is intentional because broad log

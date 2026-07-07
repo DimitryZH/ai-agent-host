@@ -26,9 +26,11 @@ Current posture:
 - local repository code only;
 - not deployed;
 - not scheduled;
-- not wired into Terraform;
-- no exporter systemd service;
-- no exporter systemd timer;
+- disabled Terraform deployment skeleton exists;
+- rendered exporter systemd service template exists;
+- rendered exporter systemd timer template exists;
+- not installed by bootstrap;
+- not enabled by default;
 - no cron job;
 - no Cloud Monitoring live writes;
 - no live custom metric creation;
@@ -45,6 +47,24 @@ The dry-run runner composes the checker and writer in memory:
 ```text
 bounded systemctl metadata -> checker metrics-json -> writer dry-run model
 ```
+
+## Deployment Skeleton Status
+
+The repository now includes a disabled-by-default deployment skeleton:
+
+- `gcp/openclaw_stateful_vm/terraform/service_state_exporter.tf`
+- `gcp/openclaw_stateful_vm/systemd/openclaw-service-state-exporter.service.tftpl`
+- `gcp/openclaw_stateful_vm/systemd/openclaw-service-state-exporter.timer.tftpl`
+
+Default Terraform posture:
+
+- `service_state_exporter_enabled = false`
+- `service_state_exporter_live_writes_enabled = false`
+
+The skeleton renders service and timer templates for review, but it does not
+install helper files on the VM, create live systemd units, enable a timer,
+start an exporter, add Cloud Monitoring client dependencies, or implement live
+metric writes.
 
 ## Proposed Runtime Execution Model
 
@@ -174,25 +194,28 @@ alert noise.
 
 Future Terraform work should remain disabled by default.
 
-Likely future resources or templates may include:
+Current disabled skeleton:
 
 - Terraform variable for exporter enablement;
+- Terraform variable for live metric write enablement;
 - Terraform variable for schedule interval;
 - Terraform variable for metric prefix;
 - Terraform validation checks for safe enablement;
-- systemd service template for a oneshot exporter run;
-- systemd timer template for scheduling;
+- systemd service template for a oneshot dry-run exporter run;
+- systemd timer template for scheduling.
+
+Future implementation work may still include:
+
 - startup/bootstrap wiring that installs the helper and systemd templates;
 - optional alert policy resources in a later task only.
 
 Current repository structure already uses Terraform templates for the existing
-OpenClaw and Telegram adapter systemd units. A future exporter implementation
-can follow that pattern if reviewed and approved, but this package does not add
-or modify Terraform files.
+OpenClaw and Telegram adapter systemd units. The exporter skeleton follows that
+template style, but it does not add active install, start, or enable behavior.
 
 ## Proposed Rollout Sequence
 
-1. Implement systemd service and timer templates disabled by default.
+1. Review the disabled systemd service and timer skeleton.
 2. Validate formatting and unit rendering locally.
 3. Validate Terraform plan only.
 4. Review the plan for file placement, local user, permissions, and default
@@ -288,7 +311,7 @@ This approval package does not approve:
 - creating logs-based metrics;
 - creating alert policies;
 - creating notification channels;
-- modifying Terraform;
+- activating Terraform deployment resources;
 - running Terraform apply;
 - mutating GCP;
 - restarting or stopping OpenClaw services;

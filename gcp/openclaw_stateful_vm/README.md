@@ -98,14 +98,20 @@ gcp/openclaw_stateful_vm/
 |   |-- snapshot_policy.tf
 |   |-- monitoring.tf
 |   |-- monitoring_service_alerts.tf
+|   |-- service_state_exporter.tf
 |   |-- outputs.tf
 |   `-- terraform.tfvars.example
 |-- scripts/
 |   `-- bootstrap-openclaw.sh.tftpl
 |-- systemd/
-|   `-- openclaw.service.tftpl
+|   |-- openclaw.service.tftpl
+|   |-- openclaw-telegram-adapter.service.tftpl
+|   |-- openclaw-service-state-exporter.service.tftpl
+|   `-- openclaw-service-state-exporter.timer.tftpl
 |-- monitoring/
 |   |-- service_state_checker.py
+|   |-- service_state_metric_writer.py
+|   |-- service_state_monitor_runner.py
 |   |-- README.md
 |   `-- tests/
 |-- telegram_adapter/
@@ -160,6 +166,11 @@ terraform validate
 The monitoring skeleton files are intentionally resource-free until alert
 routing, signal safety, and notification channel ownership are approved in a
 later operations review.
+
+The service-state exporter deployment skeleton is disabled by default through
+`terraform/service_state_exporter.tf`. It renders future systemd service and
+timer templates for review, but it does not install, start, or enable the
+exporter.
 
 Run ShellCheck against a rendered bootstrap script when available. The source
 is a Terraform template and cannot be checked directly without rendering its
