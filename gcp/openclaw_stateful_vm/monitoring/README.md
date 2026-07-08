@@ -17,7 +17,7 @@ separate review. It is not deployed, installed, or scheduled by default.
 
 `service_state_metric_writer.py` validates the checker `metrics-json` output
 and builds a dry-run Cloud Monitoring custom metric write model. Dry-run is the
-default and only implemented behavior; it does not call Cloud Monitoring.
+default. A live write path exists only behind an explicit `--write` flag.
 
 `service_state_monitor_runner.py` composes the checker and writer in memory. It
 checks the approved services, builds checker `metrics-json`, validates it
@@ -125,14 +125,15 @@ python -m gcp.openclaw_stateful_vm.monitoring.service_state_checker \
   --format metrics-json
 ```
 
-Future ingestion into Cloud Monitoring needs a separate runtime design,
-least-privilege review, metric descriptor review, Terraform plan review, and
-explicit deployment approval.
+Live ingestion into Cloud Monitoring needs a separate least-privilege review,
+metric descriptor review, Terraform plan review, and explicit deployment
+approval.
 
-## Metric Writer Dry Run
+## Metric Writer
 
 The writer accepts checker `metrics-json` input from a file or stdin and
-prepares the bounded model that a future Cloud Monitoring writer would submit.
+prepares the bounded model that a Cloud Monitoring writer would submit. Dry-run
+is the default and does not call Cloud Monitoring.
 
 Input from a file:
 
@@ -192,8 +193,14 @@ The dry-run model intentionally excludes:
 - notification channel identifiers;
 - external callback URLs.
 
-`--write` is reserved for a future live writer. It currently returns a clear
-not-implemented error without making Cloud Monitoring API calls.
+`--write` submits the validated bounded time series to Cloud Monitoring. It
+requires `--project`, uses the configured `--metric-prefix`, and keeps `service`
+as the only custom metric label. The Cloud Monitoring client is imported only
+for the live write path, so dry-run validation does not require GCP credentials.
+
+The deployed systemd service does not pass `--write`, and Terraform keeps live
+writes disabled by default. Enabling live writes in the runtime requires a
+separate reviewed plan and apply.
 
 ## Dry-Run Runner
 
@@ -245,8 +252,8 @@ Exit behavior:
 
 The runner is intended to shape a future scheduled exporter entrypoint, but it
 is not deployed or scheduled. It does not create systemd units, cron jobs,
-Terraform resources, alert policies, notification channels, custom metrics, or
-Cloud Monitoring live writes.
+Terraform resources, alert policies, notification channels, or Cloud Monitoring
+live writes.
 
 Disabled deployment skeleton:
 
@@ -257,14 +264,14 @@ Disabled deployment skeleton:
 The skeleton renders a dry-run service and timer for review. Bootstrap wiring
 can install the helper package and enable the timer only when
 `service_state_exporter_enabled` is explicitly set to `true`; defaults keep it
-absent from live hosts and live metric writes remain unimplemented.
+absent from live hosts. Live metric writes remain disabled by default.
 
 ## Deployment Status
 
 These helpers are repository-local unless the disabled exporter install wiring
 is explicitly enabled. They do not create Cloud Monitoring metrics,
 logs-based metrics, alert policies, notification channels, or live metric
-writes.
+writes by default.
 
 Before deployment, the checker, writer, and runner need a separate design
 review covering:

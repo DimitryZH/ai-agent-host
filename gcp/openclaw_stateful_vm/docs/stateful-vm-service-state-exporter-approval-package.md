@@ -91,7 +91,7 @@ Why this model fits:
 - `systemctl show` gives cleaner bounded state than broad log matching;
 - systemd timers are native to the VM and easy to disable during rollback;
 - the helper can run without storing credentials on disk;
-- the future live writer can use the VM service account instead of user-owned
+- the live writer can use the VM service account instead of user-owned
   credentials.
 
 Alternative comparison:

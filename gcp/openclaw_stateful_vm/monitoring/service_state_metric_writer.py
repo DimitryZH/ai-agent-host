@@ -1,10 +1,11 @@
-"""Build a dry-run Cloud Monitoring model from service-state metrics JSON."""
+"""Build and optionally write bounded Cloud Monitoring service-state metrics."""
 
 from __future__ import annotations
 
 import argparse
 import json
 import sys
+import time
 from pathlib import Path
 from typing import Any, Sequence
 
@@ -24,6 +25,12 @@ METRIC_SUFFIX_PREFIX = "openclaw_service_state_"
 
 class ValidationError(ValueError):
     """Raised when the metrics-json payload is not safe to model."""
+
+
+def load_monitoring_v3() -> Any:
+    from google.cloud import monitoring_v3
+
+    return monitoring_v3
 
 
 def read_input(input_file: str | None) -> str:
@@ -50,6 +57,13 @@ def load_payload(raw_input: str) -> dict[str, Any]:
         raise ValidationError("payload must include a metrics list")
 
     return payload
+
+
+def validate_project(project: str) -> str:
+    project_id = project.strip()
+    if not project_id:
+        raise ValidationError("project must not be empty")
+    return project_id
 
 
 def metric_type(metric_prefix: str, metric_name: str) -> str:
@@ -95,17 +109,22 @@ def validate_metric(metric: Any) -> dict[str, Any]:
     }
 
 
+def validate_metrics(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    return [validate_metric(metric) for metric in payload["metrics"]]
+
+
 def build_dry_run_model(
     payload: dict[str, Any],
     *,
     project: str,
     metric_prefix: str = DEFAULT_METRIC_PREFIX,
 ) -> dict[str, Any]:
-    metrics = [validate_metric(metric) for metric in payload["metrics"]]
+    project_id = validate_project(project)
+    metrics = validate_metrics(payload)
 
     return {
         "dry_run": True,
-        "project": project,
+        "project": project_id,
         "metric_prefix": metric_prefix.rstrip("/"),
         "time_series": [
             {
@@ -118,14 +137,75 @@ def build_dry_run_model(
     }
 
 
+def build_cloud_monitoring_time_series(
+    metrics: Sequence[dict[str, Any]],
+    *,
+    project: str,
+    metric_prefix: str = DEFAULT_METRIC_PREFIX,
+    monitoring_v3: Any,
+    timestamp_seconds: int | None = None,
+) -> list[Any]:
+    project_id = validate_project(project)
+    end_time_seconds = timestamp_seconds
+    if end_time_seconds is None:
+        end_time_seconds = int(time.time())
+
+    time_series = []
+    for metric in metrics:
+        series = monitoring_v3.TimeSeries()
+        series.metric.type = metric_type(metric_prefix, metric["name"])
+        series.metric.labels["service"] = metric["labels"]["service"]
+        series.resource.type = "global"
+        series.resource.labels["project_id"] = project_id
+
+        point = monitoring_v3.Point()
+        point.interval.end_time.seconds = end_time_seconds
+        point.value.int64_value = metric["value"]
+        series.points = [point]
+        time_series.append(series)
+
+    return time_series
+
+
+def write_time_series(
+    payload: dict[str, Any],
+    *,
+    project: str,
+    metric_prefix: str = DEFAULT_METRIC_PREFIX,
+    client: Any | None = None,
+    monitoring_v3: Any | None = None,
+) -> dict[str, Any]:
+    project_id = validate_project(project)
+    metrics = validate_metrics(payload)
+    monitoring_module = monitoring_v3 or load_monitoring_v3()
+    time_series = build_cloud_monitoring_time_series(
+        metrics,
+        project=project_id,
+        metric_prefix=metric_prefix,
+        monitoring_v3=monitoring_module,
+    )
+    monitoring_client = client or monitoring_module.MetricServiceClient()
+    monitoring_client.create_time_series(
+        name=f"projects/{project_id}",
+        time_series=time_series,
+    )
+
+    return {
+        "dry_run": False,
+        "project": project_id,
+        "metric_prefix": metric_prefix.rstrip("/"),
+        "time_series_count": len(time_series),
+    }
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Prepare bounded dry-run Cloud Monitoring writes from service-state metrics JSON."
+        description="Prepare or write bounded Cloud Monitoring service-state metrics."
     )
     parser.add_argument(
         "--project",
         required=True,
-        help="Google Cloud project id for the future metric write model.",
+        help="Google Cloud project id for the metric write model.",
     )
     parser.add_argument(
         "--input-file",
@@ -140,7 +220,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--write",
         action="store_true",
-        help="Reserved for a future live writer. Currently returns an error without API calls.",
+        help="Write validated service-state metrics to Cloud Monitoring.",
     )
     parser.add_argument(
         "--metric-prefix",
@@ -154,21 +234,21 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    if args.write:
-        print(
-            "--write is not implemented; this module currently supports dry-run only",
-            file=sys.stderr,
-        )
-        return 2
-
     try:
         payload = load_payload(read_input(args.input_file))
-        model = build_dry_run_model(
-            payload,
-            project=args.project,
-            metric_prefix=args.metric_prefix,
-        )
-    except (OSError, ValidationError) as exc:
+        if args.write:
+            model = write_time_series(
+                payload,
+                project=args.project,
+                metric_prefix=args.metric_prefix,
+            )
+        else:
+            model = build_dry_run_model(
+                payload,
+                project=args.project,
+                metric_prefix=args.metric_prefix,
+            )
+    except (ImportError, OSError, ValidationError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 

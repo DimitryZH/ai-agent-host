@@ -227,7 +227,7 @@ gcp/openclaw_stateful_vm/systemd/openclaw-service-state-exporter.timer.tftpl
 The skeleton is disabled by default. Bootstrap install, start, and enable
 behavior is gated by `service_state_exporter_enabled`. When enabled, it
 installs the helper package and dry-run systemd timer only; live metric writes
-remain disabled and unimplemented.
+remain disabled and require separate rollout approval.
 
 The service alert skeleton defines the OpenClaw and Telegram adapter service
 targets and a disabled-by-default service alert switch. It does not create
