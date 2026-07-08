@@ -12,8 +12,8 @@ approved runtime services:
 - `openclaw.service`
 - `openclaw-telegram-adapter.service`
 
-It is intended to become the basis for a metric-producing checker after
-separate review. It is not deployed, installed, or scheduled by default.
+It is intended to become the basis for service-state metrics. It is deployed
+only when the exporter install wiring is explicitly enabled.
 
 `service_state_metric_writer.py` validates the checker `metrics-json` output
 and builds a dry-run Cloud Monitoring custom metric write model. Dry-run is the
@@ -250,10 +250,11 @@ Exit behavior:
 - exit non-zero when any requested service is unhealthy;
 - exit non-zero when writer validation fails.
 
-The runner is intended to shape a future scheduled exporter entrypoint, but it
-is not deployed or scheduled. It does not create systemd units, cron jobs,
-Terraform resources, alert policies, notification channels, or Cloud Monitoring
-live writes.
+The runner is the scheduled exporter entrypoint when
+`service_state_exporter_enabled=true`. The deployed service still runs dry-run
+mode unless a separate live-write rollout is approved. The runner does not
+create systemd units, cron jobs, Terraform resources, alert policies,
+notification channels, or Cloud Monitoring live writes.
 
 Disabled deployment skeleton:
 
