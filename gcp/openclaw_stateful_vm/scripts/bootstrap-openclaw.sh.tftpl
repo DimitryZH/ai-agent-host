@@ -181,10 +181,7 @@ while IFS=$'\t' read -r relative_path content_b64; do
   mv -f "$temp_path" "$target_path"
 done < <(decode '${service_state_exporter_package_files_b64}' | jq -r 'to_entries[] | [.key, .value] | @tsv')
 
-if ! python3 -m venv --help >/dev/null 2>&1; then
-  apt-get install -y --no-install-recommends python3-venv
-fi
-
+apt-get install -y --no-install-recommends python3-venv
 python3 -m venv "$SERVICE_STATE_EXPORTER_VENV_DIR"
 "$SERVICE_STATE_EXPORTER_VENV_DIR/bin/python" -m pip install \
   --disable-pip-version-check \
