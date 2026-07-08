@@ -159,8 +159,18 @@ def build_cloud_monitoring_time_series(
         series.resource.labels["project_id"] = project_id
 
         point = monitoring_v3.Point()
-        point.interval.end_time.seconds = end_time_seconds
-        point.value.int64_value = metric["value"]
+        try:
+            point.interval.end_time.seconds = end_time_seconds
+        except AttributeError:
+            point.interval = monitoring_v3.TimeInterval(
+                {"end_time": {"seconds": end_time_seconds}}
+            )
+        try:
+            point.value.int64_value = metric["value"]
+        except AttributeError:
+            point.value = monitoring_v3.TypedValue(
+                {"int64_value": metric["value"]}
+            )
         series.points = [point]
         time_series.append(series)
 

@@ -53,6 +53,28 @@ class FakePoint:
         self.value = FakeValue()
 
 
+class FakeUnsetInterval:
+    def __init__(self) -> None:
+        self.end_time = None
+
+
+class FakeUnsetPoint:
+    def __init__(self) -> None:
+        self.interval = FakeUnsetInterval()
+        self.value = None
+
+
+class FakeProtoTimeInterval:
+    def __init__(self, payload) -> None:
+        self.end_time = FakeEndTime()
+        self.end_time.seconds = payload["end_time"]["seconds"]
+
+
+class FakeProtoTypedValue:
+    def __init__(self, payload) -> None:
+        self.int64_value = payload["int64_value"]
+
+
 class FakeTimeSeries:
     def __init__(self) -> None:
         self.metric = FakeMetric()
@@ -81,6 +103,14 @@ class FakeMonitoringV3:
 
     def MetricServiceClient(self) -> FakeClient:
         return self.client
+
+
+class FakeProtoMonitoringV3(FakeMonitoringV3):
+    def __init__(self) -> None:
+        super().__init__()
+        self.Point = FakeUnsetPoint
+        self.TimeInterval = FakeProtoTimeInterval
+        self.TypedValue = FakeProtoTypedValue
 
 
 def valid_payload() -> dict:
@@ -353,6 +383,22 @@ class ServiceStateMetricWriterTests(unittest.TestCase):
         serialized = serialized_series(series)
         for sensitive in SENSITIVE_STRINGS:
             self.assertNotIn(sensitive, serialized)
+
+    def test_generated_series_handles_unset_proto_point_fields(self) -> None:
+        fake_monitoring = FakeProtoMonitoringV3()
+        metrics = writer.validate_metrics(valid_payload())
+
+        series = writer.build_cloud_monitoring_time_series(
+            metrics,
+            project=PROJECT_ID,
+            monitoring_v3=fake_monitoring,
+            timestamp_seconds=1234567890,
+        )
+
+        self.assertEqual(len(series), 4)
+        for item in series:
+            self.assertEqual(item.points[0].interval.end_time.seconds, 1234567890)
+            self.assertIn(item.points[0].value.int64_value, {0, 1})
 
     def test_write_flag_uses_mocked_cloud_monitoring_client(self) -> None:
         fake_monitoring = FakeMonitoringV3()
