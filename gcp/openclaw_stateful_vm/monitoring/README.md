@@ -202,6 +202,27 @@ The deployed systemd service does not pass `--write`, and Terraform keeps live
 writes disabled by default. Enabling live writes in the runtime requires a
 separate reviewed plan and apply.
 
+## Runtime Dependencies
+
+Exporter deployment wiring packages `requirements.txt` with the helper code and
+creates a dedicated virtual environment at:
+
+```text
+/opt/openclaw-service-state-exporter/.venv
+```
+
+When `service_state_exporter_enabled=true`, bootstrap installs the declared
+dependencies into that environment and the systemd service uses the venv
+Python. Dependency installation is part of the approved exporter deployment
+wiring only; it is not run when the exporter is disabled.
+
+The deployed service still runs dry-run mode by default and does not pass
+`--write`. Live metric writes require a separate rollout approval.
+
+For VM-side validation, prefer `PYTHONDONTWRITEBYTECODE=1` or `python3 -B`.
+The installed package directory is intentionally read-only to the exporter user,
+so validation should not depend on creating `__pycache__` files there.
+
 ## Dry-Run Runner
 
 The runner is the local dry-run entrypoint for the full service-state monitoring

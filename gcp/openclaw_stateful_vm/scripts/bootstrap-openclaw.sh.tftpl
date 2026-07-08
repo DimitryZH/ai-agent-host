@@ -137,6 +137,8 @@ done < <(decode '${telegram_adapter_package_files_b64}' | jq -r 'to_entries[] | 
 %{ endif ~}
 
 %{ if service_state_exporter_enabled ~}
+SERVICE_STATE_EXPORTER_VENV_DIR="$SERVICE_STATE_EXPORTER_WORKING_DIR/.venv"
+
 if ! getent group "$SERVICE_STATE_EXPORTER_GROUP" >/dev/null; then
   groupadd --system "$SERVICE_STATE_EXPORTER_GROUP"
 fi
@@ -164,7 +166,8 @@ for package_init in \
 done
 
 while IFS=$'\t' read -r relative_path content_b64; do
-  [[ "$relative_path" == gcp/openclaw_stateful_vm/monitoring/*.py ]] ||
+  [[ "$relative_path" == gcp/openclaw_stateful_vm/monitoring/*.py ||
+    "$relative_path" == gcp/openclaw_stateful_vm/monitoring/requirements.txt ]] ||
     fail "Invalid service-state exporter package path."
   [[ "$relative_path" != *".."* ]] ||
     fail "Invalid service-state exporter package path."
@@ -177,6 +180,18 @@ while IFS=$'\t' read -r relative_path content_b64; do
   chmod 0640 "$temp_path"
   mv -f "$temp_path" "$target_path"
 done < <(decode '${service_state_exporter_package_files_b64}' | jq -r 'to_entries[] | [.key, .value] | @tsv')
+
+if ! python3 -m venv --help >/dev/null 2>&1; then
+  apt-get install -y --no-install-recommends python3-venv
+fi
+
+python3 -m venv "$SERVICE_STATE_EXPORTER_VENV_DIR"
+"$SERVICE_STATE_EXPORTER_VENV_DIR/bin/python" -m pip install \
+  --disable-pip-version-check \
+  --no-cache-dir \
+  -r "$SERVICE_STATE_EXPORTER_WORKING_DIR/gcp/openclaw_stateful_vm/monitoring/requirements.txt"
+chown -R "root:$SERVICE_STATE_EXPORTER_GROUP" "$SERVICE_STATE_EXPORTER_VENV_DIR"
+chmod -R g+rX,o-rwx "$SERVICE_STATE_EXPORTER_VENV_DIR"
 %{ endif ~}
 
 install -d -o root -g root -m 0750 /etc/openclaw

@@ -84,7 +84,10 @@ locals {
   service_state_exporter_timer_name   = "openclaw-service-state-exporter.timer"
 
   service_state_exporter_package_files = {
-    for file_name in sort(fileset("${path.module}/../monitoring", "*.py")) :
+    for file_name in sort(tolist(setunion(
+      fileset("${path.module}/../monitoring", "*.py"),
+      fileset("${path.module}/../monitoring", "requirements.txt"),
+    ))) :
     "gcp/openclaw_stateful_vm/monitoring/${file_name}" => base64encode(file("${path.module}/../monitoring/${file_name}"))
   }
 

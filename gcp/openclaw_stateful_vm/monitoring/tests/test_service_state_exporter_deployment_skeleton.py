@@ -13,6 +13,7 @@ TFVARS_EXAMPLE = TERRAFORM_DIR / "terraform.tfvars.example"
 SERVICE_TEMPLATE = SYSTEMD_DIR / "openclaw-service-state-exporter.service.tftpl"
 TIMER_TEMPLATE = SYSTEMD_DIR / "openclaw-service-state-exporter.timer.tftpl"
 BOOTSTRAP_TEMPLATE = STATEFUL_VM_ROOT / "scripts" / "bootstrap-openclaw.sh.tftpl"
+REQUIREMENTS_TXT = STATEFUL_VM_ROOT / "monitoring" / "requirements.txt"
 
 
 def read(path: Path) -> str:
@@ -74,6 +75,11 @@ class ServiceStateExporterDeploymentSkeletonTests(unittest.TestCase):
         self.assertIn("service_state_exporter_systemd_unit = templatefile(", terraform_text)
         self.assertIn("service_state_exporter_systemd_timer = templatefile(", terraform_text)
         self.assertIn("service_state_exporter_package_files", terraform_text)
+        self.assertIn('fileset("${path.module}/../monitoring", "*.py")', terraform_text)
+        self.assertIn(
+            'fileset("${path.module}/../monitoring", "requirements.txt")',
+            terraform_text,
+        )
         self.assertRegex(
             locals_text,
             r"service_state_exporter_enabled\s+=\s+var\.service_state_exporter_enabled",
@@ -113,12 +119,41 @@ class ServiceStateExporterDeploymentSkeletonTests(unittest.TestCase):
 
         self.assertIn("SERVICE_STATE_EXPORTER_USER", bootstrap_text)
         self.assertIn("SERVICE_STATE_EXPORTER_WORKING_DIR", bootstrap_text)
+        self.assertIn("SERVICE_STATE_EXPORTER_VENV_DIR", bootstrap_text)
         self.assertIn("groupadd --system \"$SERVICE_STATE_EXPORTER_GROUP\"", exporter_blocks)
         self.assertIn("useradd --system", exporter_blocks)
         self.assertIn("gcp/openclaw_stateful_vm/monitoring/*.py", exporter_blocks)
+        self.assertIn("gcp/openclaw_stateful_vm/monitoring/requirements.txt", exporter_blocks)
+        self.assertIn("python3 -m venv \"$SERVICE_STATE_EXPORTER_VENV_DIR\"", exporter_blocks)
+        self.assertIn("bin/python\" -m pip install", exporter_blocks)
+        self.assertIn("--disable-pip-version-check", exporter_blocks)
+        self.assertIn("--no-cache-dir", exporter_blocks)
+        self.assertIn("python3-venv", exporter_blocks)
         self.assertIn("openclaw-service-state-exporter.service", exporter_blocks)
         self.assertIn("openclaw-service-state-exporter.timer", exporter_blocks)
         self.assertIn("systemctl enable --now openclaw-service-state-exporter.timer", exporter_blocks)
+
+    def test_exporter_requirements_declares_cloud_monitoring_client(self) -> None:
+        requirements_text = read(REQUIREMENTS_TXT)
+
+        self.assertRegex(requirements_text, r"(?m)^google-cloud-monitoring>=2\.0,<3\.0$")
+        self.assertNotIn("ai-agent-host", requirements_text)
+        self.assertNotIn("TELEGRAM_BOT_TOKEN", requirements_text)
+        self.assertNotIn("notificationChannels/", requirements_text)
+
+    def test_exporter_dependency_install_is_not_unconditional(self) -> None:
+        bootstrap_text = read(BOOTSTRAP_TEMPLATE)
+        outside_exporter_blocks = re.sub(
+            r"%\{ if service_state_exporter_enabled ~\}.*?%\{ endif ~\}",
+            "",
+            bootstrap_text,
+            flags=re.DOTALL,
+        )
+
+        self.assertNotIn("SERVICE_STATE_EXPORTER_VENV_DIR", outside_exporter_blocks)
+        self.assertNotIn("python3 -m venv", outside_exporter_blocks)
+        self.assertNotIn("pip install", outside_exporter_blocks)
+        self.assertNotIn("python3-venv", outside_exporter_blocks)
 
     def test_bootstrap_exporter_wiring_does_not_add_unsafe_actions(self) -> None:
         exporter_blocks = exporter_bootstrap_blocks(read(BOOTSTRAP_TEMPLATE))
@@ -177,6 +212,10 @@ class ServiceStateExporterDeploymentSkeletonTests(unittest.TestCase):
         }
 
         self.assertIn("Type=oneshot", service_text)
+        self.assertIn(
+            "ExecStart=${service_state_exporter_working_directory}/.venv/bin/python -m",
+            service_text,
+        )
         self.assertIn("service_state_monitor_runner", service_text)
         self.assertIn("NoNewPrivileges=true", service_text)
         self.assertIn("ProtectSystem=strict", service_text)
