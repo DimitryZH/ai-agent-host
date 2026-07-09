@@ -123,14 +123,14 @@ Secret values should not be committed to this repository.
 
 ## What Remains Open
 
-The stateful VM runtime is running and the Phase 7D status-only mobile operator
-channel is closed for its approved scope. The next operational priority is
-Phase 8 observability and resilience before expanding Telegram beyond
-status-only or enabling GitHub PR/write.
+The stateful VM runtime is running, the status-only mobile operator channel is
+closed for its approved scope, and the service-state observability baseline is
+complete. Recurring Cloud Monitoring custom metric writes are enabled for the
+approved OpenClaw and Telegram adapter service-state signals.
 
 Remaining closure work includes:
 
-- monitoring and alerting for OpenClaw and Telegram adapter services;
+- alert routing and notification channel ownership, if separately approved;
 - unhealthy MIG / readiness alerting;
 - disk capacity and snapshot freshness alerting;
 - recurring backup/restore drill schedule;

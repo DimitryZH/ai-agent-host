@@ -1,8 +1,8 @@
 # OpenClaw Stateful VM Monitoring Helpers
 
 This directory contains local monitoring helper code for the private OpenClaw
-Stateful VM runtime. The current helpers prepare bounded service-state metrics
-for future service failure alerting.
+Stateful VM runtime. The helpers produce bounded service-state metrics for the
+approved OpenClaw and Telegram adapter services.
 
 ## Purpose
 
@@ -12,8 +12,8 @@ approved runtime services:
 - `openclaw.service`
 - `openclaw-telegram-adapter.service`
 
-It is intended to become the basis for service-state metrics. It is deployed
-only when the exporter install wiring is explicitly enabled.
+It is the basis for service-state metrics. It is deployed only when the
+exporter install wiring is explicitly enabled.
 
 `service_state_metric_writer.py` validates the checker `metrics-json` output
 and builds a dry-run Cloud Monitoring custom metric write model. Dry-run is the
@@ -65,7 +65,7 @@ python -m gcp.openclaw_stateful_vm.monitoring.service_state_checker \
   --format json
 ```
 
-Print metric-shaped JSON for future ingestion review:
+Print metric-shaped JSON for ingestion review:
 
 ```bash
 python -m gcp.openclaw_stateful_vm.monitoring.service_state_checker \
@@ -126,9 +126,8 @@ python -m gcp.openclaw_stateful_vm.monitoring.service_state_checker \
   --format metrics-json
 ```
 
-Live ingestion into Cloud Monitoring needs a separate least-privilege review,
-metric descriptor review, Terraform plan review, and explicit deployment
-approval.
+Live ingestion into Cloud Monitoring is limited to the approved service-state
+metric model and requires explicit runtime wiring.
 
 ## Metric Writer
 
@@ -201,9 +200,10 @@ for the live write path, so dry-run validation does not require GCP credentials.
 
 Terraform wires the deployed systemd service to include `--write` only when
 `service_state_exporter_live_writes_enabled=true`. The variable defaults to
-`false`, so the rendered service remains dry-run-only unless a separate
-reviewed plan and apply explicitly enable recurring live writes. Alert policies
-and notification channels remain separate future work.
+`false`, so new environments remain dry-run-only unless a reviewed plan and
+apply explicitly enable recurring live writes. The current operational baseline
+has recurring live writes enabled for the approved service-state metrics.
+Alert policies and notification channels remain separate future work.
 
 ## Alert Policy Skeleton
 
@@ -239,9 +239,10 @@ dependencies into that environment and the systemd service uses the venv
 Python. Dependency installation is part of the approved exporter deployment
 wiring only; it is not run when the exporter is disabled.
 
-The deployed service still runs dry-run mode by default and does not pass
-`--write` unless `service_state_exporter_live_writes_enabled=true` is rendered
-through Terraform. Live metric writes require a separate rollout approval.
+The deployed service runs dry-run mode by default and passes `--write` only
+when `service_state_exporter_live_writes_enabled=true` is rendered through
+Terraform. The current operational baseline uses recurring live writes for the
+approved service-state metrics.
 
 For VM-side validation, prefer `PYTHONDONTWRITEBYTECODE=1` or `python3 -B`.
 The installed package directory is intentionally read-only to the exporter user,
@@ -297,36 +298,44 @@ Exit behavior:
 - exit non-zero when writer validation fails.
 
 The runner is the scheduled exporter entrypoint when
-`service_state_exporter_enabled=true`. The deployed service still runs dry-run
-mode unless a separate live-write rollout is approved. The runner does not
-create systemd units, cron jobs, Terraform resources, alert policies,
-notification channels, or Cloud Monitoring live writes.
+`service_state_exporter_enabled=true`. The deployed service runs dry-run mode
+unless live writes are explicitly rendered through Terraform. The runner does
+not create systemd units, cron jobs, Terraform resources, alert policies, or
+notification channels.
 
-Disabled deployment skeleton:
+Deployment skeleton:
 
 - `../terraform/service_state_exporter.tf`
 - `../systemd/openclaw-service-state-exporter.service.tftpl`
 - `../systemd/openclaw-service-state-exporter.timer.tftpl`
 
-The skeleton renders a dry-run service and timer for review. Bootstrap wiring
-can install the helper package and enable the timer only when
+The skeleton renders a service and timer for review. Bootstrap wiring can
+install the helper package and enable the timer only when
 `service_state_exporter_enabled` is explicitly set to `true`; defaults keep it
-absent from live hosts. Live metric writes are wired behind
-`service_state_exporter_live_writes_enabled` and remain disabled by default.
+absent from new hosts. Live metric writes are wired behind
+`service_state_exporter_live_writes_enabled` and remain disabled by default in
+new environments.
 
 ## Deployment Status
 
-These helpers are repository-local unless the disabled exporter install wiring
-is explicitly enabled. They do not create Cloud Monitoring metrics,
-logs-based metrics, alert policies, notification channels, or live metric
-writes by default.
+The exporter is deployed for the current Stateful VM runtime and recurring
+Cloud Monitoring custom metric writes are enabled for:
 
-Before deployment, the checker, writer, and runner need a separate design
-review covering:
+- `custom.googleapis.com/openclaw/service_state/active`
+- `custom.googleapis.com/openclaw/service_state/available`
+- `custom.googleapis.com/openclaw/service_state/healthy`
+- `custom.googleapis.com/openclaw/service_state/running`
 
-- runtime execution model;
-- least-privilege local permissions;
-- metric type and label shape;
+Approved service labels are:
+
+- `openclaw.service`
+- `openclaw-telegram-adapter.service`
+
+The helpers do not create logs-based metrics, alert policies, or notification
+channels. The alert policy skeleton remains disabled by default, and
+notification routing remains future work.
+
+Before alert delivery is enabled, the next review needs to cover:
+
 - notification routing;
-- rollout and rollback procedure;
 - Terraform plan review.

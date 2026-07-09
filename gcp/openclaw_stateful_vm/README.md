@@ -98,6 +98,7 @@ gcp/openclaw_stateful_vm/
 |   |-- snapshot_policy.tf
 |   |-- monitoring.tf
 |   |-- monitoring_service_alerts.tf
+|   |-- service_state_alert_policy.tf
 |   |-- service_state_exporter.tf
 |   |-- outputs.tf
 |   `-- terraform.tfvars.example
@@ -163,15 +164,15 @@ terraform init -backend=false
 terraform validate
 ```
 
-The monitoring skeleton files are intentionally resource-free until alert
+The monitoring skeleton keeps alert resources disabled by default until alert
 routing, signal safety, and notification channel ownership are approved in a
 later operations review.
 
-The service-state exporter deployment skeleton is disabled by default through
-`terraform/service_state_exporter.tf`. Bootstrap wiring can install the helper
-package and dry-run systemd service/timer only when
-`service_state_exporter_enabled` is explicitly set to `true`; the example and
-variable defaults keep it absent from live hosts.
+The service-state exporter deployment wiring lives in
+`terraform/service_state_exporter.tf`. It installs the helper package and
+systemd service/timer only when `service_state_exporter_enabled` is explicitly
+set to `true`; live Cloud Monitoring writes require
+`service_state_exporter_live_writes_enabled=true`.
 
 Run ShellCheck against a rendered bootstrap script when available. The source
 is a Terraform template and cannot be checked directly without rendering its
@@ -259,11 +260,15 @@ Validated on the Stateful VM runtime:
 - Stateful MIG recreate persistence;
 - isolated snapshot restore drill;
 - GitHub read-only runtime mode;
-- Telegram status-only adapter runtime closeout.
+- Telegram status-only adapter runtime closeout;
+- service-state exporter deployment;
+- recurring Cloud Monitoring custom metric writes for `active`, `available`,
+  `healthy`, and `running` signals on `openclaw.service` and
+  `openclaw-telegram-adapter.service`.
 
 Still intentionally deferred:
 
-- observability and alerting for OpenClaw and Telegram adapter services;
+- alert routing and notification channel ownership;
 - disk capacity and snapshot freshness alerting;
 - recurring backup/restore drill schedule;
 - final GitHub PR-mode decision on the VM runtime;
@@ -278,7 +283,7 @@ Still intentionally deferred:
 - HTTP application health checks for autohealing;
 - external HTTPS load balancer or public access;
 - Cloud Storage archive backups;
-- monitoring alert policies;
+- enabled monitoring alert policies;
 - automatic approval of GitHub PR-capable runtime mode.
 
 ## Related Documents

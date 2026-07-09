@@ -400,8 +400,9 @@ The observability and alerting planning baseline is tracked in
 
 It covers the current Ops Agent, Cloud Logging, Cloud Monitoring writer role,
 MIG autohealing, health/readiness, disk, snapshot, and Telegram adapter
-observability posture. It also defines alert candidates and implementation
-sequencing without creating alert policies or notification channels.
+observability posture. It also documents the deployed service-state exporter
+and recurring Cloud Monitoring custom metric writes for the approved service
+signals. Alert policies and notification channels remain disabled by default.
 
 The Terraform monitoring skeleton lives at
 `../terraform/monitoring.tf`,
@@ -417,21 +418,22 @@ Service failure signal validation is recorded in
 path is a custom service-state checker that exports bounded service metadata,
 not raw logs or secret-bearing runtime data.
 
-The repository-local checker skeleton lives under
-`../monitoring/service_state_checker.py`. It is not deployed or scheduled by
-default.
+The repository-local checker lives under
+`../monitoring/service_state_checker.py`. The scheduled service-state exporter
+uses the checker, writer, and runner to write bounded custom metrics for
+`openclaw.service` and `openclaw-telegram-adapter.service`.
 
 The service-state exporter deployment approval package is tracked in
 `stateful-vm-service-state-exporter-approval-package.md`. It defines the
-proposed future systemd timer, IAM, metric model, rollout, validation, and
-rollback review items without deploying the exporter.
+systemd timer, IAM, metric model, rollout, validation, and rollback review
+items for the exporter.
 
-A disabled deployment skeleton exists in
+A deployment skeleton exists in
 `../terraform/service_state_exporter.tf` and
 `../systemd/openclaw-service-state-exporter.timer.tftpl`. Bootstrap wiring can
-install the helper package and dry-run timer only when
-`service_state_exporter_enabled` is explicitly set to `true`; defaults keep it
-absent from live hosts.
+install the helper package and timer only when `service_state_exporter_enabled`
+is explicitly set to `true`; live writes require
+`service_state_exporter_live_writes_enabled=true`.
 
 ## Manual Pre-Upgrade Snapshot
 

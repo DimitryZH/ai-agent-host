@@ -2,12 +2,13 @@
 
 ## Status
 
-Status: Monitoring skeleton baseline.
+Status: Service-state observability baseline complete.
 
 This document defines the compact observability baseline and alerting plan for
-the OpenClaw Stateful VM runtime. The current baseline includes a
-Terraform-ready monitoring skeleton. Alert policy resources remain disabled by
-default and no notification channels are configured.
+the OpenClaw Stateful VM runtime. The current baseline includes recurring
+Cloud Monitoring custom metric writes for approved service-state signals and a
+Terraform-ready alert policy skeleton. Alert policy resources remain disabled
+by default and no notification channels are configured.
 
 ## Current Runtime Baseline
 
@@ -35,11 +36,32 @@ resilience controls:
   `delete_rule = "NEVER"`;
 - daily scheduled snapshots are attached to the state disk;
 - snapshot retention is at least 14 days;
+- service-state exporter deployment is enabled for the approved services;
+- recurring Cloud Monitoring custom metric writes are enabled for the bounded
+  service-state signal set;
 - runbook coverage exists for service checks, health/readiness checks, state
   disk checks, snapshot/restore, rollback, and autohealing-loop response.
 
-No Terraform-managed Cloud Monitoring alert policies or notification channels
-are active by default in this repository path.
+No Terraform-managed alert policies or notification channels are active by
+default in this repository path.
+
+## Service-State Metric Baseline
+
+The service-state exporter writes the approved custom metric types:
+
+- `custom.googleapis.com/openclaw/service_state/active`;
+- `custom.googleapis.com/openclaw/service_state/available`;
+- `custom.googleapis.com/openclaw/service_state/healthy`;
+- `custom.googleapis.com/openclaw/service_state/running`.
+
+The approved service labels are:
+
+- `openclaw.service`;
+- `openclaw-telegram-adapter.service`.
+
+The metric model uses only the `service` label and numeric `0` or `1` values.
+It does not read journal logs, environment variables, Secret Manager payloads,
+Telegram payloads, or OpenClaw API data.
 
 ## Read-Only Baseline Evidence
 
@@ -61,9 +83,10 @@ call Telegram, restart services, or run OpenClaw tools.
 
 ## Observability Gaps
 
-- Service failure detection is not yet represented as alert policy code.
-- Telegram adapter restart or crash-loop detection is not yet represented as
-  alert policy code.
+- Service failure detection has a disabled-by-default alert policy skeleton,
+  but alert delivery is not enabled.
+- Telegram adapter restart or crash-loop detection is not yet represented as a
+  dedicated alert policy.
 - OpenClaw `/health` and `/readyz` are private VM-local endpoints; public uptime
   checks are not a direct fit without adding a private checker pattern.
 - Current MIG autohealing uses TCP reachability, which is useful for repair but
@@ -77,8 +100,8 @@ call Telegram, restart services, or run OpenClaw tools.
 
 | Candidate | Purpose | Signal source | Likely implementation approach | Severity | First threshold | Validation method | Rollback / disable impact |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `openclaw.service` failure | Detect gateway outage before operator reports it. | systemd state through Ops Agent metrics or logs-based metric. | Prefer Ops Agent/systemd signal if available; otherwise create a logs-based metric from systemd journal entries forwarded to Cloud Logging. | Critical | Service inactive for 2 consecutive checks or 5 minutes. | Stop-free validation by querying metric history; later use a controlled non-production service failure test. | Disabling removes direct gateway service failure paging; MIG autohealing may still repair TCP failures. |
-| `openclaw-telegram-adapter.service` failure | Detect loss of mobile status channel. | systemd state through Ops Agent metrics or logs-based metric. | Same pattern as OpenClaw service, with a separate policy and lower severity. | Warning | Service inactive for 5 minutes. | Stop-free validation by metric query; later use a controlled non-production service failure test. | Disabling removes Telegram adapter outage notification only; OpenClaw runtime remains private and usable through IAP. |
+| `openclaw.service` failure | Detect gateway outage before operator reports it. | Service-state custom metric. | Use the approved `custom.googleapis.com/openclaw/service_state/*` metrics and `service="openclaw.service"` label. | Critical | Service-state value below `1` for 5 minutes. | Stop-free validation by querying recent metric history; later use a controlled non-production service failure test. | Disabling removes direct gateway service failure paging; recurring metric writes remain available for manual review. |
+| `openclaw-telegram-adapter.service` failure | Detect loss of mobile status channel. | Service-state custom metric. | Use the approved `custom.googleapis.com/openclaw/service_state/*` metrics and `service="openclaw-telegram-adapter.service"` label. | Warning | Service-state value below `1` for 5 minutes. | Stop-free validation by querying recent metric history; later use a controlled non-production service failure test. | Disabling removes Telegram adapter outage notification only; OpenClaw runtime remains private and usable through IAP. |
 | OpenClaw `/health` failure | Detect live endpoint failure on the private runtime. | VM-local HTTP probe result. | Use a lightweight internal checker or Ops Agent script-style/custom metric if approved later; public uptime checks are not appropriate for the private endpoint. | Critical | 2 failures over 5 minutes. | Run checker in dry-run mode against `127.0.0.1:8080/health`; compare with manual IAP SSH curl. | Disabling removes application liveness alerting; TCP autohealing remains as a weaker signal. |
 | OpenClaw `/readyz` failure | Detect application readiness problems that TCP checks can miss. | VM-local HTTP probe result. | Same private checker/custom metric approach as `/health`; consider separate policy because readiness can fail while process is alive. | Critical | 2 failures over 5 minutes. | Run checker in dry-run mode against `127.0.0.1:8080/readyz`; compare with manual IAP SSH curl. | Disabling removes readiness alerting; service and MIG alerts still cover broader failures. |
 | MIG unhealthy or no healthy active instance | Detect failed repair, missing writer, or unhealthy replacement. | Compute Engine MIG health state and instance count. | Cloud Monitoring alert on MIG/instance group metrics, or logs-based alert for repair failures if metric coverage is insufficient. | Critical | Healthy instance count below 1 for 5 minutes, or current action stuck outside `NONE` for 10 minutes. | Compare alert query with `gcloud compute instance-groups managed list-instances`. | Disabling removes infrastructure-level outage notification; service checks may still catch some failures. |
@@ -109,6 +132,7 @@ Terraform skeleton location:
 
 ```text
 gcp/openclaw_stateful_vm/terraform/monitoring.tf
+gcp/openclaw_stateful_vm/terraform/service_state_alert_policy.tf
 ```
 
 The skeleton defines:
@@ -123,6 +147,8 @@ The skeleton defines:
 - `monitoring_service_failure_alerts_enabled`, default `false`;
 - service failure review targets for `openclaw.service` and
   `openclaw-telegram-adapter.service`.
+- disabled-by-default service-state alert policy creation and enablement
+  switches.
 
 The skeleton intentionally keeps `google_monitoring_alert_policy` resources
 disabled by default and defines no `google_monitoring_notification_channel`
@@ -142,24 +168,21 @@ URLs were printed or committed.
 Routing decision status:
 
 - no operator-owned Cloud Monitoring notification channel was confirmed;
-- service failure alert activation must wait for explicit operator approval of
-  alert routing;
+- service failure alert activation must wait for explicit approval of alert
+  routing;
 - future Terraform alert policies must attach only approved existing
   notification channel identifiers supplied outside public docs.
 
-Alert policies are not created because the signal choice and routing ownership
-still need review. This keeps the repository ready for Terraform-managed
-alerting without causing notification noise or changing live Cloud Monitoring
-state.
+Alert policies are not created by default because routing ownership still needs
+review. This keeps the repository ready for Terraform-managed alerting without
+causing notification noise.
 
 Plan-only note:
 
-- the monitoring skeleton does not introduce alert policy, notification
-  channel, or monitoring-related resource changes;
-- the local plan-only check showed unrelated existing runtime/Telegram
-  configuration drift;
-- do not apply monitoring work until the runtime variable set is reconciled and
-  the next operations review has an approved alert policy plan.
+- the default monitoring skeleton does not introduce enabled alert policy or
+  notification channel changes;
+- do not apply alerting work until the next operations review has an approved
+  alert policy plan.
 
 ## Service Failure Alert Review
 
@@ -209,12 +232,11 @@ Repository-local dry-run runner:
 gcp/openclaw_stateful_vm/monitoring/service_state_monitor_runner.py
 ```
 
-The checker is local code only. It supports `text`, `json`, and metric-shaped
-`metrics-json` output for review. The writer validates that output and builds a
-dry-run Cloud Monitoring custom metric write model. The runner composes both
-helpers into a local dry-run entrypoint. These helpers are not deployed or
-scheduled by default, and they do not write Cloud Monitoring metrics or create
-alerts.
+The checker supports `text`, `json`, and metric-shaped `metrics-json` output.
+The writer validates that output and writes only the bounded Cloud Monitoring
+custom metric model when explicitly invoked with live-write runtime wiring. The
+runner composes both helpers into the scheduled service-state exporter
+entrypoint. The helpers do not create alert policies or notification channels.
 
 Disabled deployment skeleton:
 
@@ -224,10 +246,10 @@ gcp/openclaw_stateful_vm/systemd/openclaw-service-state-exporter.service.tftpl
 gcp/openclaw_stateful_vm/systemd/openclaw-service-state-exporter.timer.tftpl
 ```
 
-The skeleton is disabled by default. Bootstrap install, start, and enable
-behavior is gated by `service_state_exporter_enabled`. When enabled, it
-installs the helper package and dry-run systemd timer only; live metric writes
-remain disabled and require separate rollout approval.
+Bootstrap install, start, and enable behavior is gated by
+`service_state_exporter_enabled`. Live metric writes are gated separately by
+`service_state_exporter_live_writes_enabled`, which remains disabled by default
+for new environments.
 
 The service-state alert policy skeleton defines OpenClaw and Telegram adapter
 service targets and a disabled-by-default alert policy create switch. It does
@@ -236,33 +258,26 @@ because broad log payload matching could accidentally include sensitive
 operational data; any future filters or notification routing must be reviewed
 before they are applied.
 
-Activation prerequisites:
+Alert activation prerequisites:
 
-- design and review the custom service-state checker;
-- design and review the custom metric writer runtime;
-- design and review the scheduled runner execution model;
-- approve enabling the service-state exporter install wiring;
-- confirm the service failure signal source;
 - approve notification routing;
 - provide approved notification channel identifiers outside public docs;
-- reconcile existing Terraform runtime drift;
 - review a clean Terraform plan;
 - receive separate apply approval.
 
 ## Recommended Implementation Sequence
 
-### Terraform skeleton and notification discovery
+### Terraform alert routing and notification discovery
 
-- Add no-op-safe Terraform structure for monitoring resources.
 - Discover existing notification channel ownership and approved routing.
 - Keep notification identifiers out of public docs when sensitive.
 - Validate with `terraform fmt`, `terraform validate`, and plan-only review.
 
 ### OpenClaw and Telegram service failure alerts
 
-- Implement the lowest-risk service failure policies first.
-- Prefer native Ops Agent/systemd signals if available.
-- Use logs-based metrics only when they can avoid sensitive log content.
+- Use the existing service-state custom metric signal first.
+- Keep logs-based metrics out of scope unless they can avoid sensitive log
+  content.
 - Review the exact Terraform policy plan before any `terraform apply`.
 
 ### Health, readiness, disk capacity, and snapshot freshness
@@ -280,7 +295,7 @@ Activation prerequisites:
 - Keep destructive cleanup and restore exercises approval-controlled.
 - Record sanitized drill evidence outside public docs when needed.
 
-### Final operations closeout
+### Final alerting closeout
 
 - Update the operations runbook with the implemented alert inventory.
 - Document rollback/disable steps for each policy.
@@ -304,13 +319,10 @@ Observability work must preserve the current security posture:
 
 ## Next Implementation Step
 
-Custom Service-State Checker Runtime Design.
+Alert routing remains future work.
 
 Scope for the next implementation step:
 
-- OpenClaw `openclaw.service` failure alerting;
-- Telegram `openclaw-telegram-adapter.service` failure alerting;
-- checker runtime design review before deployment;
 - notification routing approval before activation;
 - Terraform plan review before any apply.
 
