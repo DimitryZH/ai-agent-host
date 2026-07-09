@@ -100,8 +100,8 @@ See:
 
 * `gcp/openclaw_cloud_run/` - validated Cloud Run proof-of-concept runtime.
 * `gcp/openclaw_stateful_vm/` - production-like Stateful VM runtime.
+* `gcp/openclaw_stateful_vm/terraform/` - current mature Stateful VM Terraform.
 * `gcp/devbox/` - GCP engineering workstation preparation.
-* `gcp/terraform/` - earlier GCP Terraform baseline material.
 * `aws/` - AWS runtime infrastructure material.
 * `docs/project-transition-to-ai-operations-platform.md` - project boundary and handoff document.
 * `docs/architecture.md` - top-level architecture map.

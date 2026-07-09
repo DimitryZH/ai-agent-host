@@ -7,12 +7,11 @@ Scope of this experiment:
 - verify image structure and startup contract
 - verify Cloud Run-compatible process model (`PORT`, foreground process)
 - keep security defaults restrictive
-- avoid deployment changes in this phase
+- avoid deployment changes without a separate approval
 
-This is intentionally separate from `gcp/cloud_run/`:
-
-- `gcp/cloud_run/` is the proven minimal Flask runtime baseline used to validate Cloud Run + Terraform + IAM flow.
-- `gcp/openclaw_cloud_run/` is a higher-risk runtime experiment to answer container/runtime feasibility before any infrastructure rollout changes.
+This is the public Cloud Run proof-of-concept runtime path for OpenClaw.
+Earlier generic Flask and Terraform bootstrap material is archived internally
+and is no longer kept as a public runtime path.
 
 ## Related Documentation
 
@@ -40,6 +39,10 @@ This is intentionally separate from `gcp/cloud_run/`:
 - `scripts/deploy_onboarding_ui.sh`: build + deploy temporary IAM-protected UI onboarding revision.
 - `scripts/disable_onboarding_ui.sh`: rollback helper to disable Control UI.
 - `scripts/validate_post_onboarding.sh`: authenticated probe helper after onboarding.
+
+This directory does not currently contain a Terraform root. The current mature
+Terraform root for the applied runtime is
+`gcp/openclaw_stateful_vm/terraform/`.
 
 ## Runtime Inputs
 

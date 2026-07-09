@@ -90,6 +90,9 @@ Core characteristics:
 - Telegram status-only operator channel;
 - service-state observability baseline.
 
+The current Stateful VM Terraform root is
+`gcp/openclaw_stateful_vm/terraform/`.
+
 ## Cloud Run Role and Boundary
 
 The Cloud Run path validated the container contract, Secret Manager
@@ -99,6 +102,10 @@ GitHub control behavior. It remains useful as a runtime reference.
 Cloud Run is not treated as the durable state-owning OpenClaw runtime today
 because OpenClaw state requires a practical single-writer persistent state
 boundary.
+
+The public Cloud Run runtime material lives under `gcp/openclaw_cloud_run/`.
+Earlier generic Cloud Run bootstrap material is archived outside the public
+tracked layout.
 
 ## AWS Role and Boundary
 

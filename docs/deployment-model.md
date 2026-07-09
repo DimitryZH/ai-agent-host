@@ -44,6 +44,10 @@ is not treated as the durable state-owning OpenClaw runtime today because the
 current OpenClaw gateway needs a practical persistent single-writer state
 boundary.
 
+The public Cloud Run proof-of-concept runtime lives under
+`gcp/openclaw_cloud_run/`. Earlier generic Cloud Run bootstrap material is not
+kept as a public runtime path.
+
 ## GCP Stateful VM Current Mature Runtime
 
 The Stateful VM path is the current mature deployment model:
@@ -59,6 +63,8 @@ The Stateful VM path is the current mature deployment model:
 - daily snapshot policy;
 - manual rollback by previous image digest;
 - service-state observability baseline.
+
+Its current Terraform root is `gcp/openclaw_stateful_vm/terraform/`.
 
 ## Terraform-Managed Rollout Model
 

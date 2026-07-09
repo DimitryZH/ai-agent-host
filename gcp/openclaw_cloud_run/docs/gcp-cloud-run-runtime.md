@@ -31,34 +31,11 @@ It is not the durable state-owning runtime today because the OpenClaw gateway
 needs a practical persistent single-writer state boundary. The Stateful VM
 runtime is the current state-owning path.
 
-## Historical Local Validation
+## Historical Bootstrap Material
 
-The earlier minimal Cloud Run validation path used a local container build and
-health check pattern. Preserve these commands as historical validation examples
-only; they do not represent the current Stateful VM runtime.
-
-Build the minimal runtime image locally:
-
-```bash
-docker build -t ai-agent-runtime:local ./gcp/cloud_run
-```
-
-Run the container on local port `8080`:
-
-```bash
-docker run --rm -p 8080:8080 --name ai-agent-runtime-local ai-agent-runtime:local
-```
-
-Check health:
-
-```bash
-curl -sS http://localhost:8080/health
-```
-
-Expected behavior:
-
-- HTTP `200`;
-- JSON health response.
+Earlier generic Flask and Terraform bootstrap material validated the first
+Cloud Run and IAM flow. That material is now archived internally and is not kept
+as a public runtime path.
 
 ## OpenClaw Cloud Run Runtime
 
@@ -83,6 +60,9 @@ That implementation validates the OpenClaw container shape for Cloud Run:
 Cloud Run deployment examples and helper scripts remain useful for controlled
 experiments. Do not treat Cloud Run as the production-like state-owning runtime
 without a separate durable-state design review.
+
+This Cloud Run directory does not currently contain a Terraform root. The
+current mature Terraform root is `gcp/openclaw_stateful_vm/terraform/`.
 
 Any future Cloud Run durable-state research is optional and deferred unless
 platform capabilities change enough to justify revisiting the decision.
