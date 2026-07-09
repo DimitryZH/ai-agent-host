@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document summarizes the current AI Agent Host architecture at closeout.
+This document summarizes the current AI Agent Host architecture.
 AI Agent Host is a self-owned runtime foundation for hosting AI agent runtimes
 inside an operator-controlled cloud boundary. It is not the full AI Operations
 Platform.
@@ -33,7 +33,7 @@ AI Agent Host owns runtime foundation concerns:
 - Terraform-managed deployment patterns;
 - capability governance;
 - baseline observability;
-- closeout and handoff documentation.
+- transition and handoff documentation.
 
 AI Operations Platform owns operational workflow concerns:
 
@@ -122,7 +122,7 @@ execution, and OpenClaw self-upgrade paths.
 
 ## Observability Baseline
 
-The current Phase 8 baseline stops at service-state observability:
+The current observability baseline stops at service-state signals:
 
 - service-state exporter deployed;
 - recurring Cloud Monitoring writes enabled for approved service-state metric
@@ -159,7 +159,6 @@ foundation.
 ## Documentation Map
 
 - [Project README](../README.md)
-- [Closeout Roadmap](../ROADMAP.md)
 - [Project Transition to AI Operations Platform](project-transition-to-ai-operations-platform.md)
 - [Security Model](security-model.md)
 - [Deployment Model](deployment-model.md)

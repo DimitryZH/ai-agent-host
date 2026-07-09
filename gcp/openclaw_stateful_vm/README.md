@@ -122,19 +122,17 @@ gcp/openclaw_stateful_vm/
     |-- stateful-vm-runtime-validation-summary.md
     |-- telegram-status-only-adapter-runtime-closeout.md
     |-- stateful-vm-observability-alerting-plan.md
-    |-- stateful-vm-service-failure-signal-validation.md
-    |-- stateful-vm-service-state-exporter-approval-package.md
+    |-- README.md
     `-- stateful-vm-operations-runbook.md
 ```
 
-Deployment approval history and intermediate evidence are maintained separately
+Deployment approval history and intermediate records are maintained separately
 as internal project material. The tracked documentation here reflects the
 current applied runtime status.
 
 ## Related Top-Level Documentation
 
 - [Project README](../../README.md)
-- [Closeout Roadmap](../../ROADMAP.md)
 - [Architecture](../../docs/architecture.md)
 - [Security Model](../../docs/security-model.md)
 - [Deployment Model](../../docs/deployment-model.md)
@@ -301,6 +299,5 @@ Still intentionally deferred:
 - `docs/stateful-vm-runtime-validation-summary.md`
 - `docs/telegram-status-only-adapter-runtime-closeout.md`
 - `docs/stateful-vm-observability-alerting-plan.md`
-- `docs/stateful-vm-service-failure-signal-validation.md`
-- `docs/stateful-vm-service-state-exporter-approval-package.md`
 - `docs/stateful-vm-operations-runbook.md`
+- `docs/README.md`

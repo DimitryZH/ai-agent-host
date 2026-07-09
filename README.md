@@ -86,11 +86,9 @@ Operations Platform project.
 See:
 
 * [Project Transition to AI Operations Platform](docs/project-transition-to-ai-operations-platform.md)
-* [Roadmap](ROADMAP.md)
 
 ## Documentation
 
-* [Closeout Roadmap](ROADMAP.md)
 * [Project Transition to AI Operations Platform](docs/project-transition-to-ai-operations-platform.md)
 * [Architecture](docs/architecture.md)
 * [Security Model](docs/security-model.md)
@@ -109,7 +107,6 @@ See:
 * `docs/architecture.md` - top-level architecture map.
 * `docs/security-model.md` - top-level security and capability governance model.
 * `docs/deployment-model.md` - top-level deployment model.
-* `ROADMAP.md` - closeout, boundary, deferred work, and handoff roadmap.
 
 ## Runtime Status
 
@@ -248,7 +245,7 @@ transferred to AI Operations Platform.
 
 ## Observability Baseline
 
-The Phase 8 service-state observability baseline is complete.
+The service-state observability baseline is complete.
 
 Current baseline:
 

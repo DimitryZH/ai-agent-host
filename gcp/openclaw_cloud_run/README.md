@@ -17,7 +17,6 @@ This is intentionally separate from `gcp/cloud_run/`:
 ## Related Documentation
 
 - [Project README](../../README.md)
-- [Closeout Roadmap](../../ROADMAP.md)
 - [Architecture](../../docs/architecture.md)
 - [Security Model](../../docs/security-model.md)
 - [Deployment Model](../../docs/deployment-model.md)
@@ -142,7 +141,8 @@ The PAT must be scoped only to:
 - `DimitryZH/ai-agent-host`
 - `DimitryZH/compose-to-aspire-demo`
 
-Do not grant access to `DimitryZH/ai-operations-platform` for Phase 0.1b.
+Do not grant access to `DimitryZH/ai-operations-platform` for this read-only
+validation scope.
 
 Required GitHub permissions:
 
@@ -160,7 +160,7 @@ Forbidden permissions:
 - Environments
 - Organization permissions
 
-Keep repository writes blocked by credential scope. The bundled `github` skill documents broader `gh` workflows, so the read-only PAT is the enforcement boundary for this phase.
+Keep repository writes blocked by credential scope. The bundled `github` skill documents broader `gh` workflows, so the read-only PAT is the enforcement boundary for this validation scope.
 
 ## GitHub MCP Repository Access (Optional)
 
@@ -208,10 +208,11 @@ If the MCP server needs a separate token environment variable at runtime, inject
 Read-only requirements:
 
 - Scope access only to `DimitryZH/ai-agent-host` and `DimitryZH/compose-to-aspire-demo`.
-- Do not grant access to `DimitryZH/ai-operations-platform` for Phase 0.1.
+- Do not grant access to `DimitryZH/ai-operations-platform` for this read-only
+  validation scope.
 - Grant repository contents read access only.
 - Do not grant contents write, pull requests write, issues write, actions write, repository administration, organization administration, or secret management permissions.
-- Keep `GITHUB_READ_ONLY=1` enabled for this phase.
+- Keep `GITHUB_READ_ONLY=1` enabled for this validation scope.
 
 ## Controlled UI Onboarding Mode (IAM Protected)
 

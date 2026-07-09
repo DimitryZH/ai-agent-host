@@ -91,7 +91,6 @@ platform capabilities change enough to justify revisiting the decision.
 
 - [OpenClaw Cloud Run README](../README.md)
 - [Project README](../../../README.md)
-- [Closeout Roadmap](../../../ROADMAP.md)
 - [Architecture](../../../docs/architecture.md)
 - [Deployment Model](../../../docs/deployment-model.md)
 - [Project Transition to AI Operations Platform](../../../docs/project-transition-to-ai-operations-platform.md)

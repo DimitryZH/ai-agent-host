@@ -200,4 +200,4 @@ The channel must have a simple disable path before it is enabled:
 * remove or rotate the Telegram bot token if exposed;
 * remove the Telegram chat ID allowlist entry;
 * confirm OpenClaw remains reachable only through the approved private paths;
-* preserve validation evidence without storing secrets.
+* preserve validation records without storing secrets.

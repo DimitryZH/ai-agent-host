@@ -161,7 +161,6 @@ During closeout and transition:
 ## Related Documents
 
 - [Project README](../README.md)
-- [Closeout Roadmap](../ROADMAP.md)
 - [Architecture](architecture.md)
 - [Deployment Model](deployment-model.md)
 - [Project Transition to AI Operations Platform](project-transition-to-ai-operations-platform.md)

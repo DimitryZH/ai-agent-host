@@ -63,7 +63,7 @@ The metric model uses only the `service` label and numeric `0` or `1` values.
 It does not read journal logs, environment variables, Secret Manager payloads,
 Telegram payloads, or OpenClaw API data.
 
-## Read-Only Baseline Evidence
+## Read-Only Baseline Records
 
 Read-only checks on 2026-07-06 confirmed:
 
@@ -192,19 +192,7 @@ Terraform service alert skeleton location:
 gcp/openclaw_stateful_vm/terraform/monitoring_service_alerts.tf
 ```
 
-Signal validation note:
-
-```text
-gcp/openclaw_stateful_vm/docs/stateful-vm-service-failure-signal-validation.md
-```
-
-Exporter deployment approval package:
-
-```text
-gcp/openclaw_stateful_vm/docs/stateful-vm-service-state-exporter-approval-package.md
-```
-
-Read-only signal discovery found:
+Earlier signal discovery found:
 
 - native metric path: unclear, because the available CLI did not expose metric
   descriptor discovery;
@@ -293,7 +281,7 @@ Alert activation prerequisites:
 - Convert the existing restore-drill runbook into a recurring operator
   schedule.
 - Keep destructive cleanup and restore exercises approval-controlled.
-- Record sanitized drill evidence outside public docs when needed.
+- Record sanitized drill results outside public docs when needed.
 
 ### Final alerting closeout
 
@@ -312,7 +300,7 @@ Observability work must preserve the current security posture:
 - no MCP enablement;
 - no shell, Terraform, browser automation, or DevBox execution through
   Telegram;
-- no Secret Manager payload reads in validation evidence;
+- no Secret Manager payload reads in validation records;
 - no token values, real operator chat identifiers, callback payloads, or
   sensitive logs in public docs;
 - no service restarts or destructive recovery steps without separate approval.

@@ -86,7 +86,7 @@ The known API model alias remains:
 Use model alias "openclaw", not provider model id "google/gemini-2.5-flash".
 ```
 
-## IAP Reconnect Continuity Evidence
+## IAP Reconnect Continuity Records
 
 The operator terminated the local IAP tunnel by closing the local VS Code
 session.
@@ -98,7 +98,7 @@ After creating a new IAP tunnel and opening the Control UI again:
 - no new browser device pairing was required
 - the existing browser profile continued to work
 
-This is useful continuity evidence, but it must be interpreted correctly:
+This is a useful continuity record, but it must be interpreted correctly:
 
 ```text
 Control UI continuity across local IAP tunnel termination and re-establishment.

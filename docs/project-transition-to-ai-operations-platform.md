@@ -161,7 +161,7 @@ Examples:
 * diagnosis agent;
 * rollout diagnostics agent;
 * remediation planning agent;
-* GitHub/Codex execution agent;
+* repository execution agent;
 * operator liaison agent;
 * FinOps analysis agent.
 
@@ -270,22 +270,22 @@ flowchart TD
 
 ## Recommended Starting Point for AI Operations Platform
 
-The AI Operations Platform should start with a minimal platform roadmap rather
-than continuing the host roadmap.
+The AI Operations Platform should start with a minimal platform planning
+sequence rather than continuing host-level work in this repository.
 
-Recommended initial phases:
+Recommended initial workstreams:
 
 ```text
-Phase 0 — Foundation Import
-Phase 1 — Platform Architecture Baseline
-Phase 2 — Shared Context and Context Lifecycle
-Phase 3 — Observability Adapter MVP
-Phase 4 — Incident Triage MVP
-Phase 5 — Rollout Diagnostics MVP
-Phase 6 — Human-Approved Remediation Workflow
-Phase 7 — Multi-Agent Operations Orchestration
-Phase 8 — Platform Hardening
-Phase 9 — Integrated Portfolio Demo
+0. Foundation Import
+1. Platform Architecture Baseline
+2. Shared Context and Context Lifecycle
+3. Observability Adapter MVP
+4. Incident Triage MVP
+5. Rollout Diagnostics MVP
+6. Human-Approved Remediation Workflow
+7. Multi-Agent Operations Orchestration
+8. Platform Hardening
+9. Integrated Portfolio Demo
 ```
 
 ---
@@ -295,8 +295,8 @@ Phase 9 — Integrated Portfolio Demo
 AI Agent Host can be considered ready for closeout when:
 
 * root README clearly states the project boundary;
-* ROADMAP is updated as a closeout and handoff roadmap;
-* this transition document exists and is linked from the README or roadmap;
+* top-level public documentation states the closeout and handoff boundary;
+* this transition document exists and is linked from the README;
 * service-state observability baseline is documented;
 * alert routing and advanced operations are deferred to AI Operations Platform;
 * GitHub PR/write remains disabled unless separately approved;

@@ -208,7 +208,7 @@ No autoscaler exists.
 
 ### Health Check
 
-TCP is the default. Prior runtime evidence showed `/readyz` can report degraded
+TCP is the default. Prior runtime checks showed `/readyz` can report degraded
 event-loop behavior, so HTTP autohealing remains deferred until burn-in and
 failure-injection tests prove the endpoint safe.
 
@@ -273,7 +273,7 @@ trailing-whitespace scan: passed
 real-token/private-key pattern scan: passed; Secret Manager IDs only
 Cloud Run diff check: passed; no Cloud Run files modified
 shellcheck rendered bootstrap: not run; ShellCheck is not installed
-terraform plan: generated separately as internal project evidence
+terraform plan: generated separately as internal project records
 ```
 
 ## Terraform Plan Status

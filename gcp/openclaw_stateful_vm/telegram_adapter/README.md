@@ -5,20 +5,11 @@ modules.
 
 Current status: status-only runtime rollout complete.
 
-Enablement approval package:
-`gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-enablement-approval.md`
+Public runtime documentation:
 
-Enabled rollout approval package:
-`gcp/openclaw_stateful_vm/docs/telegram-enabled-rollout-approval-package.md`
-
-Runtime closeout:
-`gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-runtime-closeout.md`
-
-Operator setup guide:
-`gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-operator-setup.md`
-
-Operator bootstrap guide:
-`gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-operator-bootstrap.md`
+* [Stateful VM documentation index](../docs/README.md)
+* [Telegram mobile operator channel](../docs/telegram-mobile-operator-channel.md)
+* [Telegram status-only runtime closeout](../docs/telegram-status-only-adapter-runtime-closeout.md)
 
 Runtime closeout is limited to the approved status-only command scope. It does
 not approve `/ask`, GitHub commands, PR/write, Terraform, shell, browser
@@ -115,7 +106,7 @@ network tests; local tests do not call Telegram.
 `token_file.py` defines the explicit token file reader used by the approved
 runtime runner. It requires an absolute path, validates token shape, and does
 not read Secret Manager payloads. Runtime validation checks token file presence
-and permissions only; token contents are not printed in evidence.
+and permissions only; token contents are not printed in validation output.
 
 ## Poll-Once Coordinator
 

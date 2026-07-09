@@ -126,7 +126,6 @@ Platform.
 ## Related Documents
 
 - [Project README](../README.md)
-- [Closeout Roadmap](../ROADMAP.md)
 - [Architecture](architecture.md)
 - [Security Model](security-model.md)
 - [Project Transition to AI Operations Platform](project-transition-to-ai-operations-platform.md)

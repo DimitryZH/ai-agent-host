@@ -79,7 +79,7 @@ The PR validation runtime must satisfy these conditions:
 
 * `OPENCLAW_GITHUB_MODE=pr` is enabled only for the approved validation window;
 * a separate PR-capable GitHub token secret is used;
-* no token value is printed, committed, logged, or pasted into evidence;
+* no token value is printed, committed, logged, or pasted into records;
 * the selected exec approval policy is the controlled PR policy;
 * `exec` is the only required agent-facing tool for this validation;
 * file write/edit/patch tools remain disabled;

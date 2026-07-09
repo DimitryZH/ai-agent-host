@@ -6,10 +6,11 @@ For GitHub repository validation:
 
 - Use only read-only GitHub access.
 - Use the bundled `github` skill and `gh` when repository content must be inspected.
-- Read only these repositories in Phase 0.1b:
+- Read only these repositories in this validation scope:
   - `DimitryZH/ai-agent-host`
   - `DimitryZH/compose-to-aspire-demo`
-- Do not access or modify `DimitryZH/ai-operations-platform` in this phase.
+- Do not access or modify `DimitryZH/ai-operations-platform` in this
+  validation scope.
 
 For temporary draft PR validation mode:
 

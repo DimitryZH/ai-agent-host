@@ -229,7 +229,7 @@ Expected:
 Local browser use:
 
 Use the approved operator secret retrieval procedure for the gateway token.
-Do not include the token value in repository files, tickets, logs, or evidence.
+Do not include the token value in repository files, tickets, logs, or records.
 
 VM-local use:
 
@@ -413,20 +413,17 @@ alert delivery still requires a reviewed Terraform plan. Do not run
 `terraform apply` for monitoring work until the specific alert policy plan has
 been reviewed.
 
-Service failure signal validation is recorded in
-`stateful-vm-service-failure-signal-validation.md`. The current recommended
-path is a custom service-state checker that exports bounded service metadata,
-not raw logs or secret-bearing runtime data.
+The current service-failure signal path is a custom service-state checker that
+exports bounded service metadata, not raw logs or secret-bearing runtime data.
 
 The repository-local checker lives under
 `../monitoring/service_state_checker.py`. The scheduled service-state exporter
 uses the checker, writer, and runner to write bounded custom metrics for
 `openclaw.service` and `openclaw-telegram-adapter.service`.
 
-The service-state exporter deployment approval package is tracked in
-`stateful-vm-service-state-exporter-approval-package.md`. It defines the
-systemd timer, IAM, metric model, rollout, validation, and rollback review
-items for the exporter.
+The service-state exporter is deployed for the current baseline. Historical
+approval and signal-selection notes are retained in the internal workflow
+archive rather than the public docs tree.
 
 A deployment skeleton exists in
 `../terraform/service_state_exporter.tf` and
@@ -605,7 +602,7 @@ If the MIG repeatedly recreates the VM:
 If secret or runtime compromise is suspected:
 
 1. Stop the gateway.
-2. Preserve logs and disk evidence without exposing secret contents.
+2. Preserve logs and disk diagnostics without exposing secret contents.
 3. Revoke or rotate gateway, Gemini, GitHub read-only, and GitHub PR secrets as
    appropriate.
 4. Review IAP, Secret Manager, IAM, and Compute audit logs.
