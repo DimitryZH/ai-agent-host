@@ -3,6 +3,18 @@
 **Status:** Approval package; no enablement granted by this document
 **Scope:** Future Telegram status-only adapter on the OpenClaw Stateful VM
 
+## Status Note
+
+This document is retained as the historical approval package for the
+status-only Telegram rollout. The approved runtime scope is now complete and
+closed out in
+`gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-runtime-closeout.md`.
+
+Current approved commands: `/status`, `/health`, `/whoami`, and `/help`.
+Out of scope without separate approval: `/ask`, GitHub commands, PR/write,
+Terraform commands, shell execution, browser automation, MCP, DevBox execution,
+and OpenClaw self-upgrade.
+
 Operator setup guide:
 `gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-operator-setup.md`
 
@@ -16,9 +28,10 @@ Enabled rollout approval package for the first real enablement:
 Runtime closeout after approved status-only rollout:
 `gcp/openclaw_stateful_vm/docs/telegram-status-only-adapter-runtime-closeout.md`
 
-## Current Non-Enabled State
+## Original Non-Enabled State
 
-The repository currently contains a local-only Telegram adapter scaffold:
+At the time of this approval package, the repository contained a local-only
+Telegram adapter scaffold:
 
 * fixed status-only command handlers;
 * non-secret adapter config and approved chat ID parsing;
@@ -31,8 +44,9 @@ The repository currently contains a local-only Telegram adapter scaffold:
 * unit tests for command routing, allowlist behavior, malformed input, and
   non-secret responses.
 
-It has no committed Telegram token value, no committed real chat ID, no running
-polling, no installed systemd unit, no Terraform apply, and no runtime rollout.
+At that time, it had no committed Telegram token value, no committed real chat
+ID, no running polling, no installed systemd unit, no Terraform apply, and no
+runtime rollout.
 
 ## Proposed Enablement Scope
 

@@ -14,6 +14,16 @@ This is intentionally separate from `gcp/cloud_run/`:
 - `gcp/cloud_run/` is the proven minimal Flask runtime baseline used to validate Cloud Run + Terraform + IAM flow.
 - `gcp/openclaw_cloud_run/` is a higher-risk runtime experiment to answer container/runtime feasibility before any infrastructure rollout changes.
 
+## Related Documentation
+
+- [Project README](../../README.md)
+- [Closeout Roadmap](../../ROADMAP.md)
+- [Architecture](../../docs/architecture.md)
+- [Security Model](../../docs/security-model.md)
+- [Deployment Model](../../docs/deployment-model.md)
+- [Project Transition to AI Operations Platform](../../docs/project-transition-to-ai-operations-platform.md)
+- [Cloud Run Runtime Notes](docs/gcp-cloud-run-runtime.md)
+
 ## Cloud Run Constraints Addressed
 
 - One foreground process only (no `systemd`, no Docker-in-Docker).

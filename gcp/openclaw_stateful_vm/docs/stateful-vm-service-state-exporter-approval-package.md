@@ -10,6 +10,17 @@ metrics, create alert policies, or create notification channels.
 
 The goal is to make the next runtime change explicit before it is made.
 
+## Status Note
+
+This document was created as an approval/design package before the
+service-state exporter rollout. It is retained as historical design context.
+
+Current closeout posture: the service-state exporter baseline has been
+deployed, recurring Cloud Monitoring writes are enabled for the approved
+service-state metric types, and the alert policy skeleton remains disabled by
+default. Full alert routing and notification workflows are deferred and
+transferred to AI Operations Platform.
+
 ## Current Local Helper Inventory
 
 Repository-local helper code:
@@ -20,19 +31,19 @@ Repository-local helper code:
 - `gcp/openclaw_stateful_vm/monitoring/tests/`
 - `gcp/openclaw_stateful_vm/monitoring/README.md`
 
-Current posture:
+Original pre-rollout posture:
 
 - local repository code only;
-- not deployed;
-- not scheduled;
+- not deployed at the time;
+- not scheduled at the time;
 - disabled Terraform deployment skeleton exists;
 - rendered exporter systemd service template exists;
 - rendered exporter systemd timer template exists;
 - bootstrap install wiring exists but is gated by
   `service_state_exporter_enabled`;
-- not installed, started, or enabled by default;
+- not installed, started, or enabled by default at the time;
 - no cron job;
-- no Cloud Monitoring live writes;
+- no Cloud Monitoring live writes at the time;
 - no live custom metric creation;
 - no alert policies;
 - no notification channels.

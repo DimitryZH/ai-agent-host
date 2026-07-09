@@ -131,6 +131,15 @@ Deployment approval history and intermediate evidence are maintained separately
 as internal project material. The tracked documentation here reflects the
 current applied runtime status.
 
+## Related Top-Level Documentation
+
+- [Project README](../../README.md)
+- [Closeout Roadmap](../../ROADMAP.md)
+- [Architecture](../../docs/architecture.md)
+- [Security Model](../../docs/security-model.md)
+- [Deployment Model](../../docs/deployment-model.md)
+- [Project Transition to AI Operations Platform](../../docs/project-transition-to-ai-operations-platform.md)
+
 ## Configuration Flow
 
 Copy the example only for local planning:

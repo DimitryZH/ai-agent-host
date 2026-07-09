@@ -1,7 +1,20 @@
 # OpenClaw Telegram Mobile Operator Channel
 
-**Status:** Design only; not implemented
-**Scope:** Future mobile operator channel for the OpenClaw Stateful VM runtime
+**Status:** Historical design; status-only runtime scope is now complete
+**Scope:** Telegram status-only mobile operator channel for the OpenClaw
+Stateful VM runtime
+
+## Status Note
+
+This document was created as the initial design for the Telegram mobile
+operator channel. The approved status-only adapter is now live for the approved
+scope and is closed out in
+`telegram-status-only-adapter-runtime-closeout.md`.
+
+Current approved commands: `/status`, `/health`, `/whoami`, and `/help`.
+Out of scope without separate approval: `/ask`, GitHub commands, PR/write,
+Terraform commands, shell execution, browser automation, MCP, DevBox execution,
+and OpenClaw self-upgrade.
 
 ## Purpose
 

@@ -1,7 +1,8 @@
 # OpenClaw Stateful VM Implementation Summary
 
-**Status:** Terraform runtime applied; core runtime validation completed;
-restart, recreate, and restore persistence still unproven
+**Status:** Terraform runtime applied; core runtime, restart/recreate,
+controlled stop/start, isolated restore, GitHub read-only, Telegram
+status-only, and service-state observability baseline validated
 **Scope:** OpenClaw stateful VM implementation and externally useful runtime
 baseline
 **Date:** 2026-06-18
@@ -40,12 +41,20 @@ Validated runtime outcomes:
 - bundled `admin-http-rpc` plugin enabled for authenticated pairing flows.
 - local IAP tunnel termination and re-establishment did not require a new
   browser pairing flow for the existing Control UI profile.
+- controlled `openclaw.service` restart validated;
+- controlled Stateful MIG recreate validated;
+- controlled Stateful MIG stop/start validated;
+- isolated snapshot restore drill validated;
+- GitHub read-only mode validated and PR/write remains disabled;
+- Telegram status-only adapter runtime scope completed;
+- service-state observability baseline completed.
 
 Important boundary:
 
 - local IAP reconnect continuity is not proof of persistence across service
   restart, container replacement, VM replacement, Stateful MIG recreate, or
-  snapshot restore.
+  snapshot restore by itself; those boundaries were validated separately in
+  the runtime validation and operations docs.
 
 ## Repository Cleanup
 
@@ -317,15 +326,14 @@ Gateway transport still reported pending pairing/scope approval during
 validation, so OpenClaw used embedded fallback. This is a follow-up caveat, not
 a blocker for the read-only tool policy result.
 
-## Unproven Persistence Boundaries
+## Remaining Deferred Boundaries
 
-Still unproven:
+Still deferred or not part of AI Agent Host closeout:
 
-- paired-device persistence after service restart
-- paired-device persistence after Stateful MIG recreate
-- snapshot restore into a usable runtime
 - GitHub PR/write mode, which remains separate and not approved
 - longer-term operating model decisions
+- full alert routing and notification workflows
+- advanced operational agents, shared context, and multi-agent orchestration
 
 ## Risks And Follow-Up Notes
 

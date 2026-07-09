@@ -7,6 +7,17 @@ for the OpenClaw Stateful VM runtime. It is a read-only validation record and
 does not create alert policies, logs-based metrics, notification channels, or
 runtime changes.
 
+## Status Note
+
+This note was created before the service-state exporter rollout. It is retained
+as historical signal-selection context.
+
+Current closeout posture: the service-state exporter baseline has been
+deployed, recurring Cloud Monitoring writes are enabled for the approved
+service-state metric types, and the alert policy skeleton remains disabled by
+default. Full alert routing and notification workflows are deferred and
+transferred to AI Operations Platform.
+
 ## Read-Only Scope
 
 Validated targets:
@@ -101,7 +112,7 @@ Recommended runtime location:
 - run under a narrowly scoped local execution model;
 - publish only numeric or bounded-label health state to Cloud Monitoring.
 
-Repository status:
+Original repository status:
 
 - local checker skeleton:
   `gcp/openclaw_stateful_vm/monitoring/service_state_checker.py`;
@@ -117,10 +128,10 @@ Repository status:
   `gcp/openclaw_stateful_vm/monitoring/tests/test_service_state_checker.py`;
   `gcp/openclaw_stateful_vm/monitoring/tests/test_service_state_metric_writer.py`;
   `gcp/openclaw_stateful_vm/monitoring/tests/test_service_state_monitor_runner.py`;
-- the checker, writer, and runner are not deployed, scheduled, or wired into
-  Terraform;
-- they do not write Cloud Monitoring metrics, create custom metrics, create
-  alert policies, or create notification channels.
+- the checker, writer, and runner were not deployed, scheduled, or wired into
+  Terraform at the time;
+- they did not write Cloud Monitoring metrics, create custom metrics, create
+  alert policies, or create notification channels at the time.
 
 ## Recommended Signal Path
 
@@ -145,10 +156,10 @@ Expected future metric behavior:
 - no timestamps, free-form log messages, raw command output, or unbounded
   labels.
 
-The local writer and runner skeletons already model the intended bounded metric
-shape in dry-run mode, but live metric publication still needs separate
-runtime, least-privilege, metric descriptor, and Terraform plan review before
-any deployment.
+The local writer and runner skeletons modeled the intended bounded metric shape
+in dry-run mode. The later exporter rollout enabled recurring writes for the
+approved service-state metric types while keeping alert policy delivery and
+notification routing deferred.
 
 Deployment approval package:
 
