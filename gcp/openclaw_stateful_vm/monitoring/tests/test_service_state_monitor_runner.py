@@ -182,6 +182,89 @@ class ServiceStateMonitorRunnerTests(unittest.TestCase):
 
     def test_runner_does_not_call_cloud_monitoring_apis(self) -> None:
         with patch.object(runner.writer, "build_dry_run_model") as build_model:
+            with patch.object(runner.writer, "write_time_series") as write_time_series:
+                build_model.return_value = (
+                    {
+                        "dry_run": True,
+                        "project": PROJECT_ID,
+                        "metric_prefix": runner.writer.DEFAULT_METRIC_PREFIX,
+                        "time_series": [],
+                    }
+                )
+                exit_code, stdout, stderr = run_main(
+                    ["--project", PROJECT_ID],
+                    healthy_states(),
+                )
+
+        build_model.assert_called_once()
+        write_time_series.assert_not_called()
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(stderr, "")
+        self.assertIn('"dry_run": true', stdout)
+
+    def test_runner_write_mode_calls_cloud_monitoring_writer_once(self) -> None:
+        with patch.object(runner.writer, "write_time_series") as write_time_series:
+            with patch.object(runner.writer, "build_dry_run_model") as build_model:
+                write_time_series.return_value = {
+                    "dry_run": False,
+                    "project": PROJECT_ID,
+                    "metric_prefix": runner.writer.DEFAULT_METRIC_PREFIX,
+                    "time_series_count": 8,
+                }
+                exit_code, stdout, stderr = run_main(
+                    ["--project", PROJECT_ID, "--write"],
+                    healthy_states(),
+                )
+
+        write_time_series.assert_called_once()
+        build_model.assert_not_called()
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(stderr, "")
+        model = json.loads(stdout)
+        self.assertFalse(model["dry_run"])
+        self.assertEqual(model["time_series_count"], 8)
+
+    def test_runner_write_mode_returns_nonzero_when_service_is_unhealthy(self) -> None:
+        states = [
+            service_state("openclaw.service"),
+            service_state(
+                "openclaw-telegram-adapter.service",
+                active="inactive",
+                sub="dead",
+            ),
+        ]
+
+        with patch.object(runner.writer, "write_time_series") as write_time_series:
+            write_time_series.return_value = {
+                "dry_run": False,
+                "project": PROJECT_ID,
+                "metric_prefix": runner.writer.DEFAULT_METRIC_PREFIX,
+                "time_series_count": 8,
+            }
+            exit_code, stdout, stderr = run_main(
+                ["--project", PROJECT_ID, "--write"],
+                states,
+            )
+
+        write_time_series.assert_called_once()
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(stderr, "")
+        self.assertIn('"dry_run": false', stdout)
+
+    def test_runner_write_mode_reports_writer_errors_without_traceback(self) -> None:
+        with patch.object(runner.writer, "write_time_series") as write_time_series:
+            write_time_series.side_effect = runner.writer.ValidationError("bad payload")
+            exit_code, stdout, stderr = run_main(
+                ["--project", PROJECT_ID, "--write"],
+                healthy_states(),
+            )
+
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(stdout, "")
+        self.assertEqual(stderr, "error: bad payload\n")
+
+    def test_runner_does_not_call_cloud_monitoring_apis_without_write(self) -> None:
+        with patch.object(runner.writer, "build_dry_run_model") as build_model:
             build_model.return_value = (
                 {
                     "dry_run": True,

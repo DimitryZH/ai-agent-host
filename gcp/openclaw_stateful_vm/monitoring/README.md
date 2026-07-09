@@ -21,7 +21,8 @@ default. A live write path exists only behind an explicit `--write` flag.
 
 `service_state_monitor_runner.py` composes the checker and writer in memory. It
 checks the approved services, builds checker `metrics-json`, validates it
-through the writer, and prints the bounded dry-run model.
+through the writer, and prints the bounded model. It writes to Cloud Monitoring
+only when invoked with `--write`.
 
 ## Safe Data Model
 
@@ -263,9 +264,10 @@ python -m gcp.openclaw_stateful_vm.monitoring.service_state_monitor_runner \
   --strict
 ```
 
-Runner output is the writer dry-run JSON model with `dry_run: true`,
-`metric_prefix`, and bounded `time_series` entries. The only supported output
-format is JSON.
+Runner output is JSON. In dry-run mode it prints the writer model with
+`dry_run: true`, `metric_prefix`, and bounded `time_series` entries. With
+`--write`, it writes the validated bounded time series and prints the writer
+summary with `dry_run: false` and `time_series_count`.
 
 Exit behavior:
 
