@@ -104,8 +104,10 @@ because OpenClaw state requires a practical single-writer persistent state
 boundary.
 
 The public Cloud Run runtime material lives under `gcp/openclaw_cloud_run/`.
-Earlier generic Cloud Run bootstrap material is archived outside the public
-tracked layout.
+The legacy Cloud Run baseline Terraform for `ai-agent-runtime` is retained
+under `gcp/openclaw_cloud_run/terraform/`; the experimental
+`openclaw-runtime-experimental` service is documented as a gcloud-managed
+proof-of-concept path.
 
 ## AWS Role and Boundary
 

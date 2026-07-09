@@ -34,8 +34,9 @@ runtime is the current state-owning path.
 ## Historical Bootstrap Material
 
 Earlier generic Flask and Terraform bootstrap material validated the first
-Cloud Run and IAM flow. That material is now archived internally and is not kept
-as a public runtime path.
+Cloud Run and IAM flow. The legacy Cloud Run baseline Terraform now lives under
+`gcp/openclaw_cloud_run/terraform/` and is associated with `ai-agent-runtime`,
+not with `openclaw-runtime-experimental`.
 
 ## OpenClaw Cloud Run Runtime
 
@@ -61,8 +62,9 @@ Cloud Run deployment examples and helper scripts remain useful for controlled
 experiments. Do not treat Cloud Run as the production-like state-owning runtime
 without a separate durable-state design review.
 
-This Cloud Run directory does not currently contain a Terraform root. The
-current mature Terraform root is `gcp/openclaw_stateful_vm/terraform/`.
+The Cloud Run Terraform root is `gcp/openclaw_cloud_run/terraform/` for the
+legacy `ai-agent-runtime` baseline. The current mature Terraform root for the
+state-owning runtime is `gcp/openclaw_stateful_vm/terraform/`.
 
 Any future Cloud Run durable-state research is optional and deferred unless
 platform capabilities change enough to justify revisiting the decision.

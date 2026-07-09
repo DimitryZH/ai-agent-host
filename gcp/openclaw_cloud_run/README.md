@@ -10,8 +10,9 @@ Scope of this experiment:
 - avoid deployment changes without a separate approval
 
 This is the public Cloud Run proof-of-concept runtime path for OpenClaw.
-Earlier generic Flask and Terraform bootstrap material is archived internally
-and is no longer kept as a public runtime path.
+The `terraform/` subdirectory retains the legacy Cloud Run baseline Terraform
+for `ai-agent-runtime`; it does not currently describe the
+`openclaw-runtime-experimental` service.
 
 ## Related Documentation
 
@@ -36,12 +37,12 @@ and is no longer kept as a public runtime path.
 - `cloudbuild.versioned.yaml`: Cloud Build config for pinned image builds with explicit `OPENCLAW_VERSION` override.
 - `entrypoint.sh`: strict startup wrapper that renders runtime config and starts Gateway.
 - `config/openclaw.template.json`: non-sensitive template with placeholder values.
+- `terraform/`: legacy Cloud Run baseline Terraform for `ai-agent-runtime`.
 - `scripts/deploy_onboarding_ui.sh`: build + deploy temporary IAM-protected UI onboarding revision.
 - `scripts/disable_onboarding_ui.sh`: rollback helper to disable Control UI.
 - `scripts/validate_post_onboarding.sh`: authenticated probe helper after onboarding.
 
-This directory does not currently contain a Terraform root. The current mature
-Terraform root for the applied runtime is
+The current mature Terraform root for the applied state-owning runtime is
 `gcp/openclaw_stateful_vm/terraform/`.
 
 ## Runtime Inputs

@@ -45,8 +45,10 @@ current OpenClaw gateway needs a practical persistent single-writer state
 boundary.
 
 The public Cloud Run proof-of-concept runtime lives under
-`gcp/openclaw_cloud_run/`. Earlier generic Cloud Run bootstrap material is not
-kept as a public runtime path.
+`gcp/openclaw_cloud_run/`. The legacy Cloud Run baseline Terraform for
+`ai-agent-runtime` lives under `gcp/openclaw_cloud_run/terraform/`; the
+experimental `openclaw-runtime-experimental` service is managed by the Cloud
+Run scripts and documented commands in that runtime folder.
 
 ## GCP Stateful VM Current Mature Runtime
 
