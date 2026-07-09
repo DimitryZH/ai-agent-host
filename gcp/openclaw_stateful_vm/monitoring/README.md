@@ -205,6 +205,26 @@ Terraform wires the deployed systemd service to include `--write` only when
 reviewed plan and apply explicitly enable recurring live writes. Alert policies
 and notification channels remain separate future work.
 
+## Alert Policy Skeleton
+
+Terraform includes a disabled service-state alert policy skeleton for the
+custom service-state metrics. It is controlled by:
+
+- `service_state_alert_policy_create`, default `false`;
+- `service_state_alert_policy_enabled`, default `false`.
+
+The skeleton targets only the bounded service-state metric types under
+`custom.googleapis.com/openclaw/service_state` and the approved service labels:
+
+- `openclaw.service`;
+- `openclaw-telegram-adapter.service`.
+
+No notification channels are configured by the skeleton, and it does not create
+logs-based metrics or IAM bindings. Live writes provide the runtime metric
+signal, but enabling alert policy creation or delivery still requires a
+separate reviewed plan and apply. Notification routing remains separate future
+work.
+
 ## Runtime Dependencies
 
 Exporter deployment wiring packages `requirements.txt` with the helper code and

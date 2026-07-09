@@ -404,11 +404,13 @@ observability posture. It also defines alert candidates and implementation
 sequencing without creating alert policies or notification channels.
 
 The Terraform monitoring skeleton lives at
-`../terraform/monitoring.tf` and
-`../terraform/monitoring_service_alerts.tf`. It is intentionally resource-free
-until alert routing, signal safety, and notification channel ownership are
-approved. Do not run `terraform apply` for monitoring work until the specific
-alert policy plan has been reviewed.
+`../terraform/monitoring.tf`,
+`../terraform/monitoring_service_alerts.tf`, and
+`../terraform/service_state_alert_policy.tf`. Service-state alert policy
+creation is disabled by default, notification channels are not configured, and
+alert delivery still requires a reviewed Terraform plan. Do not run
+`terraform apply` for monitoring work until the specific alert policy plan has
+been reviewed.
 
 Service failure signal validation is recorded in
 `stateful-vm-service-failure-signal-validation.md`. The current recommended

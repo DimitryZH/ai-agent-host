@@ -6,8 +6,8 @@ Status: Monitoring skeleton baseline.
 
 This document defines the compact observability baseline and alerting plan for
 the OpenClaw Stateful VM runtime. The current baseline includes a
-Terraform-ready monitoring skeleton, but it does not create alert policies,
-notification channels, or runtime changes.
+Terraform-ready monitoring skeleton. Alert policy resources remain disabled by
+default and no notification channels are configured.
 
 ## Current Runtime Baseline
 
@@ -39,7 +39,7 @@ resilience controls:
   disk checks, snapshot/restore, rollback, and autohealing-loop response.
 
 No Terraform-managed Cloud Monitoring alert policies or notification channels
-are currently defined in this repository path.
+are active by default in this repository path.
 
 ## Read-Only Baseline Evidence
 
@@ -124,10 +124,10 @@ The skeleton defines:
 - service failure review targets for `openclaw.service` and
   `openclaw-telegram-adapter.service`.
 
-The skeleton intentionally defines no active `google_monitoring_alert_policy`
-resources and no active `google_monitoring_notification_channel` resources.
-The default Terraform configuration therefore remains a planning-only baseline
-for monitoring.
+The skeleton intentionally keeps `google_monitoring_alert_policy` resources
+disabled by default and defines no `google_monitoring_notification_channel`
+resources. The default Terraform configuration therefore remains a no-alerting
+baseline for monitoring.
 
 Notification channel discovery used the local supported command:
 
@@ -229,11 +229,12 @@ behavior is gated by `service_state_exporter_enabled`. When enabled, it
 installs the helper package and dry-run systemd timer only; live metric writes
 remain disabled and require separate rollout approval.
 
-The service alert skeleton defines the OpenClaw and Telegram adapter service
-targets and a disabled-by-default service alert switch. It does not create
-logs-based metrics or alert policies. This is intentional because broad log
-payload matching could accidentally include sensitive operational data; any
-future filters must be reviewed before they are committed or applied.
+The service-state alert policy skeleton defines OpenClaw and Telegram adapter
+service targets and a disabled-by-default alert policy create switch. It does
+not create logs-based metrics or notification channels. This is intentional
+because broad log payload matching could accidentally include sensitive
+operational data; any future filters or notification routing must be reviewed
+before they are applied.
 
 Activation prerequisites:
 
