@@ -198,9 +198,11 @@ requires `--project`, uses the configured `--metric-prefix`, and keeps `service`
 as the only custom metric label. The Cloud Monitoring client is imported only
 for the live write path, so dry-run validation does not require GCP credentials.
 
-The deployed systemd service does not pass `--write`, and Terraform keeps live
-writes disabled by default. Enabling live writes in the runtime requires a
-separate reviewed plan and apply.
+Terraform wires the deployed systemd service to include `--write` only when
+`service_state_exporter_live_writes_enabled=true`. The variable defaults to
+`false`, so the rendered service remains dry-run-only unless a separate
+reviewed plan and apply explicitly enable recurring live writes. Alert policies
+and notification channels remain separate future work.
 
 ## Runtime Dependencies
 
@@ -217,7 +219,8 @@ Python. Dependency installation is part of the approved exporter deployment
 wiring only; it is not run when the exporter is disabled.
 
 The deployed service still runs dry-run mode by default and does not pass
-`--write`. Live metric writes require a separate rollout approval.
+`--write` unless `service_state_exporter_live_writes_enabled=true` is rendered
+through Terraform. Live metric writes require a separate rollout approval.
 
 For VM-side validation, prefer `PYTHONDONTWRITEBYTECODE=1` or `python3 -B`.
 The installed package directory is intentionally read-only to the exporter user,
@@ -286,7 +289,8 @@ Disabled deployment skeleton:
 The skeleton renders a dry-run service and timer for review. Bootstrap wiring
 can install the helper package and enable the timer only when
 `service_state_exporter_enabled` is explicitly set to `true`; defaults keep it
-absent from live hosts. Live metric writes remain disabled by default.
+absent from live hosts. Live metric writes are wired behind
+`service_state_exporter_live_writes_enabled` and remain disabled by default.
 
 ## Deployment Status
 

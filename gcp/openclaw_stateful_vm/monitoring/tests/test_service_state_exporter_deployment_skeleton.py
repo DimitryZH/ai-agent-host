@@ -42,6 +42,24 @@ def exporter_bootstrap_blocks(bootstrap_text: str) -> str:
     return "\n".join(blocks)
 
 
+def render_service_template(*, live_writes_enabled: bool) -> str:
+    rendered = read(SERVICE_TEMPLATE)
+    rendered = rendered.replace(
+        "%{ if service_state_exporter_live_writes_enabled } --write%{ endif }",
+        " --write" if live_writes_enabled else "",
+    )
+    replacements = {
+        "${metric_prefix}": "custom.googleapis.com/openclaw/service_state",
+        "${project_id}": "ai-agent-host-497515",
+        "${service_state_exporter_group}": "openclaw-monitoring",
+        "${service_state_exporter_user}": "openclaw-monitoring",
+        "${service_state_exporter_working_directory}": "/opt/openclaw-service-state-exporter",
+    }
+    for old, new in replacements.items():
+        rendered = rendered.replace(old, new)
+    return rendered
+
+
 class ServiceStateExporterDeploymentSkeletonTests(unittest.TestCase):
     def test_terraform_defaults_keep_exporter_and_live_writes_disabled(self) -> None:
         terraform_text = read(EXPORTER_TF)
@@ -65,6 +83,10 @@ class ServiceStateExporterDeploymentSkeletonTests(unittest.TestCase):
         self.assertIn("check \"service_state_exporter_live_writes_require_exporter\"", terraform_text)
         self.assertIn(
             "!var.service_state_exporter_live_writes_enabled || var.service_state_exporter_enabled",
+            terraform_text,
+        )
+        self.assertIn(
+            "service_state_exporter_live_writes_enabled = var.service_state_exporter_live_writes_enabled",
             terraform_text,
         )
 
@@ -190,10 +212,10 @@ class ServiceStateExporterDeploymentSkeletonTests(unittest.TestCase):
         self.assertNotIn("openclaw-service-state-exporter.timer", outside_exporter_blocks)
         self.assertNotIn("systemctl enable --now openclaw-service-state-exporter.timer", outside_exporter_blocks)
 
-    def test_service_template_is_dry_run_only_and_hardened(self) -> None:
+    def test_service_template_default_render_is_dry_run_only_and_hardened(self) -> None:
         service_text = read(SERVICE_TEMPLATE)
+        default_render = render_service_template(live_writes_enabled=False)
         forbidden_terms = {
-            "--write",
             "gcloud secrets versions access",
             "journalctl",
             "systemctl restart",
@@ -217,6 +239,12 @@ class ServiceStateExporterDeploymentSkeletonTests(unittest.TestCase):
             service_text,
         )
         self.assertIn("service_state_monitor_runner", service_text)
+        self.assertIn(
+            "%{ if service_state_exporter_live_writes_enabled } --write%{ endif }",
+            service_text,
+        )
+        self.assertIn("/opt/openclaw-service-state-exporter/.venv/bin/python -m", default_render)
+        self.assertNotIn("--write", default_render)
         self.assertIn("NoNewPrivileges=true", service_text)
         self.assertIn("ProtectSystem=strict", service_text)
         self.assertIn("ProtectHome=true", service_text)
@@ -224,6 +252,25 @@ class ServiceStateExporterDeploymentSkeletonTests(unittest.TestCase):
         for term in forbidden_terms:
             with self.subTest(term=term):
                 self.assertNotIn(term, service_text)
+
+    def test_service_template_live_write_render_adds_only_gated_write_flag(self) -> None:
+        service_text = read(SERVICE_TEMPLATE)
+        live_write_render = render_service_template(live_writes_enabled=True)
+
+        self.assertEqual(service_text.count("--write"), 1)
+        self.assertEqual(live_write_render.count("--write"), 1)
+        self.assertRegex(
+            live_write_render,
+            r"(?m)^ExecStart=/opt/openclaw-service-state-exporter/\.venv/bin/python -m "
+            r"gcp\.openclaw_stateful_vm\.monitoring\.service_state_monitor_runner "
+            r"--project ai-agent-host-497515 "
+            r"--metric-prefix custom\.googleapis\.com/openclaw/service_state --write$",
+            msg=live_write_render,
+        )
+        self.assertNotIn("api.telegram.org", live_write_render)
+        self.assertNotIn("gcloud secrets versions access", live_write_render)
+        self.assertNotIn("notificationChannels/", live_write_render)
+        self.assertNotIn("/api/v1/admin/rpc", live_write_render)
 
     def test_timer_template_has_only_schedule_metadata(self) -> None:
         timer_text = read(TIMER_TEMPLATE)

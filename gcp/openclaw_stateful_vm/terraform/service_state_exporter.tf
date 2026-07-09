@@ -92,11 +92,12 @@ locals {
   }
 
   service_state_exporter_systemd_unit = templatefile("${path.module}/../systemd/openclaw-service-state-exporter.service.tftpl", {
-    metric_prefix                            = var.service_state_exporter_metric_prefix
-    project_id                               = var.project_id
-    service_state_exporter_group             = var.service_state_exporter_group
-    service_state_exporter_user              = var.service_state_exporter_user
-    service_state_exporter_working_directory = var.service_state_exporter_working_directory
+    service_state_exporter_live_writes_enabled = var.service_state_exporter_live_writes_enabled
+    metric_prefix                              = var.service_state_exporter_metric_prefix
+    project_id                                 = var.project_id
+    service_state_exporter_group               = var.service_state_exporter_group
+    service_state_exporter_user                = var.service_state_exporter_user
+    service_state_exporter_working_directory   = var.service_state_exporter_working_directory
   })
 
   service_state_exporter_systemd_timer = templatefile("${path.module}/../systemd/openclaw-service-state-exporter.timer.tftpl", {
